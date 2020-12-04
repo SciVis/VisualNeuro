@@ -1,0 +1,39 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1">
+
+<link rel="stylesheet" type="text/css" href="css/style.css">
+<link rel="stylesheet" type="text/css" href="css/saveDialogue.css">
+<link href="https://fonts.googleapis.com/css?family=Montserrat:400,600,900" rel="stylesheet">
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta name="viewport" content="width=device-width">
+
+</head>
+<body>
+
+  <div class="background">
+    <div id="saveDiv">
+      <h1>Save patient ID's</h1>
+      <span class="checkboxField"><input id="checkGroupA" class="checkbox" type="checkbox" checked><span class="checkboxLabel">Group A</span></span>
+      <span class="checkboxField"><input id="checkGroupB" class="checkbox" type="checkbox" checked><span class="checkboxLabel">Group B</span></span>
+      <br>
+      <input id="fileName" style="text-align:right;" type="text" placeholder="Enter filename here"><span id="fileEnding">.csv</span>
+      <p>The file will be saved to:</p>
+      <p id="saveLocation"></p>
+      <button id="saveFile" onclick="savePatients()">Save</button>
+      <br><br>
+      <p id="saveFeedback"></p>
+    </div>
+  </div>
+
+</body>
+
+<script language="JavaScript" src="scripts/save.js"></script>
+
+</html>

@@ -1,0 +1,29 @@
+body {
+  overflow-y: scroll;
+}
+
+.row {
+  padding: 2em;
+  padding-top: 0;
+}
+
+.infoBoxText {
+  color: #2c3e50;
+  font-weight: 600;
+  font-size: 1em;
+  width: 100%;
+  padding: 1.5%;
+  background: none;
+  border: none;
+}
+
+.infoBox {
+  background: #d7dcdf;
+  padding: 5%;
+}
+
+.informationBlock {
+  background: #595959;
+  padding: 0.5em;
+  margin: 1em;
+}

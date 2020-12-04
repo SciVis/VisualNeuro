@@ -1,0 +1,25 @@
+
+.popover {
+  .mm_actions {
+    .btn.pull-right {
+      margin-right: 5px;
+      &:first-child {
+        margin-right: 0;
+      }
+    }
+  }
+
+
+}
+.popover p {
+  color: black;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 400;
+  font-size: 0.8em;
+}
+.modal p {
+  color: black;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 400;
+  font-size: 0.8em;
+}

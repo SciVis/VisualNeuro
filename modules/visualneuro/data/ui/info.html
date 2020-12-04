@@ -1,0 +1,60 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1">
+
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+<link rel="stylesheet" type="text/css" href="css/style.css">
+<link rel="stylesheet" type="text/css" href="css/infowindow.css">
+<link href="https://fonts.googleapis.com/css?family=Montserrat:400,600,900" rel="stylesheet">
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+</head>
+<body>
+
+  <div class="background">
+    <h1>Information</h1>
+
+    <div class="row">
+      <div class="col-md-6 informationBlock">
+        <h2>Group A and B</h2>
+        <p>The two subject groups to be compared is specified by using the handles down in the parallel coordinates plot
+          to filter out specific groups of subjects. The buttons up on the right labeled "Group A" and "Group B" can be used
+          to toggle between the two groups.</p>
+      </diV>
+
+      <div class="col-md-5 informationBlock">
+        <h2>Atlas</h2>
+        <p>The atlas shows the anatomical region of the currently selected coordinate as well as the Broadman area (if any).
+        The rendering of the atlas in the 3D view can be turned of with the button in the control panel.</p>
+      </div>
+
+      <div class="col-md-4 informationBlock">
+        <h2>T-test comparison</h2>
+        <p>The 3D volume in the center shows either the mean of the current subject group, or, if activated, the t-value of the t-test between subject group A and B. The t-test depends on a p-value, which is set in the control
+        panel to the right.</p>
+      </div>
+
+      <!--<div class="col-md-7 informationBlock">
+        <h2>Topology</h2>
+        <p>On the right side of the screen there is a large volume with spheres that shows the topology of the mean volumes
+          of the current subject group. The spheres can be clicked to move the 2D slices to a specific point of interest.</p>
+        <p>The topology can be filtered with the slider on the right hand side of the screen labeled "Topology datavalue threshold",
+          which sets a lower thresholds for which spheres to show.</p>
+          <p>The spheres can either be scaled according to their underlying datavalue (from the fMRI mean volume) or their persistence.
+            Which scaling method to use can be chosen in the control panel. The overall size of the spheres can also be changed through
+            a slider in the control panel.</p>
+      </div>-->
+    </div>
+  </div>
+
+
+  <!-- Bootstrap scripts -->
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+#fileEnding {
+  margin-left: 0.2em;
+}
+
+#saveDiv {
+  padding: 0.5em;
+  text-align: center;
+}
+
+#saveLocation {
+  font-style: italic;
+  word-wrap: break-word;
+}
+
+#saveFile {
+  position: absolute;
+  left: 35%;
+  width: 30%;
+}
+
+#fileName {
+  margin: 0;
+  margin-top: 1em;
+  left: 30%;
+  width: 50%;
+}

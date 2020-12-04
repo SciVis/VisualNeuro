@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1">
+
+<link rel="stylesheet" href="css/ion.rangeSlider.min.css"/>
+<script src="inviwo://webbrowser/data/js/inviwoapi.js"></script>
+<link href="css/fontawesome/all.min.css" rel="stylesheet"> <!--load all styles -->
+<link rel="stylesheet" href="css/bootstrap.min.css">
+<link href="css/tabulator_bootstrap4.min.css" rel="stylesheet">
+<link rel="stylesheet" type="text/css" href="css/style.css">
+<link rel="stylesheet" href="css/guidedtour.css">
+<link href="css/fonts.css" rel="stylesheet">
+<link href="css/scrollbars.css" rel="stylesheet">
+
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta name="viewport" content="width=device-width">
+<script language="JavaScript">
+// Initialize Inviwo API so that we can use it to synchronize properties
+var inviwo = new InviwoAPI();
+</script>
+</head>
+<body>
+<div class="container-fluid m-0 p-0" id="main">
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark" id="navbar">
+  <a class="navbar-brand" href="#">VisualNeuro</a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+    <ul class="navbar-nav mr-auto">
+      <li class="nav-item" id="importDataMenuItem">
+        <a class="nav-link active" href="#">Import data<span class="sr-only">(current)</span></a>
+      </li>
+      <li class="nav-item" id="analyzeMenuItem">
+        <a class="nav-link" id="analyzeMenuItemLink" href="#">Analyze</a>
+      </li>
+    </ul>
+	<div class="button" id="infoDiv"><span id="infoButton">i</span></div>
+    
+  </div>
+</nav> 
+<!-- ./Navbar -->
+
+<!-- DATA IMPORT -->
+<div id="fileLoaderDialog">
+<div class="container">
+	<div class="row">
+		<div class="col-6">
+			<div class="card bg-dark text-white h-100">
+				<div class="card-header">Volumetric Data</div>
+				<div class="card-body">
+					<div class="form-group">
+						<label for="volumeFolderPath">Brain imaging data folder</label>
+						<span class="far fa-question-circle" onclick="hide()" data-container='body' data-toggle="tooltip" data-html="true" data-placement="right" title="<p>Put each subject's volume data, e.g NiFTI-files, in one folder. The data should be in the MNI coordinate space.
+    It can take a bit of time to process the data once the folder is selected, be patient :)
+    </p>
+     <h5>Example:</h5>
+      <p> 
+        volumes/subject_001.nii<br>
+        volumes/subject_002.nii<br>
+        volumes/subject_002.nii<br>
+      </p>"></span>
+						<div class="custom-file">
+						    <input type="text" class="custom-file-input" id="volumeFolderPath" required>
+						    <label class="custom-file-label" for="volumeFolderPath">Choose folder</label>
+					    </div>
+					    <div id="tour-step1"></div>
+					</div>
+
+					<div class="form-group form-group-inline">
+						<label for="selectDataType">Type of data values</label>
+						<span class="far fa-question-circle" data-container='body' data-toggle="tooltip" data-html="true" data-placement="right" title="<p>
+    Determine how to map the imaging data values to colors.
+    </p>
+    <b>Low to high</b> <img src='images/linearTF.jpg' class='img-fluid' height='100'></img>Values are varying from low to high<br>
+    <b>Diverging around zero</b> <img src='images/symmetricTF.jpg' class='img-fluid' height='100'></img>Negative values are semantically different from postive values.<br>"></span>
+						<select id="selectDataType" class="form-control"></select>
+					</div>
+					<div id="tour-step2"></div>
+			<!--
+					<div class="form-group">
+						<label for="volumeFolderPath">fMRI coordinate space:</label>
+						<form id="selectCoordinateSpace">
+							<label><input type="radio" name="coordinateSpace" value="Brain Context MNI" checked/>MNI</label>
+							<label><input type="radio" name="coordinateSpace" value="Brain Context Talairach"/>Talairach</label>
+						</form>
+					</div>
+				-->
+				</div>
+			</div>
+		</div>
+
+		<div class="col-6">
+			<div class="card bg-dark text-white h-100">
+				<div class="card-header">Clinical Data</div>
+				<div class="card-body">
+					<div class="form-group">
+						<label for="clinicalParametersPath">Study subject data (.csv file)</i></label>
+						<span class="far fa-question-circle" data-container='body' data-toggle="tooltip" data-html="true" data-placement="right" title="<p>
+    Specify additional per-subject measurements. The first row must contain column titles followed by one line per subject. 
+    A column called 'filename' is <b>mandatory</b> and must contain the filename of the corresponding subject's neuroimaging data.
+     </p>
+    <h5>Example file:</h5>
+  <p>
+    filename,Healthy,Age<br>
+    subject_001.nii,true,29<br>
+    subject_002.nii,false,38<br>
+    subject_003.nii,false,55<br>
+  </p>"></span>
+						<div class="custom-file">
+						    <input type="text" class="custom-file-input" id="clinicalParametersPath" required>
+						    <label class="custom-file-label" for="clinicalParametersPath">Choose file</label>
+					    </div>
+
+					</div>
+					<div id="tour-step3"></div>
+					<div class="form-group">
+						<label for="selectedColumnFilename">Select filename column</label>
+						<select id="selectedColumnFilename" class="form-control"><option>No .csv file loaded></option></select>
+					</div>
+
+					<div class="form-group">
+						<label for="selectedColumnSubjectStatus">Color by column</label>
+						<select id="selectedColumnSubjectStatus" class="form-control"><option>No .csv file loaded></option></select>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col py-3 px-lg-5">
+			<div class="d-flex justify-content-center">
+			<button type="button" class="btn btn-lg btn-primary" id="toAnalysisStep">Start analyzing</button>
+		</div>
+		</div>	
+	</div>
+</div>
+</div>
+<div class="container-fluid m-0 p-0" id="mainPanel" style="height: calc( 100vh - 56px );">
+  <div class="row m-0 p-0" style="height: 100%;width: 100%;">
+    <div class="col m-0 p-0">
+    	<div class="row m-0 p-0" id="spatialDataPanel" style="height: 60%;">
+		 	<div class="col m-0 p-0" id="slicesPanel" style="height: 100%;">
+		 		<div class="row m-0" style="height: 50%";>
+		 			<!--slice 1, 2-->
+		    		<div class="d-flex justify-content-end" style="width: 100%">
+					<div class="dropdown">
+					  <button class="btn dropdown-toggle p-1 m-1" type="button" data-toggle="dropdown"><i class="fas fa-cog"></i></button>
+					  <ul class="dropdown-menu">
+					  	<a class="dropdown-item" href="#" id="T1Option">T1</a>
+					    <a class="dropdown-item" href="#" id="greyMatterOption">Grey matter</a>
+					    <a class="dropdown-item" href="#" id="whiteMatterOption">White matter</a>
+					  </ul>
+					</div>
+				</div>
+	 			</div>
+		 		<div class="row m-0" style="height: 50%";>
+		 			<div class="col-6"><!--slice 3--></div>
+			 		<div class="col-6 p-0" style="height: 100%;">
+			 			<!--slice Info-->
+			 			<div class="card bg-dark text-white h-100">
+		 				<div class="card-body">
+			    			<p class="mb-0" for="coordinate">Coordinate: <i id="coordinate">(asd, das, 33)</i></p>
+			    			<p class="mb-1" for="brainValue">Value: <i id="brainValue">0</i></p>
+		    				<h6 class="mb-1">Brain atlas regions</h6>
+		    				<p class="mb-1" for="broadmann">Broadmann: <i id="broadmann"></i></p>
+		    				<p class="mb-0" for="brainRegionName">AAL: <i id="brainRegionName">Left insula</i></p>
+			 			</div>
+			 		</div>
+			 		</div>
+		 		</div>
+
+		 	</div>
+ 		 	<div class="col m-0 p-0" id="dvrPanel" style="height: 100%;">
+				
+	    		<div class="container-fluid" style="height: 100%;">
+	    			<div class="d-flex justify-content-center"  style="height: 50%;>
+	    				<label class="text-dark" id="volInfo"></label>
+	    			</div>
+	    			<div class="d-flex flex-row align-items-end" style="height: 50%;">
+	    				<div class="form-inline" id="volProgressDiv">
+		    				<label class="mb-1 text-dark" for="volProgressBar" id="volProgressLabel">Progress:</label>
+						 	<div class="progress"  id="volProgressBar">
+						  		<div class="progress-bar p-1" id="volProgress" role="progressbar"  aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"">0%</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="row m-0 p-0" id="parallelCoordinatesPanel" style="height: 40%;">
+	    		<div class="container-fluid p-0">
+	    			<div id="tour-pcp-1"></div><div id="tour-pcp-2"></div><div id="tour-pcp-3"></div>
+	    		<div class="d-flex justify-content-end">
+					<div class="dropdown">
+					  <button class="btn dropdown-toggle p-1 m-1" type="button" data-toggle="dropdown"><i class="fas fa-cog"></i></button>
+					  <div class="dropdown-menu">
+					    <a class="dropdown-item" id="resetFilteringADropDown">Reset selection</a>
+					    <a class="dropdown-item" href="#" id="resetFilteringBDropDown">Reset selection</a>
+					    <div class="btn-group dropright">
+						    <div class="dropdown-item dropdown-toggle" data-toggle="dropdown">
+							    Color by
+							<div class="dropdown-menu sub-menu" id="selectedColumnSubjectStatusDropDown">
+							    <a class="dropdown-item" href="#">No .csv file loaded</a>
+							  </div>
+							</div>
+						</div>
+					  </div>
+					</div>
+				</div>
+			</div>
+		</div>
+  </div>
+  <div class="col-2" id="controlPanel">
+    		<!-- BLOCK FOR CONTROLS PANEL AT RIGHT SIDE OF SCREEN -->
+  			<div class="card bg-dark text-white mt-2">
+				<div class="card-header">Group selection</div>
+				<div class="card-body p-1">
+				<div class="d-flex justify-content-center">
+					<div class="form">
+						<div class="form-group row" id="tour-group-selection"> 
+							<div class="col">
+								<div class="form-check form-check-inline">
+									<label class="form-check-label" for="groupA"><input class="form-check-input" type="radio" name="patientGroup" id="groupA" value="0" checked/>A</label>
+									<label class="form-check-label" for="groupB"><input class="form-check-input" type="radio" name="patientGroup" id="groupB" value="1"/>B</label>
+								</div>
+							</div>
+						</div>
+						
+							<button id="resetFilteringA" class="btn-primary btn-sm">Reset selection</button>
+							<button id="resetFilteringB" class="btn-primary btn-sm noShow">Reset selection</button>
+					
+					</div>
+				</div>
+				</div>
+			</div>
+			<div class="card bg-dark text-white mt-2">
+				<div class="card-header">Comparison</div>
+				<div class="card-body p-1"> 
+						 <div class="row align-items-center">
+	 						<div class="col-3">
+								<label for="activeVolume" class="form-control-sm text-left">Show</label>
+							</div>
+							<div class="col">
+								<select id="activeVolume" class="form-control form-control-sm"/></select>
+							</div>
+						</div>
+						<div class="form-group row" id="TailTestOptions">
+							<div class="col">
+								<label for="activeVolume" class="form-control-sm text-left">Tail test</label>
+								<div class="form-check form-check-inline form-control-sm">
+									<label class="form-check-label" for="tailTestTwoSided"><input class="form-check-input" type="radio" name="tailTest" id="tailTestTwoSided" value="0" checked/>Two-sided</label>
+									<label class="form-check-label" for="tailTestLeft"><input class="form-check-input" type="radio" name="tailTest" id="tailTestLeft" value="2"/>Left</label>
+									<label class="form-check-label" for="tailTestRight"><input class="form-check-input" type="radio" name="tailTest" id="tailTestRight" value="1"/>Right</label>
+								</div>
+							</div>
+						</div>
+					<div class="row align-items-center pt-3" id="pValueContainer">
+						<div class="col-3">
+							<label for="pValueSlider" class="text-left form-control-sm">p-Value</label>
+						</div>
+						<div class="col">
+							<input type="text" id="pValueSlider" class="js-range-slider" name="pValueSlider" value="" />
+						</div>						
+					</div>
+
+				</div>
+			</div>
+			<div class="card bg-dark text-white mt-2">
+				<div class="card-header">Visual properties</div>
+				<div class="card-body p-1">
+					<div class="row align-items-center" id="thresholdContainer">
+						<div class="col-3">
+							<label for="dataThreshold" class="form-control-sm">Threshold</label>
+						</div>
+						<div class="col">
+							<input type="text" id="dataThreshold" class="js-range-slider" name="dataThreshold" value="" />
+						</div>
+					</div>
+					<div class="row align-items-center pt-3">
+						<div class="col-3">
+							<label for="opacity" class="text-left form-control-sm">Opacity</label>
+						</div>
+						<div class="col">
+							<input type="text" id="opacity" class="js-range-slider" name="opacity" value="" />
+						</div>
+					</div>
+					<div class="row align-items-center pt-3">
+						<div class="col-md-3">
+							<label class="text-left form-control-sm" for="cameraSide">Camera</label>
+						</div>
+						<div class="col-md-8 ml-md-auto">
+							<div class="btn-group" role="group">
+							<button id="cameraSide" class="btn btn-primary">Side</button>
+							<button id="cameraFront" class="btn btn-primary">Front</button>
+							<button id="cameraTop" class="btn btn-primary">Top</button>
+					</div>
+						</div>
+					</div>
+
+				</div>
+			</div>
+			<div class="card bg-dark text-white mt-2">
+				<div class="card-header">
+					<div class="row align-items-center">
+						<div class="col">Brain atlas</div>
+						<div class="col">
+							<div class="d-flex justify-content-end">
+									<div class="form-check">
+										<label class="form-check-label form-control-sm" for="enableAtlas"><input class="form-check-input mt-1" type="checkbox" id="enableAtlas" checked/>Show atlas</label>
+									</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="card-body  pt-0 pl-1 pr-1">
+		          <div id="region-table" class="table-striped  table-dark table-hover" style="width: 100%; overflow: auto;"></div>
+			        <div class="form-inline pt-2">
+			        	<div class="col">
+							<div class="d-flex justify-content-start">
+								<button id="correlationsDialog" class="btn btn-primary"><i class="fas fa-chart-bar mr-1"></i>Region analysis</button>
+							</div>
+						</div>
+						<div class="col">
+							<div class="d-flex justify-content-end">
+					          <!--<button id="selectAtlasRegions" class="btn-sm btn-secondary ml-2">All</button>-->
+					          <button id="deselectAtlasRegions" class="btn-sm btn-light ml-2">Deselect all</button>
+				          	</div>
+			      		</div>
+			        </div>
+				</div>
+			</div>
+		</div>
+    </div>
+  </div>
+</div>
+</div> <!-- end MAIN -->
+
+<!-- GUIDED TOUR DATA IMPORT-->
+<div class="hidden" id="tour-step1-info">
+  <p>
+  	Two types of data are required per subject, a brain imaging scan and clinical measurements. Let's start with the brain imaging scans.</p>
+<p>
+    Put each subject's volume data, e.g NIfTI-files, in one folder. The data should be in the MNI coordinate space.
+     <h5>Example:</h5>
+        volumes/subject_001.nii<br>
+        volumes/subject_002.nii<br>
+        volumes/subject_002.nii<br>
+      </p>
+  <p>
+    Go ahead and click on <b>Browse</b> button to select the folder. 
+    It can take a bit of time to process the data once the folder is selected, be patient :)
+    </p>
+</div>
+<div class="hidden" id="tour-step2-info">
+<p>
+    Determine how to map the imaging data values to colors.
+    </p>
+    <b>Low to high</b> <img src='images/linearTF.jpg' class='img-fluid' height='100'></img>Values are varying from low to high<br>
+    <b>Diverging around zero</b> <img src='images/symmetricTF.jpg' class='img-fluid' height='100'></img>Negative values are semantically different from postive values.<br>
+</div> 
+<div class="hidden" id="tour-step3-info">
+	<p>
+	Specify additional per-subject measurements. The first row must contain column titles followed by one line per subject. 
+    A column called 'filename' is <b>mandatory</b> and must contain the filename of the corresponding subject's neuroimaging data.
+    Try to keep the number of columns below 10 to reduce screen clutter.
+    <h5>Example file:</h5>
+    filename,Healthy,Age<br>
+    subject_001.nii,true,29<br>
+    subject_002.nii,false,38<br>
+    subject_003.nii,false,55<br>
+  </p>
+  <p>
+      Go ahead and click on <b>Browse</b> button to select the .csv file. 
+  </p>
+</div>
+<div class="modal fade" tabindex="-1" role="dialog" id="dataImportTourModal">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">
+          Welcome!
+        </h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>
+          First time using VisualNeuro? Let's see how to setup and import your data.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-dismiss="modal">No Thanks</button><button autofocus="autofocus" class="btn btn-primary" data-dismiss="modal" id="start">Start tour</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- GUIDED TOUR ANALYZE-->
+<div class="hidden" id="tour-pcp-info">
+  <p>Each vertical line represents one clinical attribute. Each horizontal line represents one subject.</p>
+  <p>Drag the handles to filter out subjects based on their clinical attributes.
+  The lines represent the subjects in your current group selection.</p>
+</div>
+<div class="hidden" id="tour-group-selection-info">
+  <p>
+  	You can work with two subject groups at the same time. Switch to group B and then filter out a different set of subjects.
+    </p>
+</div>
+<div class="hidden" id="tour-ttest-info">
+  <p>
+  	So far we have seen the average of each subject group's brain imaging data. Let's see which brain regions that are statistically different between the two groups.</p>
+  	<p>Select <b>Group t-Test</b>.</p>
+  	<p>The t-values passing the specified p-value is now shown in the brain imaging views. So, anywhere where you now see a value in the brain is statistically significantly different between the two groups.  
+    </p>
+</div>
+<div class="hidden" id="tour-param-to-brain-info">
+  <p>
+  	Now, let's see which regions in the brain that correlate with a clinical parameter.</p>
+  	<p><b>Click on a vertical line</b> to analyze the Spearman correlation between each voxel and the selected parameter.</p>
+  	<p>Only the correlations passing the specified p-value is shown in the brain imaging views. So, anywhere where you now see a value in the brain is statistically significantly correlated with the selected parameter.  
+    </p>
+  	<p><b>Click on the same vertical line</b> to deselect it.</p>
+</div>
+<div class="hidden" id="tour-brain-to-param-info">
+  <p>
+  	Interested in a specific brain region?</p>
+  	<p><b>Click on one or more regions</b> to select them. The selected regions will appear as blue in the brain imaging views and the cursor will be moved to the center of the last selected region.</p>
+  	<p><b>Click on Region analysis</b> to open a window where the correlation between the voxels in the selected regions and each clinical parameter is shown.</p>
+  	<p>Only the correlations passing the specified p-value is shown</p>
+</div>
+<div class="modal fade" tabindex="-1" role="dialog" id="analyzeTourModal">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">
+          You've made it!
+        </h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>
+          Over to the fun part. Let me show you how to quickly select subject groups.
+          VisualNeuro allows you to understand connections between clinical parameters and the brain imaging data in the following manner:
+          <h6>Within group comparison</h6>
+                <ul>
+  <li>Which regions in the brain correlate with a given clinical parameter</li>
+</ul>
+<h6>Between group comparison</h6>
+      <ul>
+  <li>Which brain regions differ between two groups (with statistical tests)</li>
+  <li>Correlation between an atlas brain region and each clinical parameter</li>
+</ul></p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-dismiss="modal">No Thanks</button><button autofocus="autofocus" class="btn btn-primary" data-dismiss="modal" id="start">Start tour</button>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+<script src="js/jquery.min.js"></script>
+<script type="text/javascript" src="js/tabulator.min.js"></script>
+<script src="js/popper.min.js"></script>
+<script src="js/bootstrap.min.js"></script>
+<script src="js/ion.rangeSlider.min.js"></script>
+<script language="JavaScript" src="scripts/inviwoSynchronization.js"></script>
+<script language="JavaScript" src="scripts/correlationsDialog.js"></script>
+<script language="JavaScript" src="scripts/brainRegionSelection.js"></script>
+<script type="text/javascript" src="scripts/guidedtour.js"></script>
+<script language="JavaScript">
+
+	// Recieve .csv-data from Inviwo and put it into localStorage
+function onInviwoDataChanged(data, port) {
+	//console.log(port.processor);
+	if ( port.processor==="CSVSource3" ) {
+		localStorage.setItem("atlasRegions", JSON.stringify(data));
+		setupBrainRegionTable();
+	} else {
+	  	localStorage.setItem("regionCorrelations", JSON.stringify(data));
+	}
+}
+
+function updateStartAnalyzingButton() {
+	if ($("#volumeFolderPath").siblings(".custom-file-label").hasClass("selected") &&
+		$("#clinicalParametersPath").siblings(".custom-file-label").hasClass("selected")) {
+		$("#toAnalysisStep").attr("disabled", false);
+	} else {
+		$("#toAnalysisStep").attr("disabled", true);
+	}
+}
+
+function updateSelectorPaths() {
+	// HACK: Ensure that input-selector paths have been processed (group filtering)
+
+	inviwo.setProperty('VolumeController.selectedfMRItype', {selectedIndex: Number(1)}); 
+	inviwo.setProperty('VolumeController.selectedfMRItype', {selectedIndex: Number(0)}); 
+	inviwo.setProperty('GroupController.activeGroup', {selectedIndex: Number(1)}); 
+	inviwo.getProperty('GroupController.activeGroup', function(prop) {
+		inviwo.setProperty('GroupController.activeGroup', {selectedIndex: Number(0)}); 
+		}); 
+	
+
+}
+
+function syncVolumeFolderPath(prop) { 
+	//console.log(prop.value);
+	inviwo.syncStringInput("volumeFolderPath", prop); 
+	var fileName = prop.value.split("\\").pop();
+	//console.log(fileName);
+	if (fileName === "") {
+		$("#volumeFolderPath").siblings(".custom-file-label").removeClass("selected");
+	} else {
+		$("#volumeFolderPath").siblings(".custom-file-label").addClass("selected").html(fileName);
+		updateSelectorPaths();
+	}
+	updateStartAnalyzingButton();
+	
+} 
+function syncClinicalParametersPath(prop) { 
+	//console.log(prop.value);
+	inviwo.syncStringInput("clinicalParametersPath", prop);  
+	var fileName = prop.value.split("\\").pop();
+	
+	if (fileName === "") {
+		$("#clinicalParametersPath").siblings(".custom-file-label").removeClass("selected");
+	} else {
+		$("#clinicalParametersPath").siblings(".custom-file-label").addClass("selected").html(fileName);
+		updateSelectorPaths()
+	}
+	updateStartAnalyzingButton();
+
+} 
+
+
+
+function syncEnableAtlas(prop) { inviwo.syncCheckbox("enableAtlas", prop); } 
+
+function syncPValueSlider(prop) { 
+	$("#pValueSlider").data("ionRangeSlider").update({ from: prop.value, min: prop.minValue, max: prop.maxValue });
+} 
+
+function syncDataThreshold(prop) { 	
+	// Prevent NaN in ion slider
+	prop.maxValue = Math.max(5e-200, prop.maxValue);
+	$("#dataThreshold").data("ionRangeSlider").update({ from: prop.value, min: prop.minValue, max: prop.maxValue}); 
+}
+function syncOpacity(prop) { 
+	$("#opacity").data("ionRangeSlider").update({ from: prop.value, min: prop.minValue, max: prop.maxValue });
+} 
+
+function syncSelectedColumnFilename(prop) {
+	if(!prop) { // no options
+		return;
+	}
+	var htmlId = "selectedColumnFilename";
+	var property = document.getElementById(htmlId);
+	var newOptions = prop["options"];
+	if (newOptions.length > 0) {
+		property.remove(0);
+	} else {
+		property.append(new Option("No .csv file loaded"));
+	}
+	inviwo.syncOption(htmlId, prop);
+	
+	var options = property.options;
+	for (var i in options) {
+		var option = options[i];
+		var optionElem = property.options.namedItem(option["id"]);
+		if (option["name"] == "filename" || option["name"] == 'filnamn' || option["name"] == 'Neuroimaging data' || option["name"] == 'id') {
+			optionElem.selected = true;
+		}
+	}
+}
+function syncSelectedColorAxis(prop) {
+	if(!prop) { // no options
+		return;
+	}
+	var htmlId = "selectedColumnSubjectStatus";
+	var property = document.getElementById(htmlId);
+	
+	var newOptions = prop["options"];
+	if (newOptions && newOptions.length > 0) {
+		property.remove(0);
+	} else {
+		property.append(new Option("No .csv file loaded"));
+	}
+	inviwo.syncOption(htmlId, prop);
+	
+	var options = property.options;
+	for (var i in options) {
+		var option = options[i];
+		var optionElem = property.options.namedItem(option["id"]);
+		if (option["name"] == "Diagnosis") {
+			optionElem.selected = true;
+		}
+	}
+	syncSelectedColorAxisDropdown(prop);
+}
+function syncSelectedColorAxisDropdown(prop) {
+	if(!prop) { // no options
+		return;
+	}
+	var htmlId = "selectedColumnSubjectStatusDropDown";
+	var property = document.getElementById(htmlId);
+	var newOptions = prop["options"];
+	if (newOptions.length > 0) {
+		property.childNodes[0].remove();
+	} else {
+		let a = document.createElement('A');
+		a.text = "No .csv file loaded";
+		property.appendChild(a);
+	}
+	function syncDropDown(htmlId, prop) {
+    	var property = document.getElementById(htmlId);
+        var newOptions = prop['options'];
+        let idx = 0;
+        for (let i in newOptions) {
+            let option = newOptions[i];
+            idx = i-2;
+            if (idx < 0) {
+            	continue;
+            }
+            
+            if (property.children.length <= idx) {
+            	let a = document.createElement('A');
+            	a.className = 'dropdown-item';
+                property.appendChild(a);
+                //console.log(idx);
+            }
+
+            var optionElem = property.children[idx];
+            optionElem.id = htmlId + option['id'];
+            optionElem.innerHTML = option['name'];
+            //console.log(optionElem.text);
+            optionElem.onclick = function() {
+				var selectedDisplayName = $(this).text();
+				//console.log(selectedDisplayName);
+			    inviwo.setProperty("ParallelCoordinates.colormap.selectedColorAxis", {selectedDisplayName: selectedDisplayName});
+			  }
+            //optionElem.value = option['value'];
+
+            //if (i == prop['selectedIndex']) {
+            //    optionElem.selected = true;
+            //}
+        }
+        // Remove leftover properties
+       for (i = idx+1; i < property.children.length; i++) {
+            property.children[i].remove();
+        }
+    }
+	syncDropDown(htmlId, prop);
+}
+
+function syncInputDataTFType(prop) {
+	inviwo.syncOption("selectDataType", prop);
+}
+function syncPCPLayout(prop) {
+	$("#parallelCoordinatesPanel").css("height", 100*prop.value + '%');
+	$("#spatialDataPanel").css("height", 100 - 100*prop.value + '%');
+}
+
+function selectedGroupChanged(selectedGroupIndex) {
+	if (Number(selectedGroupIndex) === 0) {
+		$("#resetFilteringA").show();
+		$("#resetFilteringB").hide();
+		$("#resetFilteringADropDown").show();
+		$("#resetFilteringBDropDown").hide();
+	} else {
+		$("#resetFilteringA").hide();
+		$("#resetFilteringB").show();
+		$("#resetFilteringADropDown").hide();
+		$("#resetFilteringBDropDown").show();
+	}
+}
+
+function parameterSelected(property) {
+	if (property.value) {
+		$("#activeVolume option[value=" + "2" + "]").show();
+	} else {
+		$("#activeVolume option[value=" + "2" + "]").hide();
+	}
+	
+}
+
+function updateActiveVolumeProgress(progress, forActiveVolumeIndex) {
+	if ($('#activeVolume').prop('selectedIndex') === forActiveVolumeIndex) {
+		let percentageProgress = Math.trunc(progress*100);
+		$('#volProgress').css("width", percentageProgress + "%")
+	      .attr("aria-valuenow", percentageProgress)
+	      .text(percentageProgress + "% Complete");
+	}
+}
+
+function updateActiveVolumeProgressVisibility(visible, forActiveVolumeIndex) {
+	if ($('#activeVolume').prop('selectedIndex') === forActiveVolumeIndex) {
+		if (visible) {	
+			$('#volProgressDiv').show();
+		} else  {
+			$('#volProgressDiv').hide();
+		}
+	}
+}
+function meanProgressChanged(progress) {
+	updateActiveVolumeProgress(progress, 0);
+}
+function tTestProgressChanged(progress) {
+	updateActiveVolumeProgress(progress, 1);
+}
+function paramRegionProgressChanged(progress) {
+	updateActiveVolumeProgress(progress, 2);
+}
+function meanProgressVisibleChanged(visible) {
+	updateActiveVolumeProgressVisibility(visible, 0);
+}
+function tTestProgressVisibleChanged(visible) {
+	updateActiveVolumeProgressVisibility(visible, 1);
+}
+function paramRegionProgressVisibleChanged(visible) {
+	updateActiveVolumeProgressVisibility(visible, 2);
+}
+function activeVolumeChanged(selectedIndex) {
+	if (selectedIndex === 0) {
+		$("#pValueContainer").hide();
+		$("#thresholdContainer").show();
+		$('#volProgressLabel').html("Computing group average: ");
+		$('#volInfo').html("Displaying average of the selected group");
+		inviwo.setProperty('ColorScaleLegend2.style.title', {value: ""});
+	} else if (selectedIndex === 1) {
+		$("#pValueContainer").show();
+		$("#thresholdContainer").show();
+		$('#volProgressLabel').html("Computing group t-test: ");
+		$('#volInfo').html("Displaying t-value between groups");
+		inviwo.setProperty('ColorScaleLegend2.style.title', {value: "t-value"});
+	} else if (selectedIndex === 2) {
+		$("#pValueContainer").show();
+		$("#thresholdContainer").show();
+		$('#volProgressLabel').html("Computing parameter correlation: ");
+		$('#volInfo').html("Displaying correlation between parameter and selected group");
+		inviwo.setProperty('ColorScaleLegend2.style.title', {value: "Correlation"});
+	}
+	inviwo.getProperty('GroupController.parameterSelected', parameterSelected); 
+}
+function syncActiveVolumeChanged(prop) {
+	inviwo.syncOption("activeVolume", prop);
+	activeVolumeChanged(prop.selectedIndex);
+}
+
+function coordinateChanged(prop) {
+	$("#coordinate").html(prop.value[0].toFixed(1) + ", " + prop.value[1].toFixed(1) + ", " + prop.value[2].toFixed(1));
+}
+function brainValueChanged(prop) {
+	$("#brainValue").html(prop.value[0].toFixed(2));
+}
+function broadmannRegionChanged(prop) {
+	$("#broadmann").html(prop.value);
+}
+function brainRegionChanged(prop) {
+	$("#brainRegionName").html(prop.value);
+}
+
+function setSliceBackgroundVolume(selectedIndex) {
+	inviwo.setProperty("VolumeInputSelector6.selectedPort", {selectedIndex: Number(selectedIndex)});
+}
+
+  $(document).ready(function() {
+  	var firstTimeUser = true;
+  	$('#TailTestOptions').hide();
+  	$('#volProgressDiv').hide();
+
+	$("#pValueSlider").ionRangeSlider({
+        type: "single",
+        min: 0,
+        max: 1,
+        from: 0.05,
+        step: 0.005,
+        grid: true
+    });
+	$("#dataThreshold").ionRangeSlider({
+        type: "single",
+        min: 0,
+        max: 1,
+        from: 0.5,
+        step: 0.01,
+        grid: true,
+		prettify: function (n) {
+			return n.toFixed(2);
+		}
+    });
+	$("#opacity").ionRangeSlider({
+        type: "single",
+        min: 0,
+        max: 1,
+        from: 0.5,
+        step: 0.01,
+        grid: true,
+		prettify: function (n) {
+			return n.toFixed(2);
+		}
+    });
+	$(".mr-auto .nav-link").on("click", function(){
+	   $(".mr-auto").find(".active").removeClass("active");
+	   $(this).addClass("active");
+	});
+	// Show and hide the file loader dialog.
+	$("#importDataMenuItem").on("click", function() {
+		$("#fileLoaderDialog").fadeIn();
+	});
+	$("#analyzeMenuItem").on("click", function() {
+		$("#fileLoaderDialog").fadeOut();
+	});
+	$("#toAnalysisStep").on("click", function() {
+		$("#analyzeMenuItemLink").click();
+	});
+	$("#analyzeMenuItemLink").on("click", function() {
+		if (firstTimeUser) {
+			startAnalyzeTour();
+		}
+	});
+
+	$("#T1Option").on("click", function(){
+	   setSliceBackgroundVolume(0);
+	});
+	$("#whiteMatterOption").on("click", function(){
+	   setSliceBackgroundVolume(1);
+	});
+	$("#greyMatterOption").on("click", function(){
+	   setSliceBackgroundVolume(2);
+	});
+
+
+
+	// Setup synchronization between web elements and Inviwo properties.
+	// Some of the synchronization setup functions creates additional hidden
+	// elements that are synchronized to Inviwo instead of the given element.
+	// Look in inviwoSynchronization.js too se where that happens.
+	inviwo.subscribe("ImageLayout8.horizontalSplitter", syncPCPLayout);
+	inviwo.setProperty('ImageLayout5.bounds.topMinMax', {start: parseInt($("#navbar").css("height"), 10), end: parseInt($("#navbar").css("height"), 10)});
+	
+
+    setupButtonSynchronization("cameraSide", "CameraPositionController.sideviewbutton");
+    setupButtonSynchronization("cameraFront", "CameraPositionController.frontviewbutton");
+    setupButtonSynchronization("cameraTop", "CameraPositionController.topviewbutton");
+
+    setupCheckboxSynchronization("enableAtlas", "VolumeAtlas.visualizeAtlas", syncEnableAtlas);
+
+    // Show group mean or T-test
+	document.getElementById("activeVolume").onchange = function() {
+		if (this.selectedIndex >= 0) { 
+			inviwo.setProperty('VolumeController.selectedfMRItype', {selectedIndex: Number(this.selectedIndex)}); 
+			activeVolumeChanged(this.selectedIndex);
+		}
+	}
+	inviwo.subscribe("VolumeController.selectedfMRItype", syncActiveVolumeChanged);
+
+	inviwo.getProperty('VolumeTTest.tailTest', function(prop) {
+		$("input[name='tailTest']:checked").selected = prop.selectedIndex;
+	}); 
+
+	setupSliderSynchronization("pValueSlider", "VolumeTTest.pVal", true, syncPValueSlider);
+
+	setupButtonSynchronization("resetFilteringA", "ParallelCoordinates.resetHandlePositions");
+	setupButtonSynchronization("resetFilteringB", "ParallelCoordinates2.resetHandlePositions");
+	setupButtonSynchronization("resetFilteringADropDown", "ParallelCoordinates.resetHandlePositions");
+	setupButtonSynchronization("resetFilteringBDropDown", "ParallelCoordinates2.resetHandlePositions");
+	inviwo.getProperty('GroupController.activeGroup', function(prop) {
+		selectedGroupChanged(prop.selectedIndex);
+
+	}); 
+	inviwo.subscribe('GroupController.parameterSelected', parameterSelected); 
+	
+
+	inviwo.subscribeProcessorProgress("GroupAMean", meanProgressChanged, meanProgressVisibleChanged);
+	inviwo.subscribeProcessorProgress("GroupBMean", meanProgressChanged, meanProgressVisibleChanged);
+	inviwo.subscribeProcessorProgress("VolumeTTest", tTestProgressChanged, tTestProgressVisibleChanged);
+	inviwo.subscribeProcessorProgress("ParameterRegionCorrelation", paramRegionProgressChanged, paramRegionProgressVisibleChanged);
+	inviwo.subscribeProcessorProgress("ParameterRegionCorrelationB", paramRegionProgressChanged, paramRegionProgressVisibleChanged);
+
+
+	setupSliderSynchronization("dataThreshold", "VolumeController.thresholdActiveTF", true, syncDataThreshold);
+	setupSliderSynchronization("opacity", "VolumeController.opacitySelectedTF", true, syncOpacity);
+	
+	inviwo.getProperty('Volume4DSequenceSource.folder', function(prop) {
+		let volumeFolderPath = prop.value;
+		inviwo.getProperty('CSVSource2.inputFile_', function(prop) {
+			if (volumeFolderPath === "" || prop.value === "") {
+				firstTimeUser = true;
+			  	startDataImportTour();
+			} else {
+				firstTimeUser = false;
+				$("#analyzeMenuItemLink").click();
+			}
+		});
+	});
+	// File setup
+	$("#volumeFolderPath").on("click", function() {
+		inviwo.setProperty('Volume4DSequenceSource.folder', {requestFile: ""}); 
+		// File property change will not fire since the cefwidget initiated requestFile
+		// Thus, update path manually
+		inviwo.getProperty('Volume4DSequenceSource.folder', syncVolumeFolderPath); 
+	});
+	$("#clinicalParametersPath").on("click", function() {
+		inviwo.setProperty('CSVSource2.inputFile_', {requestFile: ""}); 
+		// File property change will not fire since the cefwidget initiated requestFile
+		// Thus, update path manually
+		inviwo.getProperty('CSVSource2.inputFile_', syncClinicalParametersPath); 
+	});
+	 
+	setupTextfieldSynchronization("volumeFolderPath", "Volume4DSequenceSource.folder", syncVolumeFolderPath);
+	setupTextfieldSynchronization("clinicalParametersPath", "CSVSource2.inputFile_", syncClinicalParametersPath);
+	$("input[type='radio']").click(function(){
+		/*
+		var selectedCoordinateSpace = $("input[name='coordinateSpace']:checked").val();
+		if(selectedCoordinateSpace){
+			inviwo.setProperty('VolumeInputSelector2.selectedPort', {selectedDisplayName: selectedCoordinateSpace}); 
+		}
+		*/
+		var patientGroup = $("input[name='patientGroup']:checked").val();
+		if(patientGroup){
+			inviwo.setProperty('GroupController.activeGroup', {selectedIndex: Number(patientGroup)}); 
+			selectedGroupChanged(patientGroup);
+		}
+
+		var tailTest = $("input[name='tailTest']:checked").val();
+		if(tailTest){
+			inviwo.setProperty('VolumeTTest.tailTest', {selectedIndex: Number(tailTest)}); 
+		}
+	});
+	inviwo.subscribe("VolumeController.inputDataTFType", syncInputDataTFType);
+
+	// Slices
+
+	// Information 
+	inviwo.subscribe("VolumeAtlas.worldPosition", coordinateChanged);
+	inviwo.subscribe("Z6.sampleQuery.volumeSample", brainValueChanged);
+	inviwo.subscribe("VolumeAtlas2.lookedUpName", broadmannRegionChanged);
+	inviwo.subscribe("VolumeAtlas.lookedUpName", brainRegionChanged);
+
+    $("#selectDataType").change(function(){
+        var selectedIndex = $(this).children("option:selected").index();
+		inviwo.setProperty('VolumeController.inputDataTFType', {selectedIndex: Number(selectedIndex)}); 
+		if (selectedIndex == 0) { // Linear
+			inviwo.setProperty('Volume4DSequenceSource.mirrorRanges', {value: false}); 
+		} else {
+			inviwo.setProperty('Volume4DSequenceSource.mirrorRanges', {value: true}); 
+		}
+    });
+	
+	//setupSelectionSynchronization("selectedColumnFilename", "VolumeSequenceFilter2.filenameIdColumn", syncSelectedColumnFilename);
+	inviwo.subscribe("VolumeSequenceFilter2.filenameIdColumn", syncSelectedColumnFilename);
+	document.getElementById("selectedColumnFilename").onchange = function() {
+		var selectedIndex = $(this).children("option:selected").index();
+		inviwo.setProperty("VolumeSequenceFilter2.filenameIdColumn", {selectedIndex: Number(selectedIndex)});
+		updateSelectorPaths();
+	}
+	setupSelectionSynchronization("selectedColumnSubjectStatus", "ParallelCoordinates.colormap.selectedColorAxis", syncSelectedColorAxis);
+
+	setupBrainRegionTable();
+
+    $("#infoDiv").on("click", function() {
+    	if ($("#analyzeMenuItemLink").hasClass("active")) {
+    		startAnalyzeTour();
+    	} else {
+    		startDataImportTour();
+    	}
+      //window.open("info.html", "", "width=1400px,height=900px");
+    });
+
+    // Enable tooltips
+    $(function () {
+  		$('[data-toggle="tooltip"]').tooltip()
+	})
+
+  });
+
+</script>
+</html>

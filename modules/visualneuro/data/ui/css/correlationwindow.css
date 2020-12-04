@@ -1,0 +1,40 @@
+body {
+  overflow: auto;
+}
+
+
+
+[class*="col-"] {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+/*Theme the Tabulator element*/
+/* Even rows */
+#region-table .tabulator-tableHolder .tabulator-table .tabulator-row{
+    color:#fff;
+    background-color: #343a40;
+}
+
+/* Odd rows */
+#region-table .tabulator-tableHolder .tabulator-table .tabulator-row:nth-child(even) {
+    background-color: #23272b;
+}
+
+.tabulator.table-dark .tabulator-row:hover {
+    background-color: #abdde5!important;
+}
+
+.tabulator.table-dark .tabulator-row.tabulator-selected {
+    background-color: #3198ff!important;
+}
+
+
+.tabulator.table-dark  .tabulator-header .tabulator-col .tabulator-col-content {
+  padding: 8px;
+}
+
+
+
+
+

@@ -1,0 +1,11 @@
+*.h linguist-language=C++
+## mark shader files as GLSL
+*.frag linguist-language=GLSL
+*.geom linguist-language=GLSL
+*.vert linguist-language=GLSL
+
+
+data/** linguist-vendored
+
+## mark as binary
+*.inv binary

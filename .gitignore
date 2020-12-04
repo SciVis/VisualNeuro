@@ -1,0 +1,6 @@
+modules/visualneuro/data/atlases/MNI/colin27/average/*.nii
+modules/visualneuro/data/atlases/MNI/colin27/average/label_definitions.itksnap
+modules/visualneuro/data/atlases/MNI/colin27/average/README.txt
+modules/visualneuro/data/atlases/MNI/colin27/fuzzy/*.nii
+modules/visualneuro/data/atlases/MNI/colin27/fuzzy/README.txt
+
