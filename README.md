@@ -1,7 +1,7 @@
 # VisualNeuro
 <div>
 
-![](apps/visualneuro/docs/images/screenshot.jpg)
+![](apps/visualneuro/docs/images/screenshot.JPG)
 
 </div>
 
@@ -10,9 +10,9 @@ Start analyzing your data:
 1. Specify a folder where your brain imaging data are.
 2. Specify a comma separated values (csv) file containing clinical data. One row per subject. One column must contain the filename of corresponding subjects brain imaging data, e.g. subject_001.nii
 
-Project page and application binaries [visualneruro.com](http://visualneuro.com/)
+Project page and application binaries at [visualneruro.com](http://visualneuro.com/)
 
-[Demo video](http://visualneuro.com/UE372231/wp-content/uploads/2020/04/VisualNeuroDemo.mp4)
+[![Demo video](apps/visualneuro/docs/images/demo_video.JPG)](http://visualneuro.com/UE372231/wp-content/uploads/2020/04/VisualNeuroDemo.mp4)
 
 ## Setup
 - Follow the [Inviwo build instructions](https://inviwo.org/manual-gettingstarted-build.html)

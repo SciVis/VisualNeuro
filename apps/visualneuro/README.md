@@ -2,7 +2,7 @@
 
 <div>
 
-![](docs/images/screenshot.jpg)
+![](docs/images/screenshot.JPG)
 
 </div>
 
