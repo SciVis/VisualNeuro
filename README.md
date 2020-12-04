@@ -11,10 +11,13 @@ Start analyzing your data:
 2. Specify a comma separated values (csv) file containing clinical data. One row per subject. One column must contain the filename of corresponding subjects brain imaging data, e.g. subject_001.nii
 
 Project page and application binaries at [visualneruro.com](http://visualneuro.com/)
+<div>
 
 [![Demo video](apps/visualneuro/docs/images/demo_video.JPG)](http://visualneuro.com/UE372231/wp-content/uploads/2020/04/VisualNeuroDemo.mp4)
 
+</div>
 ## Setup
+Visual Neuro utilizes the [Inviwo visualization framework](https://inviwo.org/). You will first need to checkout the [Inviwo github repository]https://github.com/inviwo/inviwo].
 - Follow the [Inviwo build instructions](https://inviwo.org/manual-gettingstarted-build.html)
 
 ### In CMAKE
