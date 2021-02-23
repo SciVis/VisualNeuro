@@ -61,132 +61,16 @@ const ProcessorInfo DataFrameWebBrowserProcessor::getProcessorInfo() const {
 }
 
 DataFrameWebBrowserProcessor::DataFrameWebBrowserProcessor(InviwoApplication* app)
-    : Processor()
+    : WebBrowserProcessor(app)
     // Output from CEF is 8-bits per channel
-    , dataFramePort_("dataFrames")
-    , background_("background")
-    , outport_("webpage", DataVec4UInt8::get())
-    , fileName_("fileName", "HTML file", "")
-    , autoReloadFile_("autoReloadFile", "Auto Reload", true)
-    , url_("URL", "URL", "http://www.inviwo.org")
-    , reload_("reload", "Reload")
-    , runJS_("runJS", "Run JS")
-    , js_("js", "JavaScript", "", InvalidationLevel::Valid)
-    , sourceType_("sourceType", "Source",
-                  {{"localFile", "Local File", SourceType::LocalFile},
-                   {"webAddress", "Web Address", SourceType::WebAddress}})
-    , picking_(this, 1, [&](PickingEvent* p) { cefInteractionHandler_.handlePickingEvent(p); })
-    , cefToInviwoImageConverter_(picking_.getColor())
-    , renderHandler_{static_cast<RenderHandlerGL*>(
-          app->getModuleByType<WebBrowserModule>()->getBrowserClient()->GetRenderHandler().get())} {
-    dataFramePort_.setOptional(true);
+    , dataFramePort_("dataFrames") {
     addPort(dataFramePort_);
-    addPort(background_);
-    background_.setOptional(true);
-    addPort(outport_);
-
-    addProperty(sourceType_);
-    addProperty(fileName_);
-    addProperty(autoReloadFile_);
-    addProperty(url_);
-    url_.setVisible(false);
-    addProperty(reload_);
-
-    addProperty(runJS_);
-    addProperty(js_);
-
-    auto updateVisibility = [this]() {
-        fileName_.setVisible(sourceType_ == SourceType::LocalFile);
-        autoReloadFile_.setVisible(sourceType_ == SourceType::LocalFile);
-        url_.setVisible(sourceType_ == SourceType::WebAddress);
-    };
-    updateVisibility();
-
-    auto reload = [this]() { browser_->GetMainFrame()->LoadURL(getSource()); };
-
-    sourceType_.onChange([reload, updateVisibility]() {
-        updateVisibility();
-        reload();
-    });
-    fileName_.onChange([this, reload]() {
-        if (autoReloadFile_) {
-            fileObserver_.setFilename(fileName_);
-        }
-        reload();
-    });
-    autoReloadFile_.onChange([this]() {
-        if (autoReloadFile_) {
-            fileObserver_.setFilename(fileName_);
-        } else {
-            fileObserver_.stop();
-        }
-    });
-    url_.onChange(reload);
-    reload_.onChange(reload);
-
-    fileObserver_.onChange([this, reload]() {
-        if (sourceType_ == SourceType::LocalFile) {
-            reload();
-        }
-    });
-
-    // Setup CEF browser
-    auto [windowInfo, browserSettings] = cefutil::getDefaultBrowserSettings();
-    auto browserClient = app->getModuleByType<WebBrowserModule>()->getBrowserClient();
-    // Note that browserClient_ outlives this class so make sure to remove
-    // renderHandler_ in
-    // destructor
-    browser_ = CefBrowserHost::CreateBrowserSync(windowInfo, browserClient, getSource(),
-                                                 browserSettings, nullptr, nullptr);
-    browserClient->setBrowserParent(browser_, this);
-    // Observe when page has loaded
-    browserClient->addLoadHandler(this);
-    // Do not process until frame is loaded
-    isReady_.setUpdate([this]() { return allInportsAreReady() && !isBrowserLoading_; });
-    // Inject events into CEF browser_
-    cefInteractionHandler_.setHost(browser_->GetHost());
-    cefInteractionHandler_.setRenderHandler(renderHandler_);
-    addInteractionHandler(&cefInteractionHandler_);
-}
-
-std::string DataFrameWebBrowserProcessor::getSource() {
-    std::string sourceString;
-    if (sourceType_.get() == SourceType::LocalFile) {
-        sourceString = "file://" + fileName_.get();
-    } else if (sourceType_.get() == SourceType::WebAddress) {
-        sourceString = url_.get();
-    }
-#ifndef NDEBUG
-    // CEF does not allow empty urls in debug mode
-    if (sourceString.empty()) {
-        sourceString = "https://www.inviwo.org";
-    }
-#endif
-    return sourceString;
-}
-
-DataFrameWebBrowserProcessor::~DataFrameWebBrowserProcessor() {
-    static_cast<WebBrowserClient*>(browser_->GetHost()->GetClient().get())->removeLoadHandler(this);
-    // Force close browser
-    browser_->GetHost()->CloseBrowser(true);
-}
-
-void DataFrameWebBrowserProcessor::deserialize(Deserializer& d) {
-    Processor::deserialize(d);
-    // Must reload page to connect property with Frame, see PropertyCefSynchronizer::OnLoadEnd
-    browser_->GetMainFrame()->LoadURL(getSource());
-}
-
-void DataFrameWebBrowserProcessor::OnLoadingStateChange(CefRefPtr<CefBrowser> browser,
-                                                        bool isLoading, bool /*canGoBack*/,
-                                                        bool /*canGoForward*/) {
-    if (browser_ && browser->GetIdentifier() == browser_->GetIdentifier()) {
-        isBrowserLoading_ = isLoading;
-        isReady_.update();
-    }
 }
 
 void DataFrameWebBrowserProcessor::process() {
+    if (isLoading_) {
+        return;
+    }
     if (js_.isModified() && !js_.get().empty()) {
         browser_->GetMainFrame()->ExecuteJavaScript(js_.get(), "", 1);
     }

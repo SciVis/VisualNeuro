@@ -38,28 +38,11 @@
 
 #include <inviwo/dataframe/datastructures/dataframe.h>
 
-#include <inviwo/core/common/inviwo.h>
-#include <inviwo/core/interaction/pickingmapper.h>
-#include <inviwo/core/processors/processor.h>
-#include <inviwo/core/properties/fileproperty.h>
-#include <inviwo/core/properties/buttonproperty.h>
-#include <inviwo/core/properties/compositeproperty.h>
-#include <inviwo/core/properties/optionproperty.h>
-#include <inviwo/core/properties/ordinalproperty.h>
-#include <inviwo/core/properties/boolproperty.h>
-#include <inviwo/core/properties/stringproperty.h>
-#include <inviwo/core/ports/imageport.h>
-#include <inviwo/core/util/singlefileobserver.h>
-
-#include <warn/push>
-#include <warn/ignore/all>
-#include <include/cef_base.h>
-#include <include/cef_load_handler.h>
-#include <warn/pop>
+#include <modules/webbrowser/processors/webbrowserprocessor.h>
 
 namespace inviwo {
 
-/** \docpage{org.inviwo.WebBrowser, Chromium Processor}
+/** \docpage{org.inviwo.DataFrameWebBrowserProcessor, Chromium Processor}
  * ![](org.inviwo.DataFrameWebBrowser.png?classIdentifier=org.inviwo.DataFrameWebBrowser)
  * Display webpage, including transparency, on top of optional background and enable synchronization
  * of properties.
@@ -106,50 +89,18 @@ namespace inviwo {
 #include <warn/push>
 #include <warn/ignore/dll-interface-base>  // Fine if dependent libs use the same CEF lib binaries
 #include <warn/ignore/extra-semi>  // Due to IMPLEMENT_REFCOUNTING, remove when upgrading CEF
-class IVW_MODULE_VISUALNEURO_API DataFrameWebBrowserProcessor : public Processor, public CefLoadHandler {
+class IVW_MODULE_VISUALNEURO_API DataFrameWebBrowserProcessor : public WebBrowserProcessor {
 public:
     DataFrameWebBrowserProcessor(InviwoApplication* app);
-    virtual ~DataFrameWebBrowserProcessor();
+    virtual ~DataFrameWebBrowserProcessor() = default;
 
     virtual void process() override;
 
     virtual const ProcessorInfo getProcessorInfo() const override;
     static const ProcessorInfo processorInfo_;
 
-    void deserialize(Deserializer& d) override;
-
-    // Detect when page has loaded
-    virtual void OnLoadingStateChange(CefRefPtr<CefBrowser> browser, bool isLoading, bool canGoBack,
-                                      bool canGoForward) override;
-
     DataFrameMultiInport dataFramePort_;
-    ImageInport background_;
-    ImageOutport outport_;
-
-    FileProperty fileName_;
-    BoolProperty autoReloadFile_;
-    StringProperty url_;     ///< Web page to show
-    ButtonProperty reload_;  ///< Force reload url
-
-    ButtonProperty runJS_;
-    StringProperty js_;
-
 protected:
-    std::string getSource();
-
-    enum class SourceType { LocalFile, WebAddress };
-
-    TemplateOptionProperty<SourceType> sourceType_;
-
-    CEFInteractionHandler cefInteractionHandler_;
-    PickingMapper picking_;
-    CefImageConverter cefToInviwoImageConverter_;
-    // create browser-window
-    CefRefPtr<RenderHandlerGL> renderHandler_;
-    CefRefPtr<CefBrowser> browser_;
-    bool isBrowserLoading_ = true;
-
-    SingleFileObserver fileObserver_;
 
     IMPLEMENT_REFCOUNTING(DataFrameWebBrowserProcessor);
 };

@@ -53,7 +53,7 @@ const ProcessorInfo BrainRayCaster::getProcessorInfo() const { return processorI
 
 BrainRayCaster::BrainRayCaster()
     : PoolProcessor()
-    , shader_("brainraycaster.frag", false)
+    , shader_("brainraycaster.frag", Shader::Build::No)
     , volumePort_("volume")
     , activityPort_("activity")
     , entryPort_("entry")
