@@ -64,7 +64,9 @@ VolumeAtlasProcessor::VolumeAtlasProcessor()
     , hoverColor_("color", "Hover Color", vec4(0, 1.f, 0, 1.f))
     , selectedColor_("selectedColor", "Selected Color", vec4(0, 123.f/255.f, 1.f, 1.f))
     , isotfComposite_("isotfComposite", "TF & Isovalues")
-    , worldPosition_("worldPosition", "World Position") {
+    , worldPosition_("worldPosition", "World Position", vec3(std::numeric_limits<float>::max()), std::pair{-vec3(std::numeric_limits<float>::max()),
+                                                                     ConstraintBehavior::Immutable}, std::pair{vec3(std::numeric_limits<float>::max()),
+                                                                     ConstraintBehavior::Immutable} ) {
 
     addPort(atlasVolume_);
     addPort(atlasLabels_);
