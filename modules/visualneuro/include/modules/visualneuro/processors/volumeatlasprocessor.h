@@ -54,29 +54,6 @@ namespace inviwo {
  * The input volume is forwarded to the outport. A transfer function property is modified to
  * create a peak at the selected index, only showing the voxels with that same index.
  *
- * ### Inports
- *   * __volume__ A volume with indexed voxels.
- *   * __atlas__ A dataframe with labels to the voxel indexes.
- *
- * ### Outports
- *   * __outport__ The same volume as was sent to inport.
- *
- * ### Properties
- *   * __Result__ The label from the atlas lookup.
- *   * __Coordinates__ 3D coordinates of the current lookup.
- *   * __Visualize Atlas__ Werther or not to show the atlas.
- *   * __Opacity__ The opacity of the calculated transfer function.
- *   * __Color__ Color of the calculated transfer function.
- *   * __TF & Isovalues__ A transfer function that shows only the voxels with the picked index.
- *   * __World Position__ 3D coordinates of the current lookup in world position (Read only).
- */
-
-/** \docpage{org.inviwo.VolumeAtlas, Volume Atlas}
- * ![](org.inviwo.VolumeAtlas.png?classIdentifier=org.inviwo.VolumeAtlas)
- * Combines an indexed voxels and a dataframe with labels for each index.
- * The input volume is forwarded to the outport. A transfer function property is modified to
- * create a peak at the selected index, only showing the voxels with that same index.
- *
  *
  * ### Inports
  *   * __atlasVolume__ A volume with indexed voxels.
@@ -96,10 +73,9 @@ namespace inviwo {
  *   * __Selected Color__ Label color when selected.
  *   * __TF & Isovalues__ A transfer function that shows only the voxels with the picked index.
  *   * __World Position__ 3D coordinates of the current lookup in world position (Read only).
- *   * __Select all regions__ Describe property.
- *   * __Deselect all regions__ Describe property.
- *   * __Selected Volume Regions__ Describe property.
- *   * __Iso Values__ Describe property.
+ *   * __Select all regions__ Selects all labels.
+ *   * __Deselect all regions__ Deselects all labels.
+ *   * __Selected Volume Regions__ List of selected labels.
  *   * __Transfer Function__ Describe property.
  *
  */

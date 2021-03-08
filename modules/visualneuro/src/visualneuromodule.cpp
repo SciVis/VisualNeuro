@@ -42,7 +42,7 @@
 #include <modules/visualneuro/processors/volumeatlascenterpositions.h>
 #include <modules/visualneuro/processors/volumettest.h>
 #include <modules/visualneuro/processors/volumevariancemean.h>
-#include <modules/visualneuro/processors/volumeatlas.h>
+#include <modules/visualneuro/processors/volumeatlasprocessor.h>
 #include <modules/visualneuro/processors/parametervolumesequencecorrelation.h>
 #include <modules/visualneuro/processors/camerapositioncontroller.h>
 #include <modules/visualneuro/processors/fmritransferfunctioncontroller.h>

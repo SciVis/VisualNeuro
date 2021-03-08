@@ -24,7 +24,7 @@ set(HEADER_FILES
     include/modules/visualneuro/processors/parametervolumesequencecorrelation.h
     include/modules/visualneuro/processors/volume4dsequenceslicefilter.h
     include/modules/visualneuro/processors/volume4dsequencesource.h
-    include/modules/visualneuro/processors/volumeatlas.h
+    include/modules/visualneuro/processors/volumeatlasprocessor.h
     include/modules/visualneuro/processors/volumeatlascenterpositions.h
     include/modules/visualneuro/processors/volumeregionparametercorrelation.h
     include/modules/visualneuro/processors/volumesequencefilter.h
@@ -58,7 +58,7 @@ set(SOURCE_FILES
     src/processors/parametervolumesequencecorrelation.cpp
     src/processors/volume4dsequenceslicefilter.cpp
     src/processors/volume4dsequencesource.cpp
-    src/processors/volumeatlas.cpp
+    src/processors/volumeatlasprocessor.cpp
     src/processors/volumeatlascenterpositions.cpp
     src/processors/volumeregionparametercorrelation.cpp
     src/processors/volumesequencefilter.cpp

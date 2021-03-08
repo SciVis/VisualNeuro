@@ -30,33 +30,46 @@
 
 #include <modules/visualneuro/visualneuromoduledefine.h>
 
+#include <inviwo/core/util/glm.h>
+#include <inviwo/core/util/stringconversion.h>
+
+#include <string>
+#include <optional>
+
 namespace inviwo {
 
 /**
- * \brief VERY_BRIEFLY_DESCRIBE_THE_CLASS
- * DESCRIBE_THE_CLASS_FROM_A_DEVELOPER_PERSPECTIVE
+ * \brief Labels for each position in a volume
+ *
  */
-struct IVW_MODULE_VISUALNEURO_API VolumeAtlas {
+class IVW_MODULE_VISUALNEURO_API VolumeAtlas {
+public:
+    struct Label {
+        std::string name;
+        std::optional<glm::vec4> color;
+        bool operator==(std::string label) { return name == label; }
+    };
     VolumeAtlas(std::shared_ptr<const Volume> atlas, std::shared_ptr<const DataFrame> labels)
-        : atlas_(atlas), labels_(labels) {
+        : atlas_(atlas) {
         std::shared_ptr<const Column> idCol;
         std::shared_ptr<const Column> labelCol;
+        std::shared_ptr<const Column> colorCol;
         for (auto col : *labels) {
-            if (col->getHeader() == "Index") {
+            if (iCaseCmp(col->getHeader(), "Index")) {
                 idCol = col;
-            } else if (col->getHeader() == "Region") {
+            } else if (iCaseCmp(col->getHeader(), "Region")) {
                 labelCol = col;
+            } else if (iCaseCmp(col->getHeader(), "Color")) {
+                colorCol = col;
             }
         }
         if (!idCol) {
-            auto headers = labels->getHeaders();
             idCol = *std::find_if(++labels->begin(), labels->end(), [](auto r) {
                 auto type = r->getBuffer()->getDataFormat()->getNumericType();
                 return type == NumericType::UnsignedInteger || type == NumericType::SignedInteger;
             });
         }
         if (!labelCol) {
-            auto headers = labels->getHeaders();
             labelCol = *std::find_if(++labels->begin(), labels->end(), [](auto r) {
                 return dynamic_cast<const CategoricalColumn*>(r.get());
             });
@@ -68,11 +81,19 @@ struct IVW_MODULE_VISUALNEURO_API VolumeAtlas {
         }
         if (!labelCol) {
             for (auto i = 0u; i < idCol->getSize(); ++i) {
-                idToName_[static_cast<int>(idCol->getAsDouble(i))] = "";
+                labels_[static_cast<int>(idCol->getAsDouble(i))] = Label{};
             }
         } else {
             for (auto i = 0u; i < idCol->getSize(); ++i) {
-                idToName_[static_cast<int>(idCol->getAsDouble(i))] = labelCol->getAsString(i);
+                std::string colorString = colorCol ? colorCol->getAsString(i) : "";
+                std::stringstream ss(colorString);
+                vec4 c{};
+                for (auto elem = 0; elem < 4; elem++) {
+                    ss >> c[elem];
+                }
+                labels_[static_cast<int>(idCol->getAsDouble(i))] =
+                    Label{labelCol->getAsString(i),
+                          ss.fail() ? std::nullopt : std::optional<glm::vec4>(c)};
             }
         }
     }
@@ -87,9 +108,9 @@ struct IVW_MODULE_VISUALNEURO_API VolumeAtlas {
         }
     }
     int getLabelId(std::string label) const {
-        auto elemIt = std::find_if(idToName_.begin(), idToName_.end(),
+        auto elemIt = std::find_if(labels_.begin(), labels_.end(),
                                    [label](auto elem) { return elem.second == label; });
-        if (elemIt == idToName_.end()) {
+        if (elemIt == labels_.end()) {
             return -1;
         } else {
             return elemIt->first;
@@ -105,19 +126,40 @@ struct IVW_MODULE_VISUALNEURO_API VolumeAtlas {
         return atlas_->dataMap_.mapFromValueToNormalized(static_cast<double>(labelId));
     }
 
-    std::string getLabel(int id) const {
-        auto elemIt = idToName_.find(id);
-        if (elemIt == idToName_.end()) {
-            return "";
+    std::optional<Label> getLabel(int id) const {
+        auto elemIt = labels_.find(id);
+        if (elemIt == labels_.end()) {
+            return std::nullopt;
         } else {
             return elemIt->second;
         }
     }
 
+    std::string getLabelName(int id) const {
+        auto elemIt = labels_.find(id);
+        if (elemIt == labels_.end()) {
+            return "";
+        } else {
+            return elemIt->second.name;
+        }
+    }
+    std::optional<vec4> getLabelColor(int id) const {
+        auto elemIt = labels_.find(id);
+        if (elemIt == labels_.end()) {
+            return std::nullopt;
+        } else {
+            return elemIt->second.color;
+        }
+    }
+
+    bool hasColors() const {
+        return std::any_of(labels_.cbegin(), labels_.cend(),
+                           [](const auto l) { return l.second.color != std::nullopt; });
+    }
+
 private:
     std::shared_ptr<const Volume> atlas_;
-    std::shared_ptr<const DataFrame> labels_;
-    std::map<int, std::string> idToName_;
-};  
+    std::map<int, Label> labels_;
+};
 
 }  // namespace inviwo

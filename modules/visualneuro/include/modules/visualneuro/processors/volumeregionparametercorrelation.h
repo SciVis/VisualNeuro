@@ -52,25 +52,6 @@ namespace inviwo {
 
 /** \docpage{org.inviwo.VolumeRegionParameterCorrelation, Volume Region Parameter Correlation}
  * ![](org.inviwo.VolumeRegionParameterCorrelation.png?classIdentifier=org.inviwo.VolumeRegionParameterCorrelation)
- * Computes correlation between selected regions and all parameters in input DataFrame.
- *
- * ### Inports
- *   * __<Inport1>__ <description>.
- *
- * ### Outports
- *   * __<Outport1>__ <description>.
- *
- * ### Properties
- *   * __<Prop1>__ <description>.
- *   * __<Prop2>__ <description>
- */
-
-/**
- * \brief VERY_BRIEFLY_DESCRIBE_THE_PROCESSOR
- * DESCRIBE_THE_PROCESSOR_FROM_A_DEVELOPER_PERSPECTIVE
- */
-/** \docpage{org.inviwo.VolumeRegionParameterCorrelation, Volume Region Parameter Correlation}
- * ![](org.inviwo.VolumeRegionParameterCorrelation.png?classIdentifier=org.inviwo.VolumeRegionParameterCorrelation)
  *
  * Computes correlation between selected regions and all parameters in input DataFrame.
  *
@@ -91,7 +72,6 @@ namespace inviwo {
  *   * __Tail Test__ Two-tailed, right one-tailed, left one-tailed.
  *
  */
-
 class IVW_MODULE_VISUALNEURO_API VolumeRegionParameterCorrelation : public PoolProcessor {
 public:
     VolumeRegionParameterCorrelation();

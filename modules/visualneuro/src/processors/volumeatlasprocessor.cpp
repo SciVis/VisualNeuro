@@ -27,7 +27,7 @@
  *
  *********************************************************************************/
 
-#include <modules/visualneuro/processors/volumeatlas.h>
+#include <modules/visualneuro/processors/volumeatlasprocessor.h>
 #include <modules/opengl/openglutils.h>
 #include <modules/opengl/texture/textureutils.h>
 
@@ -169,7 +169,8 @@ void VolumeAtlasProcessor::updateTransferFunction() {
         if (brushingAndLinking_.isConnected()) {
             auto selectedIndicies = brushingAndLinking_.getSelectedIndices();
             for (auto selectedIndex : selectedIndicies) {
-                addSelectedIndex(static_cast<int>(selectedIndex), *selectedColor_);
+                auto c = atlas_->getLabelColor(selectedIndex);
+                addSelectedIndex(static_cast<int>(selectedIndex), c ? c.value() : *selectedColor_);
             }
         }
     } else {  // hide the visualization through the transfer function if necessary
@@ -193,6 +194,7 @@ void VolumeAtlasProcessor::process() {
     auto atlasLabels = atlasLabels_.getData();
     if (atlasVolume_.isChanged() || atlasLabels_.isChanged()) {
         atlas_ = std::make_unique<VolumeAtlas>(atlasVolume, atlasLabels);
+        selectedColor_.setVisible(!atlas_->hasColors());
     }
     if (brushingDirty_) updateBrushing();
 
@@ -204,7 +206,7 @@ void VolumeAtlasProcessor::process() {
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     hoverAtlasId_ = atlas_->getLabelId(worldPosition_.get());
-    auto area = atlas_->getLabel(hoverAtlasId_);
+    auto area = atlas_->getLabelName(hoverAtlasId_);
 
     lookedUpName_.set(area);
 
