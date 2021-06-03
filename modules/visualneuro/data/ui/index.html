@@ -249,16 +249,6 @@ var inviwo = new InviwoAPI();
 								<select id="activeVolume" class="form-control form-control-sm"/></select>
 							</div>
 						</div>
-						<div class="form-group row" id="TailTestOptions">
-							<div class="col">
-								<label for="activeVolume" class="form-control-sm text-left">Tail test</label>
-								<div class="form-check form-check-inline form-control-sm">
-									<label class="form-check-label" for="tailTestTwoSided"><input class="form-check-input" type="radio" name="tailTest" id="tailTestTwoSided" value="0" checked/>Two-sided</label>
-									<label class="form-check-label" for="tailTestLeft"><input class="form-check-input" type="radio" name="tailTest" id="tailTestLeft" value="2"/>Left</label>
-									<label class="form-check-label" for="tailTestRight"><input class="form-check-input" type="radio" name="tailTest" id="tailTestRight" value="1"/>Right</label>
-								</div>
-							</div>
-						</div>
 					<div class="row align-items-center pt-3" id="pValueContainer">
 						<div class="col-3">
 							<label for="pValueSlider" class="text-left form-control-sm">p-Value</label>
@@ -267,7 +257,25 @@ var inviwo = new InviwoAPI();
 							<input type="text" id="pValueSlider" class="js-range-slider" name="pValueSlider" value="" />
 						</div>						
 					</div>
+					<div class="row align-items-center" id="TailTestOptions">
+						<div class="col">
+							<label for="activeVolume" class="form-control-sm text-left">Tail test</label>
+							<div class="form-check form-check-inline form-control-sm">
+								<label class="form-check-label" for="tailTestTwoSided"><input class="form-check-input" type="radio" name="tailTest" id="tailTestTwoSided" value="0" checked/>Both</label>
+								<label class="form-check-label" for="tailTestRight"><input class="form-check-input" type="radio" name="tailTest" id="tailTestRight" value="1"/>A > B</label>
+								<label class="form-check-label" for="tailTestLeft"><input class="form-check-input" type="radio" name="tailTest" id="tailTestLeft" value="2"/>A < B</label>
 
+							</div>
+						</div>
+					</div>
+					<div class="row align-items-center" id="EqualVariance">
+						<div class="col">
+							<label for="equalVariance" class="form-control-sm text-left">Assume equal variance</label>
+							<div class="form-check form-check-inline">
+									<input class="form-check-input" type="checkbox" id="equalVariance"/>
+							</div>
+						</div>
+					</div>
 				</div>
 			</div>
 			<div class="card bg-dark text-white mt-2">
@@ -541,6 +549,8 @@ function syncClinicalParametersPath(prop) {
 
 function syncEnableAtlas(prop) { inviwo.syncCheckbox("enableAtlas", prop); } 
 
+function syncEqualVariance(prop) { inviwo.syncCheckbox("equalVariance", prop); }
+
 function syncPValueSlider(prop) { 
 	$("#pValueSlider").data("ionRangeSlider").update({ from: prop.value, min: prop.minValue, max: prop.maxValue });
 } 
@@ -727,18 +737,24 @@ function paramRegionProgressVisibleChanged(visible) {
 function activeVolumeChanged(selectedIndex) {
 	if (selectedIndex === 0) {
 		$("#pValueContainer").hide();
+		$('#TailTestOptions').hide();
+		$("#EqualVariance").hide();
 		$("#thresholdContainer").show();
 		$('#volProgressLabel').html("Computing group average: ");
 		$('#volInfo').html("Displaying average of the selected group");
 		inviwo.setProperty('ColorScaleLegend2.style.title', {value: ""});
 	} else if (selectedIndex === 1) {
 		$("#pValueContainer").show();
+		$('#TailTestOptions').show();
+		$("#EqualVariance").show();
 		$("#thresholdContainer").show();
 		$('#volProgressLabel').html("Computing group t-test: ");
 		$('#volInfo').html("Displaying t-value between groups");
 		inviwo.setProperty('ColorScaleLegend2.style.title', {value: "t-value"});
 	} else if (selectedIndex === 2) {
 		$("#pValueContainer").show();
+		$('#TailTestOptions').hide();
+		$("#EqualVariance").hide();
 		$("#thresholdContainer").show();
 		$('#volProgressLabel').html("Computing parameter correlation: ");
 		$('#volInfo').html("Displaying correlation between parameter and selected group");
@@ -770,7 +786,7 @@ function setSliceBackgroundVolume(selectedIndex) {
 
   $(document).ready(function() {
   	var firstTimeUser = true;
-  	$('#TailTestOptions').hide();
+  	//$('#EqualVariance').hide();
   	$('#volProgressDiv').hide();
 
 	$("#pValueSlider").ionRangeSlider({
@@ -858,11 +874,11 @@ function setSliceBackgroundVolume(selectedIndex) {
 	}
 	inviwo.subscribe("VolumeController.selectedfMRItype", syncActiveVolumeChanged);
 
+	setupSliderSynchronization("pValueSlider", "VolumeTTest.pVal", true, syncPValueSlider);
 	inviwo.getProperty('VolumeTTest.tailTest', function(prop) {
 		$("input[name='tailTest']:checked").selected = prop.selectedIndex;
 	}); 
-
-	setupSliderSynchronization("pValueSlider", "VolumeTTest.pVal", true, syncPValueSlider);
+	setupCheckboxSynchronization("equalVariance", "VolumeTTest.equalVarince", syncEqualVariance);
 
 	setupButtonSynchronization("resetFilteringA", "ParallelCoordinates.resetHandlePositions");
 	setupButtonSynchronization("resetFilteringB", "ParallelCoordinates2.resetHandlePositions");

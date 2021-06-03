@@ -60,23 +60,25 @@ VolumeTTest::VolumeTTest()
     , outport_("outport")
     , pVal_("pVal", "P-Value", 0.05f, 0.0f, 0.5f, 0.05f)
     , tailTest_("tailTest", "Tail Test",
-                {{"twoTailedTest", "Two-tailed test", stats::TailTest::TwoTailed},
-                 {"rightOneTailedTest", "Right one-tailed test", stats::TailTest::RightOneTailed},
-                 {"leftOneTailedTest", "Left one-tailed test", stats::TailTest::LeftOneTailed}},
-                0) {
+                {{"twoTailedTest", "Both", stats::TailTest::Both},
+                 {"rightOneTailedTest", "Greater than", stats::TailTest::Greater},
+                 {"leftOneTailedTest", "Less than", stats::TailTest::Less}},
+                0)
+    , equalVariance_("equalVarince", "Assume equal variance", false) {
 
     addPort(volumeSequenceInport1_);
     addPort(volumeSequenceInport2_);
     addPort(outport_);
 
-    addProperty(pVal_);
-    addProperty(tailTest_);
+    addProperties(pVal_, tailTest_, equalVariance_);
 }
 
 void VolumeTTest::process() {
 
     const auto calc = [volumesA = volumeSequenceInport1_.getData(),
                        volumesB = volumeSequenceInport2_.getData(), tailTest = tailTest_.get(),
+                       equalVariance = equalVariance_.get() ? stats::EqualVariance::Yes
+                                                            : stats::EqualVariance::No,
                        p_val = pVal_.get()](pool::Stop stop,
                                             pool::Progress progress) -> std::shared_ptr<Volume> {
         auto calculateScores = [](const std::vector<const VolumeRAM*>& volumes, int vxlNmbr) {
@@ -121,9 +123,7 @@ void VolumeTTest::process() {
             std::vector<double> groupA = calculateScores(volRamA, vxlNmbr);
             std::vector<double> groupB = calculateScores(volRamB, vxlNmbr);
 
-            auto t = stats::tTest(groupA, groupB);
-
-            double p = stats::tailTest(t, volumesA->size() + volumesB->size(), tailTest);
+            auto [t, p] = stats::tTest(groupA, groupB, equalVariance, tailTest);
 
             // Check if p-value is statistically significant
             // The sign indicate if directedness of the t-Test, e.g. A is greater than B.

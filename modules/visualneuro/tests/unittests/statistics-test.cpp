@@ -82,14 +82,14 @@ TEST(pearsonCorrelation, correlationIsCorrectReverse) {
 
 TEST(tTest, tTestIsCorrect) {
 
-    double t = stats::tTest(A, B);
+    auto [t, p] = stats::tTest(A, B);
 
     EXPECT_NEAR(t, correctT, maximumError) << "T-test is not correct.";
 }
 
 TEST(tTest, tTestIsCorrectReverse) {
 
-    double t = stats::tTest(B, A);
+    auto [t, p] = stats::tTest(B, A); 
 
     EXPECT_NEAR(t, -correctT, maximumError) << "T-test (reversed) is not correct.";
 }
