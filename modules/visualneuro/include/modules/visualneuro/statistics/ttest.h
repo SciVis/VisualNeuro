@@ -36,7 +36,9 @@ namespace inviwo {
 
 namespace stats {
 
-enum class IVW_MODULE_VISUALNEURO_API TailTest { TwoTailed, RightOneTailed, LeftOneTailed };
+enum class IVW_MODULE_VISUALNEURO_API TailTest { Both, Greater, Less };
+
+enum class IVW_MODULE_VISUALNEURO_API EqualVariance : bool { Yes = true, No = false };
 
 // Calculate the variance for vector v when vector mean is not previously known
 template <typename T>
@@ -53,22 +55,100 @@ double calculateVariance(const std::vector<T>& v, const double mean) {
     return std::inner_product(diff.begin(), diff.end(), diff.begin(), 0.0) / (v.size() - 1);
 }
 
-// Calculate the t-test between vector A and B
+/*
+ * \brief Test if two independent samples have equal means.
+ * Calculates the t-test between vectors A and B and its probability to
+ * be this value by chance.
+ * Uses Student't t-test if EqualVariance = Yes, and otherwise Welch's t-test. Small probability
+ * values indicate that the two vectors have equal means.
+ * @param A independent samples from a population.
+ * @param B independent samples from a population.
+ * @param equalVariance Yes if the samples are assumed to have the same variance, No otherwise.
+ * @param tailTest Both: Mean of A is same as mean of B. Greater: Mean of A is greater than mean of B. Less: Mean of
+ * A is less than mean of B.
+ * @return the significance 't' and the probability 'p-value'
+ */
 template <typename T>
-double tTest(const std::vector<T>& A, const std::vector<T>& B) {
+std::tuple<double, double> tTest(const std::vector<T>& A, const std::vector<T>& B,
+                                 EqualVariance equalVariance = EqualVariance::No,
+                                 TailTest tailTest = TailTest::Both) {
     double meanA = std::accumulate(A.begin(), A.end(), 0.0) / A.size();
     double meanB = std::accumulate(B.begin(), B.end(), 0.0) / B.size();
 
     double varianceA = calculateVariance(A, meanA);
     double varianceB = calculateVariance(B, meanB);
 
-    return (meanA - meanB) / sqrt((varianceA / A.size()) + (varianceB / B.size()));
+    // Degrees of freedom
+    double df, denom;
+    if (equalVariance == EqualVariance::Yes) {
+        df = df = A.size() + B.size() - 2;
+        double svar = ((A.size() - 1) * varianceA + (B.size() - 1) * varianceB) / df;
+        denom = sqrt(svar * (1.0 / A.size() + 1.0 / B.size()));
+    } else {
+        // See numerical recipies 'tutest'
+        double vn1 = varianceA / A.size();
+        double vn2 = varianceB / B.size();
+        df = (vn1 + vn2) * (vn1 + vn2) / (vn1 * vn1 / (A.size() - 1) + vn2 * vn2 / (B.size() - 1));
+        denom = sqrt(vn1 + vn2);
+    }
+
+    double t = (meanA - meanB) / denom;
+    double prob;
+    // Two-tailed test
+    if (tailTest == TailTest::Both) {
+        // Simplifies to
+        prob = incbeta(df / 2.0, df / 2.0, df / (df + t * t));
+
+    }
+    // Right one-tailed test
+    else if (tailTest == TailTest::Less) {
+        prob = student_t_cdf(-t, df);
+    }
+    // Left one-tailed test
+    else {
+        prob = student_t_cdf(t, df);
+    }
+
+    return {t, prob};
+}
+
+/*
+ * \brief Test if two populations have different variances.
+ * Calculates the F-test between vectors A and B and its probability to
+ * be by chance. F is the ratio of one variance to the other, so values either >> 1 or << 1
+ * indicate significant differences. Small probability values indicate that the two vectors have
+ * significantly different variances.
+ * @return the significance 't' and the two-tailed probability 'p-value'
+ */
+template <typename T>
+std::tuple<double, double> fTest(const std::vector<T>& A, const std::vector<T>& B) {
+    // See numerical recipies 'ftest'
+    double meanA = std::accumulate(A.begin(), A.end(), 0.0) / A.size();
+    double meanB = std::accumulate(B.begin(), B.end(), 0.0) / B.size();
+
+    double varianceA = calculateVariance(A, meanA);
+    double varianceB = calculateVariance(B, meanB);
+    double f, df1, df2;
+    if (varianceA > varianceB) {
+        f = varianceA / varianceB;
+        df1 = A.size() - 1;
+        df2 = B.size() - 1;
+    } else {
+        f = varianceB / varianceA;
+        df1 = B.size() - 1;
+        df2 = A.size() - 1;
+    }
+    double prob = 2.0 * incbeta(df2 / 2.0, df1 / 2.0, df2 / (df2 + df1 * f));
+    if (prob > 1.0) {
+        prob = 2.0 - prob;
+    }
+    return {f, prob};
 }
 
 IVW_MODULE_VISUALNEURO_API double student_t_cdf(double t, double df);
 IVW_MODULE_VISUALNEURO_API double incbeta(double a, double b, double x);
 
-// Calculate the p-value based on t-Test
+// Calculate the p-value based of a Student's t-Test
 IVW_MODULE_VISUALNEURO_API double tailTest(const double t, size_t sampleSize, TailTest tailTest);
 
 }  // namespace stats

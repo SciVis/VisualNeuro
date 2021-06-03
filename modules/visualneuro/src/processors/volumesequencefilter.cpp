@@ -64,7 +64,6 @@ VolumeSequenceFilter::VolumeSequenceFilter()
 }
 
 void VolumeSequenceFilter::process() {
-    auto volumesChanged = !brushingAndLinking_.isChanged();
     if (inport_.isChanged() || filenameIdColumn_.isModified() ||
         (brushingAndLinking_.getFilteredIndices().size() != numberOfBrushed_)) {
 

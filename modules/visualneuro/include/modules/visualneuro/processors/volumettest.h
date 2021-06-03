@@ -85,6 +85,7 @@ private:
 
     FloatProperty pVal_;
     TemplateOptionProperty<stats::TailTest> tailTest_;
+    BoolProperty equalVariance_;
 };
 
 }  // namespace inviwo
