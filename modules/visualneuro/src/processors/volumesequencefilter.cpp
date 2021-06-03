@@ -65,7 +65,8 @@ VolumeSequenceFilter::VolumeSequenceFilter()
 
 void VolumeSequenceFilter::process() {
     auto volumesChanged = !brushingAndLinking_.isChanged();
-    if (inport_.isChanged() || filenameIdColumn_.isModified() || (brushingAndLinking_.getFilteredIndices().size() != numberOfBrushed_)) {
+    if (inport_.isChanged() || filenameIdColumn_.isModified() ||
+        (brushingAndLinking_.getFilteredIndices().size() != numberOfBrushed_)) {
 
         std::unordered_set<size_t> brushedIndices = brushingAndLinking_.getFilteredIndices();
         numberOfBrushed_ = brushedIndices.size();
@@ -82,7 +83,6 @@ void VolumeSequenceFilter::process() {
             } else {
                 throw Exception("No columns in the input data frame.", IVW_CONTEXT);
             }
-            
         }
         for (auto brushingId = 0u; brushingId < dfSize; brushingId++) {
             auto filename = dataFrame->getColumn(filenameIdColumn_.get())->getAsString(brushingId);
@@ -106,33 +106,22 @@ void VolumeSequenceFilter::process() {
         VolumeSequence outputVolumes;
 
         if (dfSize != volumes->size()) {
-            std::stringstream mess;
-            mess << "The number of volumes does not match the number of entries in the data frame (.csv). Found "
-            << volumes->size() << " volumes but " << dfSize << " rows.";
-            throw Exception(mess.str(), IVW_CONTEXT);
+            LogWarn(
+                fmt::format("The number of volumes does not match the number of entries in the "
+                            "data frame (.csv). Found {} volumes, but {} rows.",
+                            volumes->size(), dfSize));
         }
 
         for (const auto volume : *volumes) {
 
             std::string defaultFilepath = "No file path found";
             std::string filepath = volume->getMetaData<StringMetaData>("filename", defaultFilepath);
+            std::string filename = filesystem::getFileNameWithExtension(filepath);
 
-            // Add the filename as metadata to each volume
-            if (volumesChanged || filepath != defaultFilepath) {
-                if (volumesChanged || !volume->hasMetaData<StringMetaData>("volumeId")) {
-                    std::string filename = filesystem::getFileNameWithExtension(filepath);
-                    volume->setMetaData<StringMetaData>("volumeId", filename);
-                }
-            } else {
-                LogWarn("No filename metadata could be found for the volume!");
-            }
-
-            std::string errorMessage = "No volume id";
-            std::string volumeId = volume->getMetaData<StringMetaData>("volumeId", errorMessage);
-
-            auto mapIterator = volumeIdMapping.find(volumeId);
+            auto mapIterator = volumeIdMapping.find(filename);
             if (mapIterator == volumeIdMapping.end()) {
-                LogWarn("Volume: " << volumeId << " cannot be mapped to a brushing id!");
+                LogWarn("Volume: " << filename << " cannot be mapped to any value in column "
+                                   << filenameIdColumn_.get());
                 continue;
             }
             auto brushingId = mapIterator->second;

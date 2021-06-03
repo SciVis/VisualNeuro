@@ -100,9 +100,10 @@ public:
     static const ProcessorInfo processorInfo_;
 
     DataFrameMultiInport dataFramePort_;
-protected:
-
+private:
+    bool reloaded_ = true;
     IMPLEMENT_REFCOUNTING(DataFrameWebBrowserProcessor);
+
 };
 #include <warn/pop>
 }  // namespace inviwo
