@@ -64,25 +64,28 @@ DataFrameWebBrowserProcessor::DataFrameWebBrowserProcessor(InviwoApplication* ap
     : WebBrowserProcessor(app)
     // Output from CEF is 8-bits per channel
     , dataFramePort_("dataFrames") {
+    dataFramePort_.setOptional(true);
     addPort(dataFramePort_);
+    isLoading_.set(true);
 }
 
 void DataFrameWebBrowserProcessor::process() {
+    reloaded_ |= fileName_.isModified() || url_.isModified() || reload_.isModified() ||
+                    sourceType_.isModified();
     if (isLoading_) {
         return;
     }
     if (js_.isModified() && !js_.get().empty()) {
         browser_->GetMainFrame()->ExecuteJavaScript(js_.get(), "", 1);
     }
-    if (fileName_.isModified() || url_.isModified() || reload_.isModified() ||
-        sourceType_.isModified() || dataFramePort_.isChanged()) {
+    if (reloaded_ || dataFramePort_.isChanged()) {
         using json = nlohmann::json;
 
         auto changed = dataFramePort_.getChangedOutports();
 
         auto dataFrames = dataFramePort_.getSourceVectorData();
         for (const auto& elem : dataFrames) {
-            if (util::contains(changed, elem.first)) {
+            if (reloaded_ || util::contains(changed, elem.first)) {
                 auto dataFrame = elem.second;
                 json root = *dataFrame;
 
@@ -98,10 +101,12 @@ void DataFrameWebBrowserProcessor::process() {
                 frame->ExecuteJavaScript(data.str(), frame->GetURL(), 0);
             }
         }
-    }
+    } 
     // Vertical flip of CEF output image
     cefToInviwoImageConverter_.convert(renderHandler_->getTexture2D(browser_), outport_,
                                        &background_);
+
+    reloaded_ = false;
 }
 
 }  // namespace inviwo

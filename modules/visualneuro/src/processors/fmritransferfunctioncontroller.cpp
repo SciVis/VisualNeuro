@@ -458,13 +458,14 @@ void fMRITransferFunctionController::updateSymmetricTF(TransferFunction &tf, con
     auto smoothing = 0.075;
     // Volume TF is created with two centerpoints in the same colors as the two edge points but
     // with opacity 0.
-    tf.add(std::min(leftThreshold + smoothing, normalizedCenterPnt - minStep), centerColorLeft);
-    tf.add(std::max(rightThreshold - smoothing, normalizedCenterPnt + minStep),
+    tf.add(std::clamp(std::min(leftThreshold + smoothing, normalizedCenterPnt - minStep), 0.0, 1.0), centerColorLeft);
+    tf.add(std::clamp(std::max(rightThreshold - smoothing, normalizedCenterPnt + minStep), 0.0, 1.0),
             centerColorRight);
 
     auto rDs = (1.0 - rightThreshold) / (rightColors.size() - 1);
     for (auto &&[ind, c] : util::enumerate(rightColors)) {
-        tf.add(rightThreshold + ind * rDs, vec4(c, slicesTF ? opacity : opacity* ind / (rightColors.size()-1)));
+        auto v = std::clamp(rightThreshold + ind * rDs, 0.0, 1.0);
+        tf.add(v, vec4(c, slicesTF ? opacity : opacity* ind / (rightColors.size()-1)));
     }
 }
 
