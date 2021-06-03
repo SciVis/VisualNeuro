@@ -59,11 +59,6 @@ void VolumeAtlasCenterPositions::process() {
     std::shared_ptr<const Volume> indexedVolume = indexedVolume_.getData();
     auto volumeRAM = indexedVolume->getRepresentation<VolumeRAM>();
 
-    if (indexedVolume->getDataFormat()->getNumericType() != inviwo::NumericType::SignedInteger &&
-        indexedVolume->getDataFormat()->getNumericType() != inviwo::NumericType::UnsignedInteger) {
-        throw(inviwo::Exception("Input volume must be of integer type."));
-    }
-
     const mat4 indexToWorld = indexedVolume->getCoordinateTransformer().getIndexToWorldMatrix();
     size3_t dims = indexedVolume->getDimensions();
     util::IndexMapper3D indexMapper(dims);

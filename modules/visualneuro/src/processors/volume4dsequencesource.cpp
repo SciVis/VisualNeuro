@@ -102,9 +102,8 @@ std::shared_ptr<Volume4DSequence> Volume4DSequenceSource::loadFile(std::string_v
                                                                    pool::Progress& progress) {
     auto volumes = std::make_shared<Volume4DSequence>();
 
-    const auto fext = filesystem::getFileExtension(path);
     progress(0.f);
-    if (auto reader = rf->getReaderForTypeAndExtension<VolumeSequence>(sext, fext)) {
+    if (auto reader = rf->getReaderForTypeAndExtension<VolumeSequence>(sext, path)) {
         try {
             volumes = std::make_shared<Volume4DSequence>(1, reader->readData(path.data(), this));
         } catch (DataReaderException const& e) {
@@ -127,14 +126,13 @@ std::shared_ptr<Volume4DSequence> Volume4DSequenceSource::loadFolder(std::string
     for (auto&& [ind, f] : util::enumerate(files)) {
         auto file = std::string(folder) + "/" + f;
         if (filesystem::wildcardStringMatch(filter_, file)) {
-            std::string ext = filesystem::getFileExtension(file);
             try {
-                if (auto reader1 = rf->getReaderForTypeAndExtension<Volume>(ext)) {
+                if (auto reader1 = rf->getReaderForTypeAndExtension<Volume>(file)) {
                     auto volume = reader1->readData(file, this);
                     volume->setMetaData<StringMetaData>("filename", file);
                     volumes->push_back(std::make_shared<VolumeSequence>(1, volume));
 
-                } else if (auto reader2 = rf->getReaderForTypeAndExtension<VolumeSequence>(ext)) {
+                } else if (auto reader2 = rf->getReaderForTypeAndExtension<VolumeSequence>(file)) {
                     auto volumeSeq = reader2->readData(file, this);
 
                     for (auto volume : *volumeSeq) {
@@ -165,13 +163,14 @@ void Volume4DSequenceSource::addFileNameFilters() {
 void Volume4DSequenceSource::process() {
     if (file_.isModified() || reload_.isModified() || folder_.isModified() ||
         filter_.isModified() || mirrorRanges_.isModified()) {
-        if (getPath().empty()) {
-            return;
-        }
+
         const auto load = [this, path = getPath(), inputType = inputType_.get(),
                            sext = file_.getSelectedExtension(),
                            rf = rf_](pool::Stop stop,
                                      pool::Progress progress) -> std::shared_ptr<Volume4DSequence> {
+            if (getPath().empty()) {
+                return std::make_shared<Volume4DSequence>();
+            }
             switch (inputType) {
                 case InputType::Folder:
                     return loadFolder(path, rf, stop, progress);
@@ -225,7 +224,7 @@ void Volume4DSequenceSource::process() {
                     information_.dataRange_.setCurrentStateAsDefault();
                 }
             }
-            deserialized_ = true;
+            deserialized_ = false;
             if (result && !result->empty()) {
                 // Update value range
                 for (auto& volumeSequence : *result) {
