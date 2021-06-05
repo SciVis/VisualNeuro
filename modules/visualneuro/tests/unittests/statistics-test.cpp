@@ -37,7 +37,6 @@
 #include <modules/visualneuro/statistics/spearmancorrelation.h>
 #include <modules/visualneuro/statistics/ttest.h>
 
-
 namespace inviwo {
 
 const std::vector<double> A = {
@@ -85,11 +84,63 @@ TEST(tTest, tTestIsCorrect) {
     auto [t, p] = stats::tTest(A, B);
 
     EXPECT_NEAR(t, correctT, maximumError) << "T-test is not correct.";
+
+    // https://en.wikipedia.org/wiki/Welch%27s_t-test
+
+    {
+        // The first example is for equal variances
+        // (\sigma_{1}^{2}=\sigma _{2}^{2}=4) and equal sample sizes (N_{1}=N_{2}=15). Let A1 and A2
+        // denote two random samples:
+        std::vector<double> A1 = {27.5, 21.0, 19.0, 23.6, 17.0, 17.9, 16.9, 20.1,
+                                  21.9, 22.6, 23.1, 19.6, 19.0, 21.7, 21.4};
+        std::vector<double> A2 = {27.1, 22.0, 20.8, 23.4, 23.4, 23.5, 25.8, 22.0,
+                                  24.8, 20.2, 21.9, 22.1, 22.9, 20.5, 24.4};
+        auto [studt, studp] =
+            stats::tTest(A1, A2, stats::EqualVariance::Yes, stats::TailTest::Both);
+        EXPECT_NEAR(studt, -2.46, 0.01) << "Student's t-test is not correct.";
+        EXPECT_NEAR(studp, 0.021, 0.001) << "Student's t-test is not correct.";
+        auto [welcht, welchp] =
+            stats::tTest(A1, A2, stats::EqualVariance::No, stats::TailTest::Both);
+        EXPECT_NEAR(welcht, -2.46, 0.01) << "Welch's t-test is not correct.";
+        EXPECT_NEAR(welchp, 0.021, 0.001) << "Welch's t-test is not correct.";
+    }
+    {
+        // The second example is for unequal variances (\sigma_{1}^{2}=16}, \sigma_{2}^{2}=1) and
+        // unequal sample sizes ({\displaystyle N1=10,  N2=20. The smaller sample has the larger
+        // variance:
+        std::vector<double> A1 = {17.2, 20.9, 22.6, 18.1, 21.7, 21.4, 23.5, 24.2, 14.7, 21.8};
+        std::vector<double> A2 = {21.5, 22.8, 21.0, 23.0, 21.6, 23.6, 22.5, 20.7, 23.4, 21.8,
+                                  20.7, 21.7, 21.5, 22.5, 23.6, 21.5, 22.5, 23.5, 21.5, 21.8};
+        auto [studt, studp] =
+            stats::tTest(A1, A2, stats::EqualVariance::Yes, stats::TailTest::Both);
+        EXPECT_NEAR(studt, -2.10, 0.01) << "Student's t-test is not correct.";
+        EXPECT_NEAR(studp, 0.045, 0.001) << "Student's t-test is not correct.";
+        auto [welcht, welchp] =
+            stats::tTest(A1, A2, stats::EqualVariance::No, stats::TailTest::Both);
+        EXPECT_NEAR(welcht, -1.57, 0.01) << "Welch's t-test is not correct.";
+        EXPECT_NEAR(welchp, 0.149, 0.001) << "Welch's t-test is not correct.";
+    }
+    {
+        // The third example is for unequal variances (\sigma _{1}^{2}=1}, \sigma _{2}^{2}=16}) and
+        // unequal sample sizes (N_{1}=10, N_{2}=20). The larger sample has the larger variance:
+
+        std::vector<double> A1 = {19.8, 20.4, 19.6, 17.8, 18.5, 18.9, 18.3, 18.9, 19.5, 22.0};
+        std::vector<double> A2 = {28.2, 26.6, 20.1, 23.3, 25.2, 22.1, 17.7, 27.6, 20.6, 13.7,
+                                  23.2, 17.5, 20.6, 18.0, 23.9, 21.6, 24.3, 20.4, 24.0, 13.2};
+        auto [studt, studp] =
+            stats::tTest(A1, A2, stats::EqualVariance::Yes, stats::TailTest::Both);
+        EXPECT_NEAR(studt, -1.64, 0.01) << "Student's t-test is not correct.";
+        EXPECT_NEAR(studp, 0.110, 0.001) << "Student's t-test is not correct.";
+        auto [welcht, welchp] =
+            stats::tTest(A1, A2, stats::EqualVariance::No, stats::TailTest::Both);
+        EXPECT_NEAR(welcht, -2.22, 0.01) << "Welch's t-test is not correct.";
+        EXPECT_NEAR(welchp, 0.036, 0.001) << "Welch's t-test is not correct.";
+    }
 }
 
 TEST(tTest, tTestIsCorrectReverse) {
 
-    auto [t, p] = stats::tTest(B, A); 
+    auto [t, p] = stats::tTest(B, A);
 
     EXPECT_NEAR(t, -correctT, maximumError) << "T-test (reversed) is not correct.";
 }
@@ -112,7 +163,7 @@ TEST(spearman, spearmanIsCorrect) {
     std::vector<double> x = {106, 100, 86, 101, 99, 103, 97, 113, 112, 110};
     // Hours of TV
     std::vector<double> y = {7, 27, 2, 50, 28, 29, 20, 12, 6, 17};
-    auto [corr, p] = corrTest(x, y, stats::CorrelationMethod::Spearman, stats::TailTest::TwoTailed);
+    auto [corr, p] = corrTest(x, y, stats::CorrelationMethod::Spearman, stats::TailTest::Both);
     EXPECT_DOUBLE_EQ(corr, -29.0 / 165.0) << "Spearman is not correct.";
 
     auto pExpected = 0.62718834477648455;

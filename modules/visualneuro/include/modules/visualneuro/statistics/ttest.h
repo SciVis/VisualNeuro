@@ -71,7 +71,7 @@ double calculateVariance(const std::vector<T>& v, const double mean) {
 template <typename T>
 std::tuple<double, double> tTest(const std::vector<T>& A, const std::vector<T>& B,
                                  EqualVariance equalVariance = EqualVariance::No,
-                                 TailTest tailTest = TailTest::Both) {
+                                 TailTest tail = TailTest::Both) {
     double meanA = std::accumulate(A.begin(), A.end(), 0.0) / A.size();
     double meanB = std::accumulate(B.begin(), B.end(), 0.0) / B.size();
 
@@ -81,7 +81,7 @@ std::tuple<double, double> tTest(const std::vector<T>& A, const std::vector<T>& 
     // Degrees of freedom
     double df, denom;
     if (equalVariance == EqualVariance::Yes) {
-        df = df = A.size() + B.size() - 2;
+        df = static_cast<double>(A.size() + B.size() - 2);
         double svar = ((A.size() - 1) * varianceA + (B.size() - 1) * varianceB) / df;
         denom = sqrt(svar * (1.0 / A.size() + 1.0 / B.size()));
     } else {
@@ -93,22 +93,7 @@ std::tuple<double, double> tTest(const std::vector<T>& A, const std::vector<T>& 
     }
 
     double t = (meanA - meanB) / denom;
-    double prob;
-    // Two-tailed test
-    if (tailTest == TailTest::Both) {
-        // Simplifies to
-        prob = incbeta(df / 2.0, df / 2.0, df / (df + t * t));
-
-    }
-    // Right one-tailed test
-    else if (tailTest == TailTest::Less) {
-        prob = student_t_cdf(-t, df);
-    }
-    // Left one-tailed test
-    else {
-        prob = student_t_cdf(t, df);
-    }
-
+    double prob = tailTest(t, df, tail);
     return {t, prob};
 }
 
@@ -148,8 +133,8 @@ std::tuple<double, double> fTest(const std::vector<T>& A, const std::vector<T>& 
 IVW_MODULE_VISUALNEURO_API double student_t_cdf(double t, double df);
 IVW_MODULE_VISUALNEURO_API double incbeta(double a, double b, double x);
 
-// Calculate the p-value based of a Student's t-Test
-IVW_MODULE_VISUALNEURO_API double tailTest(const double t, size_t sampleSize, TailTest tailTest);
+// Calculate the p-value based on the Student's distribution
+IVW_MODULE_VISUALNEURO_API double tailTest(const double t, double degreesOfFreedom, TailTest tailTest);
 
 }  // namespace stats
 

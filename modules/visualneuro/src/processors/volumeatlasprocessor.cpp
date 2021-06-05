@@ -168,7 +168,7 @@ void VolumeAtlasProcessor::updateTransferFunction() {
         addSelectedIndex(hoverAtlasId_, *hoverColor_);
         if (brushingAndLinking_.isConnected()) {
             auto selectedIndicies = brushingAndLinking_.getSelectedIndices();
-            for (auto selectedIndex : selectedIndicies) {
+            for (int selectedIndex : selectedIndicies) {
                 auto c = atlas_->getLabelColor(selectedIndex);
                 addSelectedIndex(static_cast<int>(selectedIndex), c ? c.value() : *selectedColor_);
             }
