@@ -54,7 +54,7 @@ std::tuple<double, double> inviwo::stats::corrTest(const std::vector<double>& A,
     }
     // Test for significance according to Student's t-distribution
     auto t = r * sqrt((A.size() - 2) / (1.0 - r * r));
-    auto p = stats::tailTest(t, A.size(), tailTest);
+    auto p = stats::tailTest(t, static_cast<double>(A.size()-2), tailTest);
     return {r, p};
 }
 

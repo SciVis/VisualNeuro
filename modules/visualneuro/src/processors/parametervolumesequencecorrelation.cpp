@@ -63,9 +63,9 @@ ParameterVolumeSequenceCorrelation::ParameterVolumeSequenceCorrelation()
                          1)
     , pVal_("pVal", "P-Value", 0.05f, 0.0f, 0.5f, 0.05f)
     , tailTest_("tailTest", "Tail Test",
-                {{"twoTailedTest", "Two-tailed test", stats::TailTest::TwoTailed},
-                 {"rightOneTailedTest", "Right one-tailed test", stats::TailTest::RightOneTailed},
-                 {"leftOneTailedTest", "Left one-tailed test", stats::TailTest::LeftOneTailed}},
+                {{"twoTailedTest", "Two-tailed test", stats::TailTest::Both},
+                 {"rightOneTailedTest", "Right one-tailed test", stats::TailTest::Greater},
+                 {"leftOneTailedTest", "Left one-tailed test", stats::TailTest::Less}},
                 0) {
 
     addPort(volumes_);

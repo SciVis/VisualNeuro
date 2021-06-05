@@ -53,21 +53,23 @@ double incbeta(double a, double b, double x) {
     return 1.0;
 }
 
-double tailTest(const double t, size_t sampleSize, TailTest tailTest) {
+double tailTest(const double t, double degreesOfFreedom, TailTest tailTest) {
     if (isnan(t)) return 1.0;
 
     double p;
     // Two-tailed test
-    if (tailTest == TailTest::TwoTailed) {
-        p = 2.0 * student_t_cdf(-abs(t), static_cast<double>(sampleSize - 2));
+    if (tailTest == TailTest::Both) {
+        p = 2.0 * student_t_cdf(-abs(t), degreesOfFreedom);
+        // Numerical recipies simplification does not pass the tests...
+        // p = incbeta(df / 2.0, df / 2.0, df / (df + t * t));
     }
     // Right one-tailed test
-    else if (tailTest == TailTest::LeftOneTailed) {
-        p = student_t_cdf(-t, static_cast<double>(sampleSize - 2));
+    else if (tailTest == TailTest::Less) {
+        p = student_t_cdf(-t, degreesOfFreedom);
     }
     // Left one-tailed test
     else {
-        p = student_t_cdf(t, static_cast<double>(sampleSize - 2));
+        p = student_t_cdf(t, degreesOfFreedom);
     }
 
     return p;

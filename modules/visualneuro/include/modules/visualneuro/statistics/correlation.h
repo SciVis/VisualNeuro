@@ -64,7 +64,7 @@ std::tuple<double, double> corrTest(Iterator firstA, Iterator lastA,
     auto n = std::distance(firstA, lastA);
     // Test for significance according to Student's t-distribution
     auto t = r * sqrt((n - 2) / (1.0 - r * r));
-    auto p = stats::tailTest(t, n, tailTest);
+    auto p = stats::tailTest(t, static_cast<double>(n-2), tailTest);
     return {r, p};
 }
 

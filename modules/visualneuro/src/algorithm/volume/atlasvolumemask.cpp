@@ -34,53 +34,49 @@
 
 namespace inviwo {
 
-void atlasVolumeMask(Volume* mask, const Volume& volume, const Volume& atlas, const std::unordered_set<size_t>& indexFilter) {
-    auto resMask = dynamic_cast<VolumeRAMPrecision<uint8_t>*>(mask->getEditableRepresentation<VolumeRAM>());
+void atlasVolumeMask(Volume* mask, const Volume& volume, const Volume& atlas,
+                     const std::unordered_set<size_t>& indexFilter) {
+    auto resMask =
+        dynamic_cast<VolumeRAMPrecision<uint8_t>*>(mask->getEditableRepresentation<VolumeRAM>());
     auto dim = volume.getDimensions();
-    
+
     mat4 indexToWorld = volume.getCoordinateTransformer().getIndexToWorldMatrix();
     mat4 worldToIndex = atlas.getCoordinateTransformer().getWorldToIndexMatrix();
     auto volRamIndexed = atlas.getRepresentation<VolumeRAM>();
 
     auto maskData = resMask->getDataTyped();
-    
+
     auto brainRAM = volume.getRepresentation<VolumeRAM>();
 
     constexpr unsigned char maskSelection{1 << 6};  // 0100 0000
-    constexpr unsigned char maskBrain{1 << 7};  // 1000 0000
+    constexpr unsigned char maskBrain{1 << 7};      // 1000 0000
     util::IndexMapper3D im(dim);
 
     util::forEachVoxelParallel(*resMask, [&](const size3_t& ind) {
-        
         uint8_t maskVal = 0;
         if (!indexFilter.empty()) {
             // Convert position in correlation volume to position in indexed volume
             vec3 worldCoordinates(vec3(indexToWorld * ivec4(ind, 1)));
             auto indexCoordinates(size3_t(worldToIndex * vec4(worldCoordinates, 1.0f)));
-            
+
             // Calculate a value for the voxel only if it's part of a selected region
-            auto voxelValue =
-                static_cast<size_t>(
-            volRamIndexed->dispatch<int, dispatching::filter::Scalars>([indexCoordinates](auto vr) {
-                return vr->getDataTyped()[vr->posToIndex(indexCoordinates, vr->getDimensions())];
-            }));
-            if (indexFilter.find(voxelValue) !=
-                indexFilter.end()) {
+            auto voxelValue = volRamIndexed->dispatch<int, dispatching::filter::Scalars>(
+                [indexCoordinates](auto vr) {
+                    return static_cast<int>(
+                        vr->getDataTyped()[vr->posToIndex(indexCoordinates, vr->getDimensions())]);
+                });
+            if (indexFilter.find(voxelValue) != indexFilter.end()) {
                 maskVal |= maskSelection;
             }
-        } 
-        auto notZero =
-        brainRAM->dispatch<bool, dispatching::filter::Scalars>([ind](auto vr) {
-            return vr->getDataTyped()[vr->posToIndex(ind, vr->getDimensions())] !=
-            0;
+        }
+        auto notZero = brainRAM->dispatch<bool, dispatching::filter::Scalars>([ind](auto vr) {
+            return vr->getDataTyped()[vr->posToIndex(ind, vr->getDimensions())] != 0;
         });
         if (notZero) {
             maskVal |= maskBrain;
         }
-        
+
         maskData[im(ind)] = maskVal;
     });
-
- 
 }
 }  // namespace inviwo
