@@ -2,6 +2,8 @@
 # Brain Cohort Analyzer
 project(VisualNeuroApp)
 
+include(version.cmake)
+
 find_package(Qt5 5.12.0 QUIET REQUIRED COMPONENTS Core Gui Widgets OpenGL)# WebEngine WebEngineWidgets WebSockets)
 
 #--------------------------------------------------------------------
@@ -20,7 +22,9 @@ qt5_add_resources(QRC_FILE "visualneuro.qrc")
 
 #--------------------------------------------------------------------
 # Add header files
-set(HEADER_FILES  ${MOC_FILES})
+set(HEADER_FILES  
+    visualneurocommondefines.h # auto-generated
+    ${MOC_FILES})
 ivw_group("Header Files" ${HEADER_FILES})
 
 #--------------------------------------------------------------------
@@ -68,6 +72,9 @@ target_link_libraries(VisualNeuro PUBLIC
 	#Qt5::WebEngineWidgets
     #Qt5::WebSockets
 )
+target_include_directories(VisualNeuro PUBLIC
+     ${CMAKE_BINARY_DIR}/apps/visualneuro/include
+)
 ivw_configure_application_module_dependencies(VisualNeuro ${enabled_modules})
 ivw_define_standard_definitions(VisualNeuro VisualNeuro)
 ivw_define_standard_properties(VisualNeuro)
@@ -82,13 +89,13 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     # https://cmake.org/cmake/help/v3.15/prop_tgt/MACOSX_BUNDLE_INFO_PLIST.html
     string(TIMESTAMP YEAR "%Y")
     set_target_properties(${PROJECT_NAME} PROPERTIES
-        MACOSX_BUNDLE_INFO_STRING "${PROJECT_NAME} ${IVW_VERSION}"
+        MACOSX_BUNDLE_INFO_STRING "${PROJECT_NAME} ${VISUALNEURO_VERSION}"
         MACOSX_BUNDLE_ICON_FILE "favicon.icns"
         MACOSX_BUNDLE_GUI_IDENTIFIER "com.VisualNeuro"
-        MACOSX_BUNDLE_LONG_VERSION_STRING "${IVW_VERSION}"
+        MACOSX_BUNDLE_LONG_VERSION_STRING "${VISUALNEURO_VERSION}"
         MACOSX_BUNDLE_BUNDLE_NAME "${PROJECT_NAME}"
-        MACOSX_BUNDLE_SHORT_VERSION_STRING "${IVW_VERSION}"
-        MACOSX_BUNDLE_BUNDLE_VERSION "${IVW_VERSION}"
+        MACOSX_BUNDLE_SHORT_VERSION_STRING "${VISUALNEURO_VERSION}"
+        MACOSX_BUNDLE_BUNDLE_VERSION "${VISUALNEURO_VERSION}"
         MACOSX_BUNDLE_COPYRIGHT "C) 2012-${YEAR} Daniel Jönsson"
     )
     # Following http://www.cmake.org/Wiki/BundleUtilitiesExample
