@@ -31,6 +31,8 @@
 #include <inviwo/core/inviwocommondefines.h>
 #include <inviwo/core/util/commandlineparser.h>
 
+#include <visualneuro/visualneurocommondefines.h>
+
 #include <warn/push>
 #include <warn/ignore/all>
 #include <QApplication>
@@ -54,9 +56,13 @@ void InviwoSplashScreen::show() {
 void InviwoSplashScreen::drawContents(QPainter* painter) {
     QString versionLabel;
     QTextStream labelStream(&versionLabel);
-    labelStream << "Version " << QString::fromStdString(toString(build::version));
+    labelStream << "Visual Neuro Version " << QString::fromStdString(toString(visualneuro::build::version));
     painter->setPen(Qt::white);
-    painter->drawText(12, 326, versionLabel);
+    painter->drawText(12, 306, versionLabel);
+    QString inviwoVersionLabel;
+    QTextStream inviwoLabelStream(&inviwoVersionLabel);
+    inviwoLabelStream << "Powered by Inviwo Version " << QString::fromStdString(toString(build::version));
+    painter->drawText(12, 326, inviwoVersionLabel);
     auto font = painter->font();
     font.setPointSizeF(font.pointSizeF() * 0.8f);
     painter->setFont(font);

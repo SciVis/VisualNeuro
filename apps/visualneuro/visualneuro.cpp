@@ -82,7 +82,7 @@ int main(int argc, char** argv) {
     auto& clp = inviwoApp.getCommandLineParser();
 
     VisualNeuroMainWindow mainWin(&inviwoApp);
-    // inviwoApp.printApplicationInfo();
+    inviwoApp.printApplicationInfo();
 
     // initialize and show splash screen
     inviwo::InviwoSplashScreen splashScreen(clp.getShowSplashScreen());

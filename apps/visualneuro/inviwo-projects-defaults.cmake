@@ -2,17 +2,16 @@
 # Add Entry
 #   Name: CMAKE_PROJECT_inviwo-projects_INCLUDE
 # 	Type FilePath
-#   Value: C:/Users/danjo/Documents/inviwo/research/apps/visualneuro/inviwo-projects-defaults.cmake
+#   Value: C:/Users/danjo/Documents/inviwo/visualneuro/apps/visualneuro/inviwo-projects-defaults.cmake
 #
 # Press configure a couple of times
 #
 # Config
 set(IVW_EXTERNAL_MODULES 
-"C:/Users/danjo/Documents/inviwo/research/modules"
-"C:/Users/danjo/Documents/inviwo/vistinct/modules"
+"C:/Users/danjo/Documents/inviwo/visualneuro/modules"
 )
 # Apps
-set(IVW_EXTERNAL_PROJECTS "C:/Users/danjo/Documents/inviwo/research/apps")
+set(IVW_EXTERNAL_PROJECTS "C:/Users/danjo/Documents/inviwo/visualneuro/apps")
 
 set(IVW_APP_VISUALNEURO             	ON)
 set(IVW_APP_INVIWO             			OFF)
