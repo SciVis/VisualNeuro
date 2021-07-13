@@ -1,7 +1,7 @@
 set(VISUALNEURO_MAJOR_VERSION 1)
 set(VISUALNEURO_MINOR_VERSION 1)
 set(VISUALNEURO_PATCH_VERSION 0)
-set(VISUALNEURO_BUILD_VERSION 0) # set to zero when doing a release, bump to 1 directly after the release. 
+set(VISUALNEURO_BUILD_VERSION 1) # set to zero when doing a release, bump to 1 directly after the release. 
 
 if(${VISUALNEURO_BUILD_VERSION})
     set(VISUALNEURO_VERSION ${VISUALNEURO_MAJOR_VERSION}.${VISUALNEURO_MINOR_VERSION}.${VISUALNEURO_PATCH_VERSION}.${VISUALNEURO_BUILD_VERSION})
