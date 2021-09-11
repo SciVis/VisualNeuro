@@ -56,7 +56,7 @@
 #include <inviwo/core/processors/compositeprocessor.h>
 #include <inviwo/core/processors/compositeprocessorutils.h>
 
-#include <modules/openglqt/canvasprocessorwidgetqt.h>
+#include <modules/openglqt/processors/canvasprocessorwidgetqt.h>
 
 #include <inviwo/core/rendering/datavisualizermanager.h>
 
