@@ -42,6 +42,7 @@
 #include <inviwo/core/properties/stringproperty.h>
 #include <inviwo/core/ports/volumeport.h>
 #include <inviwo/core/ports/datainport.h>
+#include <inviwo/core/interaction/pickingmapper.h>
 
 #include <inviwo/dataframe/datastructures/dataframe.h>
 #include <modules/brushingandlinking/ports/brushingandlinkingports.h>
@@ -94,6 +95,7 @@ private:
     void updateTransferFunction();
     void updateBrushing();
     void updateSelectableRegionProperties();
+    void handlePicking(PickingEvent*);
 
     VolumeInport atlasVolume_;
     DataInport<DataFrame> atlasLabels_;
@@ -101,6 +103,7 @@ private:
     BrushingAndLinkingInport brushingAndLinking_;
     VolumeOutport outport_;
     DataOutport<TransferFunction> atlasTFOutport_;
+    DataOutport<TransferFunction> pickingTFOutport_;
 
     ButtonProperty selectAllRegions_;
     ButtonProperty deselectAllRegions_;
@@ -113,7 +116,12 @@ private:
     FloatVec4Property hoverColor_;
     FloatVec4Property selectedColor_;
     IsoTFProperty isotfComposite_;
+    IsoTFProperty pickingtfComposite_;
     FloatVec3Property worldPosition_;
+
+    BoolProperty enablePicking_;
+    FloatProperty pickingTransparency_;
+    PickingMapper atlasPicking_;
 
     std::unique_ptr<VolumeAtlas> atlas_;
 
@@ -121,6 +129,8 @@ private:
     double delta_;
 
     bool brushingDirty_ = true;
+    bool pickingDirty_ = false;
+    int pickingAtlasId_ = -1;
 };
 
 }  // namespace inviwo
