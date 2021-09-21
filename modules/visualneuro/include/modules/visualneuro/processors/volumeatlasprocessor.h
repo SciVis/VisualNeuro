@@ -120,9 +120,7 @@ private:
     FloatVec3Property worldPosition_;
 
     BoolProperty enablePicking_;
-    FloatProperty pickingTransparency_;
-    IntProperty pickedLabelID_;
-    StringProperty pickedLabelName_;
+
     PickingMapper atlasPicking_;
 
     std::unique_ptr<VolumeAtlas> atlas_;
@@ -132,8 +130,6 @@ private:
 
     bool brushingDirty_ = true;
     bool pickingDirty_ = false;
-
-    int intermediatePickingID_ = -1;
     int pickingAtlasId_ = -1;
 };
 
