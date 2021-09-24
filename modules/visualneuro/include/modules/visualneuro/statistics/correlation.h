@@ -31,6 +31,8 @@
 #include <modules/visualneuro/visualneuromoduledefine.h>
 #include <modules/visualneuro/statistics/ttest.h>
 
+#include <inviwo/core/util/assertion.h>
+
 #include <tuple>
 
 namespace inviwo {

@@ -28,10 +28,12 @@
  *********************************************************************************/
 
 #include <modules/visualneuro/processors/volume4dsequencesource.h>
-#include <inviwo/core/io/datareaderfactory.h>
-#include <inviwo/core/util/filesystem.h>
-#include <inviwo/core/io/datareaderexception.h>
+
 #include <inviwo/core/common/inviwoapplication.h>
+#include <inviwo/core/io/datareaderfactory.h>
+#include <inviwo/core/io/datareaderexception.h>
+#include <inviwo/core/util/filesystem.h>
+#include <inviwo/core/util/zip.h>
 
 namespace inviwo {
 

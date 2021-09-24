@@ -30,6 +30,7 @@
 #include <modules/visualneuro/processors/brainraycaster.h>
 #include <modules/opengl/image/layergl.h>
 #include <modules/opengl/volume/volumegl.h>
+#include <modules/opengl/texture/texture2d.h>
 #include <modules/opengl/texture/textureunit.h>
 #include <modules/opengl/texture/textureutils.h>
 #include <modules/opengl/shader/shaderutils.h>
@@ -38,16 +39,15 @@
 #include <inviwo/core/util/rendercontext.h>
 #include <inviwo/core/algorithm/boundingbox.h>
 
-
 namespace inviwo {
 
 // The Class Identifier has to be globally unique. Use a reverse DNS naming scheme
 const ProcessorInfo BrainRayCaster::processorInfo_{
-    "org.inviwo.BrainRayCaster",    // Class identifier
-    "Brain Ray Caster",             // Display name
-    "Volume Rendering",             // Category
-    CodeState::Stable,              // Code state
-    "GL, DVR, Raycasting",          // Tags
+    "org.inviwo.BrainRayCaster",  // Class identifier
+    "Brain Ray Caster",           // Display name
+    "Volume Rendering",           // Category
+    CodeState::Stable,            // Code state
+    "GL, DVR, Raycasting",        // Tags
 };
 const ProcessorInfo BrainRayCaster::getProcessorInfo() const { return processorInfo_; }
 
@@ -83,7 +83,6 @@ BrainRayCaster::BrainRayCaster()
     addPort(atlasPort_);
     addPort(atlasTransferFunction_);
     addPort(outport_, "ImagePortGroup1");
-
 
     backgroundPort_.setOptional(true);
 
@@ -147,9 +146,8 @@ void BrainRayCaster::initializeResources() {
 void BrainRayCaster::process() {
     if (volumePort_.isChanged() || activityPort_.isChanged() || atlasPort_.isChanged()) {
         dispatchOne(
-            [volume = volumePort_.getData(), activity = activityPort_.getData(), 
-             atlas = atlasPort_.getData()]() 
-            -> std::array<std::shared_ptr<const Volume>, 3> {
+            [volume = volumePort_.getData(), activity = activityPort_.getData(),
+             atlas = atlasPort_.getData()]() -> std::array<std::shared_ptr<const Volume>, 3> {
                 volume->getRep<kind::GL>();
                 activity->getRep<kind::GL>();
                 atlas->getRep<kind::GL>();
@@ -157,7 +155,7 @@ void BrainRayCaster::process() {
                 return {volume, activity, atlas};
             },
             [this](std::array<std::shared_ptr<const Volume>, 3> volumes) {
-                raycast(*volumes[0],*volumes[1], *volumes[2]);
+                raycast(*volumes[0], *volumes[1], *volumes[2]);
                 newResults();
             });
     } else {
@@ -178,9 +176,10 @@ void BrainRayCaster::raycast(const Volume& volume, const Volume& activity, const
     utilgl::bindAndSetUniforms(shader_, units, atlas, "atlas");
     utilgl::bindAndSetUniforms(shader_, units, isotfComposite_);
     utilgl::bindAndSetUniforms(shader_, units, activityTransferFunction_);
-    utilgl::bindAndSetUniforms(shader_, units, 
-                               *(atlasTransferFunction_.getData()->getData()->getRepresentation<LayerGL>()->getTexture()),
-                               "atlasTransferFunction");
+    utilgl::bindAndSetUniforms(
+        shader_, units,
+        *(atlasTransferFunction_.getData()->getData()->getRepresentation<LayerGL>()->getTexture()),
+        "atlasTransferFunction");
 
     utilgl::bindAndSetUniforms(shader_, units, entryPort_, ImageType::ColorDepthPicking);
     utilgl::bindAndSetUniforms(shader_, units, exitPort_, ImageType::ColorDepth);
