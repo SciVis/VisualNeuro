@@ -56,7 +56,7 @@
 #include <inviwo/core/processors/compositeprocessor.h>
 #include <inviwo/core/processors/compositeprocessorutils.h>
 
-#include <modules/openglqt/canvasprocessorwidgetqt.h>
+#include <inviwo/core/processors/canvasprocessorwidget.h>
 
 #include <inviwo/core/rendering/datavisualizermanager.h>
 
@@ -68,7 +68,6 @@
 #include <QGridLayout>
 #include <QActionGroup>
 #include <QClipboard>
-#include <QDesktopWidget>
 #include <QFileDialog>
 #include <QList>
 #include <QMessageBox>
@@ -121,16 +120,17 @@ VisualNeuroMainWindow::VisualNeuroMainWindow(InviwoApplicationQt* app)
 
     currentWorkspaceFileName_ = "";
 
-    const QDesktopWidget dw;
-    auto screen = dw.screenGeometry(this);
+    auto screen = QGuiApplication::primaryScreen();
     const float maxRatio = 0.8f;
+    const auto ssize = screen->availableSize();
 
     QSize size = utilqt::emToPx(this, QSizeF(192, 108));
-    size.setWidth(std::min(size.width(), static_cast<int>(screen.width() * maxRatio)));
-    size.setHeight(std::min(size.height(), static_cast<int>(screen.height() * maxRatio)));
+    size.setWidth(std::min(size.width(), static_cast<int>(ssize.width() * maxRatio)));
+    size.setHeight(std::min(size.height(), static_cast<int>(ssize.height() * maxRatio)));
+
 
     // Center Window
-    QPoint pos{screen.width() / 2 - size.width() / 2, screen.height() / 2 - size.height() / 2};
+    QPoint pos{ssize.width() / 2 - ssize.width() / 2, ssize.height() / 2 - ssize.height() / 2};
 
     resize(size);
     move(pos);
@@ -431,7 +431,7 @@ bool VisualNeuroMainWindow::openWorkspace(QString workspaceFileName, bool isExam
                 processor->invalidate(InvalidationLevel::InvalidResources);
 
                 auto processorWidget =
-                    dynamic_cast<CanvasProcessorWidgetQt*>(processor->getProcessorWidget());
+                    dynamic_cast<CanvasProcessorWidget*>(processor->getProcessorWidget());
                 if (processorWidget) {
                     // Assume that the main canvas is called Canvas. Otherwise just use the first
                     // one that comes up.
@@ -471,27 +471,11 @@ bool VisualNeuroMainWindow::openWorkspace(QString workspaceFileName, bool isExam
                 centralLayout = gridLayout;
 
                 centralLayout->setSpacing(0);
-                centralLayout->setMargin(0);
+                centralLayout->setContentsMargins(0, 0, 0, 0);
 
                 setCentralWidget(central);
                 
                 // END OF FIXME
-                #ifdef QWEBENGINE_TEST
-                auto processorWidget = dynamic_cast<CanvasProcessorWidgetQt*>(mainCanvasWidget);
-                auto view = new QWebEngineView(mainCanvasWidget);
-
-                QGridLayout* gl = new QGridLayout(dynamic_cast<CanvasQt*>(processorWidget->getCanvas()));
-                gl->setContentsMargins(0, 0, 0, 0);
-                gl->addWidget(view, 0, 0);
-                view->setUrl(
-                    QUrl("C:/Users/danjo/Documents/inviwo/research/apps/visualneuro/index.html"));
-                view->setAttribute(Qt::WA_TranslucentBackground);
-                view->setStyleSheet("background:transparent");
-                auto page = view->page();
-                // https://bugreports.qt.io/browse/QTBUG-41960
-                page->setBackgroundColor(Qt::transparent);
-                view->show();
-                #endif
                 mainCanvasWidget->show();
 
                 // Will make the central widget a parent to the overlay

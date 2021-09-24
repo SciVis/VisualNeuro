@@ -33,45 +33,12 @@
 #include <modules/visualneuro/visualneuromoduledefine.h>
 
 #include <execution>
+#include <numeric>
 #include <iterator>
 
 namespace inviwo {
 
 namespace stats {
-
-/*
- * \brief Computes the non-parametric Spearman rank correlation.
- * Measures the monotonic relationship between two variables rather than
- * the linear relationshop, e.g. Pearson correlation.
- * Monotonic: As one variable increases, so does the other and vice versa.
- * Non-monotonic: As one variable increases the other decreases.
- * Thus, monotonic is not as strict as linear correlation.
- * Spearman correlation coefficient is in range [-1 1], where -1 indicates perfect negative
- * association, 0 indicates no association, +1 indicates perfect positive assocation.
- *
- * \pre A and B must be of same size, otherwise std::invalid_argument exception is thrown.
- */
-template <typename Iterator>
-double spearmanCorrelation(Iterator firstA, Iterator lastA, Iterator firstB, Iterator lastB) {
-    if (std::distance(firstA, lastA) != std::distance(firstB, lastB))
-        throw std::invalid_argument("The size of the two entered datasets does not match!");
-
-    auto rankA(rank(firstA, lastA));
-    auto rankB(rank(firstB, lastB));
-    auto squaredDifference = [](const auto& a, const auto& b) {
-        auto diff = a - b;
-        return diff * diff;
-    };
-    double squaredDiffSum =
-        std::transform_reduce(std::execution::par, rankA.begin(), rankA.end(), rankB.begin(), 0.0,
-                              std::plus<>(), squaredDifference);
-
-    return 1.0 - 6.0 * squaredDiffSum /
-                     static_cast<double>(rankA.size() * (rankA.size() * rankA.size() - 1.0));
-}
-
-IVW_MODULE_VISUALNEURO_API double spearmanCorrelation(const std::vector<double>& A,
-                                                       const std::vector<double>& B);
 
 /*
  * \brief Rank elements from 1 to N in ascending order.
@@ -120,6 +87,42 @@ template <typename T>
 std::vector<double> rank(const std::vector<T> A) {
     return rank(std::begin(A), std::end(A));
 }
+
+/*
+ * \brief Computes the non-parametric Spearman rank correlation.
+ * Measures the monotonic relationship between two variables rather than
+ * the linear relationshop, e.g. Pearson correlation.
+ * Monotonic: As one variable increases, so does the other and vice versa.
+ * Non-monotonic: As one variable increases the other decreases.
+ * Thus, monotonic is not as strict as linear correlation.
+ * Spearman correlation coefficient is in range [-1 1], where -1 indicates perfect negative
+ * association, 0 indicates no association, +1 indicates perfect positive assocation.
+ *
+ * \pre A and B must be of same size, otherwise std::invalid_argument exception is thrown.
+ */
+template <typename Iterator>
+double spearmanCorrelation(Iterator firstA, Iterator lastA, Iterator firstB, Iterator lastB) {
+    if (std::distance(firstA, lastA) != std::distance(firstB, lastB))
+        throw std::invalid_argument("The size of the two entered datasets does not match!");
+
+    auto rankA(rank(firstA, lastA));
+    auto rankB(rank(firstB, lastB));
+    auto squaredDifference = [](const auto& a, const auto& b) {
+        auto diff = a - b;
+        return diff * diff;
+    };
+    double squaredDiffSum =
+        std::transform_reduce(std::execution::par, rankA.begin(), rankA.end(), rankB.begin(), 0.0,
+                              std::plus<>(), squaredDifference);
+
+    return 1.0 - 6.0 * squaredDiffSum /
+                     static_cast<double>(rankA.size() * (rankA.size() * rankA.size() - 1.0));
+}
+
+IVW_MODULE_VISUALNEURO_API double spearmanCorrelation(const std::vector<double>& A,
+                                                       const std::vector<double>& B);
+
+
 
 }  // namespace stats
 

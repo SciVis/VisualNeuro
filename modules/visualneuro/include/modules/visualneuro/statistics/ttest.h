@@ -29,8 +29,11 @@
 
 #pragma once
 
-#include <inviwo/core/common/inviwo.h>
 #include <modules/visualneuro/visualneuromoduledefine.h>
+
+#include <algorithm>
+#include <vector>
+#include <numeric>
 
 namespace inviwo {
 
@@ -97,6 +100,12 @@ std::tuple<double, double> tTest(const std::vector<T>& A, const std::vector<T>& 
     return {t, prob};
 }
 
+IVW_MODULE_VISUALNEURO_API double student_t_cdf(double t, double df);
+IVW_MODULE_VISUALNEURO_API double incbeta(double a, double b, double x);
+// Calculate the p-value based on the Student's distribution
+IVW_MODULE_VISUALNEURO_API double tailTest(const double t, double degreesOfFreedom,
+                                           TailTest tailTest);
+
 /*
  * \brief Test if two populations have different variances.
  * Calculates the F-test between vectors A and B and its probability to
@@ -129,12 +138,6 @@ std::tuple<double, double> fTest(const std::vector<T>& A, const std::vector<T>& 
     }
     return {f, prob};
 }
-
-IVW_MODULE_VISUALNEURO_API double student_t_cdf(double t, double df);
-IVW_MODULE_VISUALNEURO_API double incbeta(double a, double b, double x);
-
-// Calculate the p-value based on the Student's distribution
-IVW_MODULE_VISUALNEURO_API double tailTest(const double t, double degreesOfFreedom, TailTest tailTest);
 
 }  // namespace stats
 
