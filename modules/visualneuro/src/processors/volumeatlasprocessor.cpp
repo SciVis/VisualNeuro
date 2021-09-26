@@ -74,7 +74,9 @@ VolumeAtlasProcessor::VolumeAtlasProcessor()
                                                                      ConstraintBehavior::Immutable}, std::pair{vec3(std::numeric_limits<float>::max()),
                                                                      ConstraintBehavior::Immutable} )
     , enablePicking_("enablePicking", "Enable Picking", false)
-    , pickingTransparency_("pickingTransparency", "Transparency of None-picked Objects", 0.05f, 0.0f, 1.0f)
+    , pickingTransparency_("pickingTransparency", "Transparency of None-picked regions", 0.05f, 0.0f, 1.0f)
+    , pickedLabelID_("pickedLabelID", "Label ID of picked region")
+    , pickedLabelName_("pickedLabelName", "Label name of picked region")
     , atlasPicking_(this, 103, [&](PickingEvent *p) { handlePicking(p); }) {
 
     addPort(atlasVolume_);
@@ -101,8 +103,21 @@ VolumeAtlasProcessor::VolumeAtlasProcessor()
     selectedColor_.setSemantics(PropertySemantics::Color);
     addProperty(isotfComposite_);
     addProperty(pickingtfComposite_);
+
     addProperty(enablePicking_);
     addProperty(pickingTransparency_);
+    addProperty(pickedLabelID_);
+    pickedLabelID_.setReadOnly(true);
+    addProperty(pickedLabelName_);
+    pickedLabelName_.setReadOnly(true);
+    enablePicking_.onChange([this]() {
+        intermediatePickingID_ = -1;
+        pickingAtlasId_ = -1;
+        pickingTransparency_.setVisible(enablePicking_.get());
+        pickedLabelID_.setVisible(enablePicking_.get());
+        pickedLabelName_.setVisible(enablePicking_.get());
+    });
+
     addProperty(worldPosition_);
     worldPosition_.setReadOnly(true);
 
@@ -158,16 +173,27 @@ void VolumeAtlasProcessor::updateTransferFunction() {
     auto &tf = isotfComposite_.tf_.get();
     auto atlasVolume = atlasVolume_.getData();
     auto atlasLabels = atlasLabels_.getData();
+
+    if (pickingAtlasId_ == -1) {
+        pickedLabelID_ = -1;
+        pickedLabelName_ = "";
+    } else {
+        pickedLabelID_ = pickingAtlasId_+1;
+        pickedLabelName_ = atlas_->getLabelName(pickedLabelID_);
+    }
+
     auto addSelectedIndex = [&](int labelId, vec4 color) {
         vec2 dataRange = atlasVolume->dataMap_.dataRange;
         delta_ = 1.0 / (dataRange.y - dataRange.x);
         auto normalizedVal = atlas_->getLabelIdNormalized(labelId);
 
         if (enablePicking_.get() && pickingAtlasId_ >= 0) {
-            if (pickingAtlasId_+1 != labelId)
+            if (pickingAtlasId_ + 1 != labelId) {
                 color.w = pickingTransparency_.get();
-            else
+            } 
+            else {
                 color.w = 1.0;
+            }
         }
 
         dvec2 pos1(normalizedVal - delta_ / 2.0, 0);
@@ -189,7 +215,7 @@ void VolumeAtlasProcessor::updateTransferFunction() {
         if (brushingAndLinking_.isConnected()) {
             auto selectedIndicies = brushingAndLinking_.getSelectedIndices();
             for (auto selectedIndex : selectedIndicies) {
-                auto c = atlas_->getLabelColor(selectedIndex-1);
+                auto c = atlas_->getLabelColor(selectedIndex);
                 addSelectedIndex(static_cast<int>(selectedIndex), c ? c.value() : *selectedColor_);
             }
         }
@@ -338,32 +364,33 @@ void VolumeAtlasProcessor::updateSelectableRegionProperties() {
 
 void VolumeAtlasProcessor::handlePicking(PickingEvent *p) {
     if (enablePicking_.get()) {
-        // Scheme should be that same pick color should be on press and release
+        // Scheme should be to pick a region on double tap
         if (p->getPressState() == PickingPressState::Press &&
             p->getPressItems().count(PickingPressItem::Primary)) {
-
             int pickId = p->getPickedId();
-            pickingAtlasId_ = pickId;
-            /* if (pickingAtlasId_ == pickId) {
-                pickingAtlasId_ = -1;
+
+            //Current picking ID and last pick ID are the same, assume double tap
+            if (pickId == intermediatePickingID_) {
+                //Same pickId as already chosen, clear picking
+                if (pickingAtlasId_ == pickId) {
+                    pickingAtlasId_ = -1;
+                } else {
+                    //New picking was made
+                    pickingAtlasId_ = pickId;
+                }
+                intermediatePickingID_ = -1;
             } else {
-                pickingAtlasId_ = pickId;
-            }*/
+                intermediatePickingID_ = pickId;
+            }
+
             p->markAsUsed();
             invalidate(InvalidationLevel::InvalidOutput);
         }
-        /* if (p->getPressState() == PickingPressState::Release &&
-            p->getPressItems().count(PickingPressItem::Primary)) {
-
-            int pickId = p->getPickedId();
-            if (pickingAtlasId_ != pickId) {
-                pickingAtlasId_ = -1;
-            } else {
-                pickingAtlasId_ = pickId;
-            }
-            p->markAsUsed();
-            invalidate(InvalidationLevel::InvalidOutput);
-        }*/
+        //Some other picking was made
+        //Assuming proper double tap was not made
+        int pickId = p->getPickedId();
+        if (intermediatePickingID_ != pickId)
+            intermediatePickingID_ = -1;
     }
 }
 

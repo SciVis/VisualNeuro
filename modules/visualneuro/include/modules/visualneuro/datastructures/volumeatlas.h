@@ -55,9 +55,9 @@ public:
         std::shared_ptr<const Column> labelCol;
         std::shared_ptr<const Column> colorCol;
         for (auto col : *labels) {
-            if (iCaseCmp(col->getHeader(), "Index")) {
+            if (iCaseCmp(col->getHeader(), "Index") || iCaseCmp(col->getHeader(), "Label ID")) {
                 idCol = col;
-            } else if (iCaseCmp(col->getHeader(), "Region")) {
+            } else if (iCaseCmp(col->getHeader(), "Region") || iCaseCmp(col->getHeader(), "Label Name")) {
                 labelCol = col;
             } else if (iCaseCmp(col->getHeader(), "Color")) {
                 colorCol = col;
