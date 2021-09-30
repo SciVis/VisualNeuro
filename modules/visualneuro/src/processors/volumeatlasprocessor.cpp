@@ -150,6 +150,7 @@ VolumeAtlasProcessor::VolumeAtlasProcessor()
 
     deselectAllRegions_.onChange([&]() {
         NetworkLock lock(this);
+        pickingAtlasId_ = -1;
         for (auto region : selectedVolumeRegions_) {
             auto r = static_cast<BoolProperty *>(region);
             r->set(false);
