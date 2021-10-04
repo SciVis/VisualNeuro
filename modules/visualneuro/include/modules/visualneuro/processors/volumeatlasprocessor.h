@@ -113,7 +113,6 @@ private:
     ButtonProperty selectAllRegions_;
     ButtonProperty deselectAllRegions_;
     CompositeProperty selectedVolumeRegions_;
-    std::unordered_set<int> selectedRegions_;
 
     StringProperty lookedUpName_;
     StringProperty coordinatesString_;

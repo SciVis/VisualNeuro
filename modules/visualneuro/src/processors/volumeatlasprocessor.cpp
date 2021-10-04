@@ -153,7 +153,6 @@ VolumeAtlasProcessor::VolumeAtlasProcessor()
         if (atlasRegionCenterpoints_.isReady()) {
             auto regionPositions = atlasRegionCenterpoints_.getData();
 
-            selectedRegions_.clear();
             for (auto region : selectedVolumeRegions_) {
                 auto r = dynamic_cast<BoolProperty *>(region);
                 if (region->isModified() && r) {
@@ -173,7 +172,6 @@ VolumeAtlasProcessor::VolumeAtlasProcessor()
 
     deselectAllRegions_.onChange([&]() {
         NetworkLock lock(this);
-        pickingAtlasId_ = -1;
         for (auto region : selectedVolumeRegions_) {
             auto r = static_cast<BoolProperty *>(region);
             r->set(false);
