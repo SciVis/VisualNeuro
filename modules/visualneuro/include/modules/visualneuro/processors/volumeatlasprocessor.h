@@ -122,6 +122,7 @@ private:
     FloatVec3Property selectedColor_;
     FloatProperty selectedOpacity_;
     FloatVec3Property notSelectedColor_;
+    FloatProperty notSelectedMix_;
     FloatProperty notSelectedOpacity_;
     IsoTFProperty isotfComposite_;
     FloatVec3Property worldPosition_;

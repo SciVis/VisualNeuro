@@ -81,6 +81,7 @@ VolumeAtlasProcessor::VolumeAtlasProcessor()
     , selectedColor_("selectedColor", "Selected Color", vec3(0, 123.f / 255.f, 1.f))
     , selectedOpacity_("selectedOpacity", "Opacity Selected", ordinalAlpha(1.f))
     , notSelectedColor_("notSelectedColor", "Not Selected Color", vec3(0.2))
+    , notSelectedMix_("notSelectedMix", "Not Selected Mix", ordinalAlpha(1.f))
     , notSelectedOpacity_("notSelectedOpacity", "Opacity Not selected", ordinalAlpha(0.f))
     , isotfComposite_("isotfComposite", "Atlas TF & Isovalues")
     , worldPosition_(
@@ -116,6 +117,7 @@ VolumeAtlasProcessor::VolumeAtlasProcessor()
     addProperty(selectedOpacity_);
     addProperty(notSelectedColor_);
     notSelectedColor_.setSemantics(PropertySemantics::Color);
+    addProperty(notSelectedMix_);
     addProperty(notSelectedOpacity_);
 
     isotfComposite_.setSerializationMode(PropertySerializationMode::None);
@@ -210,14 +212,14 @@ void VolumeAtlasProcessor::updateTransferFunction() {
             for (auto label : *atlas_) {
                 auto labelId = label.first;
                 auto c = atlas_->getLabelColor(labelId);
+                vec3 labelColor(c ? vec3(c.value()) : *selectedColor_);
                 if (brushingAndLinking_.isSelected(labelId)) {
-                    setLabelColor(static_cast<int>(labelId),
-                                  c ? vec4(vec3(c.value()), *selectedOpacity_)
-                                    : vec4(*selectedColor_, *selectedOpacity_));
+                    setLabelColor(static_cast<int>(labelId), vec4(labelColor, *selectedOpacity_));
 
                 } else {
                     setLabelColor(static_cast<int>(labelId),
-                                  vec4(*notSelectedColor_, *notSelectedOpacity_));
+                                  vec4(glm::mix(labelColor, *notSelectedColor_, *notSelectedMix_),
+                                       *notSelectedOpacity_));
                 }
             }
         }
