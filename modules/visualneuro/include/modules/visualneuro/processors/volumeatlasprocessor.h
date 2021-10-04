@@ -96,6 +96,11 @@ private:
     void updateBrushing();
     void updateSelectableRegionProperties();
     void handlePicking(PickingEvent*);
+    int pickingToLabelId(int pickingID) const;
+
+    dvec3 getLabelCenterPoint(int labelId) const;
+
+    int labelIdToRow(int labelID) const;
 
     VolumeInport atlasVolume_;
     DataInport<DataFrame> atlasLabels_;
@@ -114,9 +119,12 @@ private:
     StringProperty coordinatesString_;
     BoolProperty visualizeAtlas_;
     FloatVec4Property hoverColor_;
-    FloatVec4Property selectedColor_;
+    FloatProperty hoverMix_;
+    FloatVec3Property selectedColor_;
+    FloatProperty selectedOpacity_;
+    FloatVec3Property notSelectedColor_;
+    FloatProperty notSelectedOpacity_;
     IsoTFProperty isotfComposite_;
-    IsoTFProperty pickingtfComposite_;
     FloatVec3Property worldPosition_;
 
     BoolProperty enablePicking_;
@@ -124,13 +132,12 @@ private:
     PickingMapper atlasPicking_;
 
     std::unique_ptr<VolumeAtlas> atlas_;
+    std::vector<int> pickingToLabelId_;
+    std::shared_ptr<TransferFunction> pickingTF_ = std::make_shared<TransferFunction>();
 
-    int hoverAtlasId_;
-    double delta_;
+    int hoverAtlasId_ = -1;
 
     bool brushingDirty_ = true;
-    bool pickingDirty_ = false;
-    int pickingAtlasId_ = -1;
 };
 
 }  // namespace inviwo

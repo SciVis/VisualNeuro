@@ -134,4 +134,9 @@ inline bool VolumeAtlas::hasColors() const {
     return std::any_of(labels_.cbegin(), labels_.cend(),
                        [](const auto l) { return l.second.color != std::nullopt; });
 }
+
+VolumeAtlas::const_iterator VolumeAtlas::begin() const { return labels_.begin(); }
+
+VolumeAtlas::const_iterator VolumeAtlas::end() const { return labels_.end(); }
+
 }  // namespace inviwo
