@@ -53,6 +53,9 @@ public:
         std::optional<glm::vec4> color;
         bool operator==(std::string label) { return name == label; }
     };
+
+    using const_iterator = std::map<int, Label>::const_iterator;
+
     VolumeAtlas(std::shared_ptr<const Volume> atlas, std::shared_ptr<const DataFrame> labels);
 
     int getLabelId(const ivec3 indexPos) const;
@@ -68,6 +71,8 @@ public:
 
     bool hasColors() const;
 
+    const_iterator begin() const;
+    const_iterator end() const;
 private:
     std::shared_ptr<const Volume> atlas_;
     std::map<int, Label> labels_;

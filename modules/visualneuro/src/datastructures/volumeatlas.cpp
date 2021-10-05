@@ -38,9 +38,10 @@ inline VolumeAtlas::VolumeAtlas(std::shared_ptr<const Volume> atlas,
     std::shared_ptr<const Column> labelCol;
     std::shared_ptr<const Column> colorCol;
     for (auto col : *labels) {
-        if (iCaseCmp(col->getHeader(), "Index")) {
+        if (iCaseCmp(col->getHeader(), "Index") || iCaseCmp(col->getHeader(), "Label ID")) {
             idCol = col;
-        } else if (iCaseCmp(col->getHeader(), "Region")) {
+        } else if (iCaseCmp(col->getHeader(), "Region") ||
+                   iCaseCmp(col->getHeader(), "Label Name")) {
             labelCol = col;
         } else if (iCaseCmp(col->getHeader(), "Color")) {
             colorCol = col;
@@ -133,4 +134,9 @@ inline bool VolumeAtlas::hasColors() const {
     return std::any_of(labels_.cbegin(), labels_.cend(),
                        [](const auto l) { return l.second.color != std::nullopt; });
 }
+
+VolumeAtlas::const_iterator VolumeAtlas::begin() const { return labels_.begin(); }
+
+VolumeAtlas::const_iterator VolumeAtlas::end() const { return labels_.end(); }
+
 }  // namespace inviwo
