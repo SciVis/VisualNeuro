@@ -114,7 +114,8 @@ private:
     ButtonProperty deselectAllRegions_;
     CompositeProperty selectedVolumeRegions_;
 
-    StringProperty lookedUpName_;
+    StringProperty selectedName_;
+    StringProperty hoverName_;
     StringProperty coordinatesString_;
     BoolProperty visualizeAtlas_;
     FloatVec4Property hoverColor_;

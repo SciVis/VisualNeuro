@@ -73,7 +73,8 @@ VolumeAtlasProcessor::VolumeAtlasProcessor()
     , selectAllRegions_("selectAllRegions", "Select all regions")
     , deselectAllRegions_("deselectAllRegions", "Deselect all regions")
     , selectedVolumeRegions_("selectedVolumeRegion", "Selected Volume Regions")
-    , lookedUpName_("lookedUpName", "Result", "")
+    , selectedName_("selectedName", "Selected", "")
+    , hoverName_("lookedUpName", "Hover name", "")
     , coordinatesString_("coordinatesString", "Coordinates", "")
     , visualizeAtlas_("visualizeAtlas", "Visualize Atlas", true)
     , hoverColor_("color", "Hover Color", vec4(0, 1.f, 0, 1.f))
@@ -103,9 +104,11 @@ VolumeAtlasProcessor::VolumeAtlasProcessor()
 
     // make sure that we always process even if not connected
     isSink_.setUpdate([]() { return true; });
-
-    addProperty(lookedUpName_);
-    lookedUpName_.setReadOnly(true);
+    selectedName_.setReadOnly(true);
+    hoverName_.setReadOnly(true);
+    addProperty(selectedName_);
+    addProperty(hoverName_);
+    
     addProperty(coordinatesString_);
     coordinatesString_.setReadOnly(true);
     addProperty(visualizeAtlas_);
@@ -133,9 +136,8 @@ VolumeAtlasProcessor::VolumeAtlasProcessor()
             return;
         }
         hoverAtlasId_ = atlas_->getLabelId(worldPosition_.get());
-        Property::OnChangeBlocker b1(lookedUpName_);
         auto area = atlas_->getLabelName(hoverAtlasId_);
-        lookedUpName_.set(area);
+        hoverName_.set(area);
 
         // update the coordinates string
         auto pos = worldPosition_.get();
@@ -143,7 +145,6 @@ VolumeAtlasProcessor::VolumeAtlasProcessor()
         std::ostringstream strs;
         strs << std::setprecision(1) << std::fixed << "Coordinates: (" << pos.x << ", " << pos.y
              << ", " << pos.z << ")";
-        Property::OnChangeBlocker b2(coordinatesString_);
         coordinatesString_.set(strs.str());
     });
 
@@ -170,6 +171,14 @@ VolumeAtlasProcessor::VolumeAtlasProcessor()
                 }
             }
         }
+        std::stringstream selectedRegions;
+        auto oj = util::make_ostream_joiner(selectedRegions, ",");
+        for (auto region : selectedVolumeRegions_) {
+            if (auto r = dynamic_cast<BoolProperty *>(region); *r) {
+                oj = r->getDisplayName();
+            }
+        }
+        selectedName_.set(selectedRegions.str());
     });
 
     deselectAllRegions_.onChange([&]() {
@@ -385,11 +394,11 @@ void VolumeAtlasProcessor::handlePicking(PickingEvent *e) {
         e->setToolTip(fmt::format("Label {}", id));
         hoverAtlasId_ = id;
         auto area = atlas_->getLabelName(hoverAtlasId_);
-        lookedUpName_.set(area);
+        hoverName_.set(area);
     } else if (e->getHoverState() == PickingHoverState::Exit) {
         e->setToolTip("");
         hoverAtlasId_ = -1;
-        lookedUpName_.set("");
+        hoverName_.set("");
     }
 
     if (e->getPressState() == PickingPressState::Release &&
