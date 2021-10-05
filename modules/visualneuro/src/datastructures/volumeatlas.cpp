@@ -31,6 +31,7 @@
 
 namespace inviwo {
 
+
 VolumeAtlas::VolumeAtlas(std::shared_ptr<const Volume> atlas,
                                 std::shared_ptr<const DataFrame> labels)
     : atlas_(atlas) {
@@ -38,9 +39,10 @@ VolumeAtlas::VolumeAtlas(std::shared_ptr<const Volume> atlas,
     std::shared_ptr<const Column> labelCol;
     std::shared_ptr<const Column> colorCol;
     for (auto col : *labels) {
-        if (iCaseCmp(col->getHeader(), "Index")) {
+        if (iCaseCmp(col->getHeader(), "Index") || iCaseCmp(col->getHeader(), "Label ID")) {
             idCol = col;
-        } else if (iCaseCmp(col->getHeader(), "Region")) {
+        } else if (iCaseCmp(col->getHeader(), "Region") ||
+                   iCaseCmp(col->getHeader(), "Label Name")) {
             labelCol = col;
         } else if (iCaseCmp(col->getHeader(), "Color")) {
             colorCol = col;
@@ -89,6 +91,7 @@ int VolumeAtlas::getLabelId(const ivec3 indexPos) const {
         return -1;
     }
 }
+
 int VolumeAtlas::getLabelId(std::string label) const {
     auto elemIt = std::find_if(labels_.begin(), labels_.end(),
                                [label](auto elem) { return elem.second == label; });
@@ -98,6 +101,7 @@ int VolumeAtlas::getLabelId(std::string label) const {
         return elemIt->first;
     }
 }
+
 int VolumeAtlas::getLabelId(vec3 worldPos) const {
     const mat4 trans = atlas_->getCoordinateTransformer().getWorldToIndexMatrix();
     const ivec3 indexPos(ivec3(trans * vec4(worldPos, 1)));
@@ -117,6 +121,7 @@ std::optional<VolumeAtlas::Label> VolumeAtlas::getLabel(int id) const {
     }
 }
 
+
 std::string VolumeAtlas::getLabelName(int id) const {
     auto elemIt = labels_.find(id);
     if (elemIt == labels_.end()) {
@@ -134,9 +139,14 @@ std::optional<vec4> VolumeAtlas::getLabelColor(int id) const {
         return elemIt->second.color;
     }
 }
+
 bool VolumeAtlas::hasColors() const {
     return std::any_of(labels_.cbegin(), labels_.cend(),
                        [](const auto l) { return l.second.color != std::nullopt; });
 }
+
+VolumeAtlas::const_iterator VolumeAtlas::begin() const { return labels_.begin(); }
+
+VolumeAtlas::const_iterator VolumeAtlas::end() const { return labels_.end(); }
 
 }  // namespace inviwo

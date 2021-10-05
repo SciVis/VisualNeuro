@@ -34,26 +34,35 @@
 #include <modules/visualneuro/visualneuromoduledefine.h>
 #include <execution>
 
-// Three overloaded functions for calculating the Pearson correlation between two datasets A and B.
+
+
+IVW_MODULE_VISUALNEURO_API double calculateMeanIgnoreNaNs(const std::vector<double>& v);
 
 template <typename Iterator>
-double pearsonCorrelation(Iterator firstA, Iterator lastA, Iterator firstB, Iterator lastB) {
-    double meanOfA = calculateMeanIgnoreNaNs(firstA, lastA);
-    double meanOfB = calculateMeanIgnoreNaNs(firstB, lastB);
+double calculateMeanIgnoreNaNs(Iterator first, Iterator last) {
+    double mean = 0.0;
+    size_t validElements = 0;
+    for (auto element = first; element != last; element++) {
+        if (isnan(*element)) continue;
+        mean += static_cast<double>(*element);
+        validElements++;
+    }
 
-    return pearsonCorrelation(firstA, lastA, firstB, lastB, meanOfA, meanOfB);
+    return mean / validElements;
 }
 
+// Three overloaded functions for calculating the Pearson correlation between two datasets A and B.
 IVW_MODULE_VISUALNEURO_API double pearsonCorrelation(const std::vector<double>& A,
-                                                      const std::vector<double>& B);
+                                                     const std::vector<double>& B);
 
 IVW_MODULE_VISUALNEURO_API double pearsonCorrelation(const std::vector<double>& A,
-                                                      const std::vector<double>& B,
-                                                      const double& meanOfA);
+                                                     const std::vector<double>& B,
+                                                     const double& meanOfA);
 
 IVW_MODULE_VISUALNEURO_API double pearsonCorrelation(const std::vector<double>& A,
-                                                      const std::vector<double>& B,
-                                                      const double& meanOfA, const double& meanOfB);
+                                                     const std::vector<double>& B,
+                                                     const double& meanOfA, const double& meanOfB);
+
 template <typename Iterator>
 double pearsonCorrelation(Iterator firstA, Iterator lastA, Iterator firstB, Iterator lastB,
                           const double& meanOfA, const double& meanOfB) {
@@ -86,19 +95,16 @@ double pearsonCorrelation(Iterator firstA, Iterator lastA, Iterator firstB, Iter
     return numerator / (standardDeviationParameters * standardDeviationVoxels);
 }
 
-IVW_MODULE_VISUALNEURO_API double calculateMeanIgnoreNaNs(const std::vector<double>& v);
-
 template <typename Iterator>
-double calculateMeanIgnoreNaNs(Iterator first, Iterator last) {
-    double mean = 0.0;
-    size_t validElements = 0;
-    for (auto element = first; element != last; element++) {
-        if (isnan(*element)) continue;
-        mean += static_cast<double>(*element);
-        validElements++;
-    }
+double pearsonCorrelation(Iterator firstA, Iterator lastA, Iterator firstB, Iterator lastB) {
+    double meanOfA = calculateMeanIgnoreNaNs(firstA, lastA);
+    double meanOfB = calculateMeanIgnoreNaNs(firstB, lastB);
 
-    return mean / validElements;
+    return pearsonCorrelation(firstA, lastA, firstB, lastB, meanOfA, meanOfB);
 }
+
+
+
+
 
 #endif  // IVW_PEARSONCORRELATION_H

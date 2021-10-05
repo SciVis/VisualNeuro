@@ -4,7 +4,9 @@ project(VisualNeuroApp)
 
 include(version.cmake)
 
-find_package(Qt5 5.12.0 QUIET REQUIRED COMPONENTS Core Gui Widgets OpenGL)# WebEngine WebEngineWidgets WebSockets)
+# https://doc-snapshots.qt.io/qt6-dev/cmake-qt5-and-qt6-compatibility.html#supporting-older-qt-5-versions   
+find_package(QT NAMES Qt6 Qt5 COMPONENTS Core Widgets REQUIRED)
+find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Widgets REQUIRED)
 
 #--------------------------------------------------------------------
 # Add MOC files
@@ -14,16 +16,16 @@ set(MOC_FILES
     splashscreen.h
 )
 # Add resource file
-qt5_add_resources(QRC_FILE "visualneuro.qrc")
-    source_group("Resource Files" FILES
-    visualneuro.qrc
-    ${QRC_FILE}
-)
+if(QT_VERSION_MAJOR EQUAL 6)
+    qt_add_resources(QRC_FILE "visualneuro.qrc")
+else()
+    qt5_add_resources(QRC_FILE "visualneuro.qrc")
+endif()
+source_group("Resource Files" FILES visualneuro.qrc ${QRC_FILE})
 
 #--------------------------------------------------------------------
 # Add header files
 set(HEADER_FILES  
-    visualneurocommondefines.h # auto-generated
     ${MOC_FILES})
 ivw_group("Header Files" ${HEADER_FILES})
 
@@ -38,8 +40,12 @@ set(SOURCE_FILES
 ivw_group("Source Files" ${SOURCE_FILES})
 
 # Add moc files
-qt5_wrap_cpp(MOC_FILES ${MOC_FILES})
-source_group("MOC Files" FILES ${MOC_FILES})
+if(QT_VERSION_MAJOR EQUAL 6)
+    qt_wrap_cpp(MOCED_FILES ${MOC_FILES})
+else()
+    qt5_wrap_cpp(MOCED_FILES ${MOC_FILES})
+endif()
+source_group("MOC Files" FILES ${MOCED_FILES})
 
 
 ivw_retrieve_all_modules(enabled_modules)
@@ -60,17 +66,17 @@ endif()
 source_group("Resource Files" FILES ${RES_FILES})
 
 # Create application
-add_executable(VisualNeuro MACOSX_BUNDLE WIN32 ${SOURCE_FILES} ${QRC_FILE} ${MOC_FILES} ${RES_FILES})
+add_executable(VisualNeuro MACOSX_BUNDLE WIN32 
+    ${SOURCE_FILES} 
+    ${HEADER_FILES} 
+    ${QRC_FILE} 
+    ${MOCED_FILES} 
+    ${RES_FILES})
 target_link_libraries(VisualNeuro PUBLIC
     inviwo::core
     inviwo::qtapplicationbase
-    Qt5::Core
-    Qt5::Gui
-    Qt5::Widgets
-    Qt5::OpenGL
-	#Qt5::WebEngine
-	#Qt5::WebEngineWidgets
-    #Qt5::WebSockets
+    Qt${QT_VERSION_MAJOR}::Core
+    Qt${QT_VERSION_MAJOR}::Widgets
 )
 target_include_directories(VisualNeuro PUBLIC
      ${CMAKE_BINARY_DIR}/apps/visualneuro/include
@@ -137,6 +143,8 @@ endif()
 #    set_property(TARGET VisualNeuro APPEND_STRING PROPERTY LINK_FLAGS 
 #        " /SUBSYSTEM:CONSOLE /ENTRY:mainCRTStartup")
 #endif()
+
+ivw_deploy_qt(VisualNeuro)
 
 set_property(CACHE IVW_PACKAGE_SELECT_APP APPEND PROPERTY STRINGS "VisualNeuro")
 

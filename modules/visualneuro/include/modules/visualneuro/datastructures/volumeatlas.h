@@ -30,8 +30,12 @@
 
 #include <modules/visualneuro/visualneuromoduledefine.h>
 
+
+#include <inviwo/core/datastructures/volume/volume.h>
 #include <inviwo/core/util/glm.h>
 #include <inviwo/core/util/stringconversion.h>
+
+#include <inviwo/dataframe/datastructures/dataframe.h>
 
 #include <string>
 #include <optional>
@@ -50,6 +54,7 @@ public:
         std::optional<glm::vec4> color;
         bool operator==(std::string label) { return name == label; }
     };
+    using const_iterator = std::map<int, Label>::const_iterator;
     /*
      * Create an AtlasVolume associating indices in the Volume with labels.
      * Each label may optionally have a color, which are assumed to be in column "Color".
@@ -106,6 +111,9 @@ public:
      */
     bool hasColors() const;
 
+
+    const_iterator begin() const;
+    const_iterator end() const;
 private:
     std::shared_ptr<const Volume> atlas_;
     std::map<int, Label> labels_;

@@ -29,6 +29,7 @@
 
 #include <modules/visualneuro/processors/dataframecolumnfilter.h>
 #include <inviwo/core/properties/boolproperty.h>
+#include <inviwo/core/util/utilities.h>
 
 namespace inviwo {
 
