@@ -122,6 +122,7 @@ private:
     FloatProperty hoverMix_;
     FloatVec3Property selectedColor_;
     FloatProperty selectedOpacity_;
+    BoolProperty applyNotSelectedForEmptySelection_;
     FloatVec3Property notSelectedColor_;
     FloatProperty notSelectedMix_;
     FloatProperty notSelectedOpacity_;

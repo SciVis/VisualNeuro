@@ -81,6 +81,8 @@ VolumeAtlasProcessor::VolumeAtlasProcessor()
     , hoverMix_("hoverMix", "Hover Mix", ordinalAlpha(0.4f))
     , selectedColor_("selectedColor", "Selected Color", vec3(0, 123.f / 255.f, 1.f))
     , selectedOpacity_("selectedOpacity", "Opacity Selected", ordinalAlpha(1.f))
+    , applyNotSelectedForEmptySelection_("applyNotSelected",
+                                         "Apply 'Not Selected' For Empty Selection", false)
     , notSelectedColor_("notSelectedColor", "Not Selected Color", vec3(0.2))
     , notSelectedMix_("notSelectedMix", "Not Selected Mix", ordinalAlpha(1.f))
     , notSelectedOpacity_("notSelectedOpacity", "Opacity Not selected", ordinalAlpha(0.f))
@@ -106,30 +108,17 @@ VolumeAtlasProcessor::VolumeAtlasProcessor()
     isSink_.setUpdate([]() { return true; });
     selectedName_.setReadOnly(true);
     hoverName_.setReadOnly(true);
-    addProperty(selectedName_);
-    addProperty(hoverName_);
-    
-    addProperty(coordinatesString_);
     coordinatesString_.setReadOnly(true);
-    addProperty(visualizeAtlas_);
-    addProperty(hoverColor_);
-    addProperty(hoverMix_);
-    hoverColor_.setSemantics(PropertySemantics::Color);
-    addProperty(selectedColor_);
-    selectedColor_.setSemantics(PropertySemantics::Color);
-    addProperty(selectedOpacity_);
-    addProperty(notSelectedColor_);
-    notSelectedColor_.setSemantics(PropertySemantics::Color);
-    addProperty(notSelectedMix_);
-    addProperty(notSelectedOpacity_);
-
-    isotfComposite_.setSerializationMode(PropertySerializationMode::None);
-    addProperty(isotfComposite_);
-
-    addProperty(enablePicking_);
-
-    addProperty(worldPosition_);
     worldPosition_.setReadOnly(true);
+    hoverColor_.setSemantics(PropertySemantics::Color);
+    selectedColor_.setSemantics(PropertySemantics::Color);
+    notSelectedColor_.setSemantics(PropertySemantics::Color);
+    isotfComposite_.setSerializationMode(PropertySerializationMode::None);
+    addProperties(selectedName_, hoverName_, coordinatesString_, visualizeAtlas_, hoverColor_,
+                  hoverMix_, selectedColor_, selectedOpacity_, applyNotSelectedForEmptySelection_,
+                  notSelectedColor_, notSelectedMix_, notSelectedOpacity_, isotfComposite_,
+                  enablePicking_, worldPosition_, selectAllRegions_, deselectAllRegions_,
+                  selectedVolumeRegions_);
 
     worldPosition_.onChange([&]() {
         if (!atlas_) {
@@ -148,9 +137,6 @@ VolumeAtlasProcessor::VolumeAtlasProcessor()
         coordinatesString_.set(strs.str());
     });
 
-    addProperty(selectAllRegions_);
-    addProperty(deselectAllRegions_);
-    addProperty(selectedVolumeRegions_);
     selectedVolumeRegions_.onChange([&]() {
         brushingDirty_ = true;
         if (atlasRegionCenterpoints_.isReady()) {
@@ -218,6 +204,10 @@ void VolumeAtlasProcessor::updateTransferFunction() {
     }
     if (visualizeAtlas_.get()) {
         if (brushingAndLinking_.isConnected()) {
+
+            bool applyNotSelected = *applyNotSelectedForEmptySelection_ ||
+                                    !brushingAndLinking_.getSelectedIndices().empty();
+
             for (auto label : *atlas_) {
                 auto labelId = label.first;
                 auto c = atlas_->getLabelColor(labelId);
@@ -225,10 +215,13 @@ void VolumeAtlasProcessor::updateTransferFunction() {
                 if (brushingAndLinking_.isSelected(labelId)) {
                     setLabelColor(static_cast<int>(labelId), vec4(labelColor, *selectedOpacity_));
 
-                } else {
+                } else if (applyNotSelected) {
                     setLabelColor(static_cast<int>(labelId),
                                   vec4(glm::mix(labelColor, *notSelectedColor_, *notSelectedMix_),
                                        *notSelectedOpacity_));
+                } else {
+                    setLabelColor(static_cast<int>(labelId),
+                                  c ? c.value() : vec4(labelColor, *selectedOpacity_));
                 }
             }
         }
