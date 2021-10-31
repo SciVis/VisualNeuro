@@ -282,30 +282,41 @@ void VolumeAtlasProcessor::updateSelectableRegionProperties() {
     for (auto regionProperty : selectedVolumeRegions_.getProperties()) {
         propertiesToRemove.push_back(regionProperty->getIdentifier());
     }
-    for (auto propertyId : propertiesToRemove) {
-        selectedVolumeRegions_.removeProperty(propertyId);
-    }
+    auto removeProperties = [&selectedVolumeRegions = selectedVolumeRegions_](const std::vector<std::string>& propertiesToRemove) {
+        for (auto propertyId : propertiesToRemove) {
+            selectedVolumeRegions.removeProperty(propertyId);
+        }
+    };
 
-    if (!atlasVolume_.hasData()) return;
+    if (!atlasVolume_.hasData()) {
+        removeProperties(propertiesToRemove);
+        return;
+    }
 
     auto regionIndices = atlasLabels_.getData()->getColumn(1);
     auto regionNames = atlasLabels_.getData()->getColumn(2);
-    int maxLabelId = -1;
     for (size_t i = 0; i < regionIndices->getSize(); i++) {
         auto labelId = static_cast<int>(regionIndices->getAsDouble(i));
         std::string name = regionNames->getAsString(i);
+        auto identifier = fmt::format("{}_{}", labelId, util::stripIdentifier(name));
 
-        std::stringstream identifier;
-        identifier << labelId << "_" << util::stripIdentifier(name);
+        BoolProperty *prop;
+        if (auto existingProp = selectedVolumeRegions_.getPropertyByIdentifier(identifier)) {
+            prop = static_cast<BoolProperty *>(existingProp);
+            util::erase_remove(propertiesToRemove, identifier);
+        } else {
+            auto newProp = std::make_unique<BoolProperty>(identifier, name, false);
+            newProp->onChange([&]() { brushingDirty_ = true; });
+            prop = newProp.release();
+            selectedVolumeRegions_.addProperty(prop);
+        }
 
-        auto newProp = std::make_unique<BoolProperty>(identifier.str(), name, false);
-        if (!atlasVolume_.isConnected() || !atlasVolume_.hasData()) newProp->setReadOnly(true);
-        newProp->setMetaData<IntMetaData>("labelId", labelId);
-        newProp->setMetaData<DoubleMetaData>("rowIndex", static_cast<double>(i));
-        newProp->onChange([&]() { brushingDirty_ = true; });
-        selectedVolumeRegions_.addProperty(newProp.release());
-        maxLabelId = std::max(labelId, maxLabelId);
+        if (!atlasVolume_.isConnected() || !atlasVolume_.hasData()) prop->setReadOnly(true);
+        prop->setMetaData<IntMetaData>("labelId", labelId);
+        prop->setMetaData<DoubleMetaData>("rowIndex", static_cast<double>(i));
     }
+    // Remove properties that were not reused.
+    removeProperties(propertiesToRemove);
 
     atlasPicking_.resize(regionIndices->getSize() + 1);
     auto atlasVolume = atlasVolume_.getData();
