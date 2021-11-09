@@ -79,6 +79,7 @@ VolumeAtlasProcessor::VolumeAtlasProcessor()
     , visualizeAtlas_("visualizeAtlas", "Visualize Atlas", true)
     , hoverColor_("color", "Hover Color", vec4(0, 1.f, 0, 1.f))
     , hoverMix_("hoverMix", "Hover Mix", ordinalAlpha(0.4f))
+    , showTooltip_("showTooltip", "Show Tooltip", true)
     , selectedColor_("selectedColor", "Selected Color", vec3(0, 123.f / 255.f, 1.f))
     , selectedOpacity_("selectedOpacity", "Opacity Selected", ordinalAlpha(1.f))
     , applyNotSelectedForEmptySelection_("applyNotSelected",
@@ -115,7 +116,8 @@ VolumeAtlasProcessor::VolumeAtlasProcessor()
     notSelectedColor_.setSemantics(PropertySemantics::Color);
     isotfComposite_.setSerializationMode(PropertySerializationMode::None);
     addProperties(selectedName_, hoverName_, coordinatesString_, visualizeAtlas_, hoverColor_,
-                  hoverMix_, selectedColor_, selectedOpacity_, applyNotSelectedForEmptySelection_,
+                  hoverMix_, showTooltip_, selectedColor_, selectedOpacity_,
+                  applyNotSelectedForEmptySelection_,
                   notSelectedColor_, notSelectedMix_, notSelectedOpacity_, isotfComposite_,
                   enablePicking_, worldPosition_, selectAllRegions_, deselectAllRegions_,
                   selectedVolumeRegions_);
@@ -395,7 +397,9 @@ void VolumeAtlasProcessor::handlePicking(PickingEvent *e) {
     auto id = pickingToLabelId(e->getPickedId());
 
     if (e->getHoverState() == PickingHoverState::Enter) {
-        e->setToolTip(fmt::format("Label {}", id));
+        if (showTooltip_) {
+            e->setToolTip(fmt::format("Label {}", id));
+        }
         hoverAtlasId_ = id;
         auto area = atlas_->getLabelName(hoverAtlasId_);
         hoverName_.set(area);
@@ -405,7 +409,7 @@ void VolumeAtlasProcessor::handlePicking(PickingEvent *e) {
         hoverName_.set("");
     }
 
-    if (e->getPressState() == PickingPressState::Release &&
+    if (e->getPressState() == PickingPressState::Press &&
         e->getPressItem() == PickingPressItem::Primary &&
         glm::distance(e->getPressedPosition(), e->getPosition()) <
             2.f / glm::min(e->getCanvasSize().x, e->getCanvasSize().y)) {
@@ -427,7 +431,7 @@ void VolumeAtlasProcessor::handlePicking(PickingEvent *e) {
             }
         }
         e->markAsUsed();
-    } else if (e->getPressState() == PickingPressState::Release &&
+    } else if (e->getPressState() == PickingPressState::Press &&
                e->getPressItem() == PickingPressItem::Primary &&
                e->modifiers().contains(KeyModifier::Shift)) {
 

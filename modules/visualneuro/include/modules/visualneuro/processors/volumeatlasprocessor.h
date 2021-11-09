@@ -120,6 +120,7 @@ private:
     BoolProperty visualizeAtlas_;
     FloatVec4Property hoverColor_;
     FloatProperty hoverMix_;
+    BoolProperty showTooltip_;
     FloatVec3Property selectedColor_;
     FloatProperty selectedOpacity_;
     BoolProperty applyNotSelectedForEmptySelection_;
