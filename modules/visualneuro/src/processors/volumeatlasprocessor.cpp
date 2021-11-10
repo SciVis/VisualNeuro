@@ -409,10 +409,10 @@ void VolumeAtlasProcessor::handlePicking(PickingEvent *e) {
         hoverName_.set("");
     }
 
-    if (e->getPressState() == PickingPressState::Press &&
+    if (e->getPressState() == PickingPressState::Release &&
         e->getPressItem() == PickingPressItem::Primary &&
         glm::distance(e->getPressedPosition(), e->getPosition()) <
-            2.f / glm::min(e->getCanvasSize().x, e->getCanvasSize().y)) {
+            4.f / glm::min(e->getCanvasSize().x, e->getCanvasSize().y)) {
         if (!e->modifiers().contains(KeyModifier::Control)) {
             // Deselect all others
             for (auto region : selectedVolumeRegions_) {
@@ -431,7 +431,7 @@ void VolumeAtlasProcessor::handlePicking(PickingEvent *e) {
             }
         }
         e->markAsUsed();
-    } else if (e->getPressState() == PickingPressState::Press &&
+    } else if (e->getPressState() == PickingPressState::Release &&
                e->getPressItem() == PickingPressItem::Primary &&
                e->modifiers().contains(KeyModifier::Shift)) {
 
