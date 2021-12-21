@@ -48,7 +48,8 @@ DataFrameColumnFilter::DataFrameColumnFilter()
     , input_("input")
     , output_("output")
     , filter_("filter", "Filter")
-    , secondaryFilter_("secondaryFilter", "Remove", input_, true) {
+    , secondaryFilter_("secondaryFilter", "Remove", input_,
+                       ColumnOptionProperty::AddNoneOption::Yes) {
 
     addPort(input_);
     addPort(output_);

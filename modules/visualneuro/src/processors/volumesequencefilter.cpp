@@ -48,10 +48,11 @@ VolumeSequenceFilter::VolumeSequenceFilter()
     : Processor()
     , inport_("inport")
     , dataFrame_("dataFrame_")
-    , brushingAndLinking_("brushingAndLinking")
+    , brushingAndLinking_("brushingAndLinking", BrushingModification::Filtered)
     , volumesOutport_("volumesOutport")
     , dataOutport_("dataOutport")
-    , filenameIdColumn_("filenameIdColumn", "Volume Filename Column", dataFrame_, false, 1) {
+    , filenameIdColumn_("filenameIdColumn", "Volume Filename Column", dataFrame_,
+                        ColumnOptionProperty::AddNoneOption::No, 1) {
 
     addPort(inport_);
     addPort(dataFrame_);
@@ -65,10 +66,7 @@ VolumeSequenceFilter::VolumeSequenceFilter()
 
 void VolumeSequenceFilter::process() {
     if (inport_.isChanged() || filenameIdColumn_.isModified() ||
-        (brushingAndLinking_.getFilteredIndices().size() != numberOfBrushed_)) {
-
-        std::unordered_set<size_t> brushedIndices = brushingAndLinking_.getFilteredIndices();
-        numberOfBrushed_ = brushedIndices.size();
+        brushingAndLinking_.isFilteringModified()) {
 
         // Create a map between brushing id's and the volume filenames.
         std::unordered_map<std::string, int> volumeIdMapping;
@@ -124,10 +122,8 @@ void VolumeSequenceFilter::process() {
                 continue;
             }
             auto brushingId = mapIterator->second;
-            auto brushedIterator = brushedIndices.find(brushingId);
-
             // Add volumes that are not in the brushed indices to the output
-            if (brushedIterator == brushedIndices.end()) {
+            if (!brushingAndLinking_.isFiltered(brushingId)) {
                 outputVolumes.push_back(volume);
             }
         }
@@ -152,9 +148,8 @@ void VolumeSequenceFilter::process() {
         std::vector<std::string> col;
 
         // Add all non-brushed volumes to the column vector.
-        for (auto id : volumeIdMapping) {
-            auto brushedId = brushedIndices.find(id.second);
-            if (brushedId != brushedIndices.end()) col.push_back(id.first);
+        for (auto& id : volumeIdMapping) {
+            if (!brushingAndLinking_.isFiltered(id.second)) col.push_back(id.first);
         }
 
         // Add the created column to the dataframe and send to outport.
@@ -165,7 +160,7 @@ void VolumeSequenceFilter::process() {
         dataOutport_.setData(dataframe);
 
         // If no change has been done in the brushing, take no action.
-    } else if (brushingAndLinking_.getFilteredIndices().size() == numberOfBrushed_) {
+    } else if (!brushingAndLinking_.isFilteringModified()) {
         return;
         // If no volumes are brushed, send all volumes to the outports.
     } else {

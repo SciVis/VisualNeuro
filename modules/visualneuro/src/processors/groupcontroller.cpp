@@ -28,6 +28,8 @@
  *********************************************************************************/
 
 #include <modules/visualneuro/processors/groupcontroller.h>
+#include <inviwo/core/network/processornetwork.h>
+#include <inviwo/core/common/inviwoapplication.h>
 
 namespace inviwo {
 
@@ -46,55 +48,26 @@ GroupController::GroupController()
     , groupA_("groupA")
     , groupB_("groupB")
     , activeGroup_("activeGroup", "Active Group", {{"A", "A", 0}, {"B", "B", 1}}, 0)
-    , parameterSelected_("parameterSelected", "A parameter is selected", false)
-    , managers_{{std::make_shared<BrushingAndLinkingManager>(this),
-                 std::make_shared<BrushingAndLinkingManager>(this)}} {
+    , parameterSelected_("parameterSelected", "A parameter is selected", false) {
 
     addPort(groupA_);
     addPort(groupB_);
     addProperty(activeGroup_);
     addProperty(parameterSelected_);
-    groupA_.setData(managers_[0]);
-    groupB_.setData(managers_[1]);
-
 }
 
 void GroupController::process() {
-    if (*activeGroup_ == 0) {
-        groupA_.setData(managers_[0]);
-    } else {
-        groupB_.setData(managers_[1]);
+    if (groupA_.getManager().isSelectionModified(BrushingTarget::Column)) {
+        getNetwork()->getApplication()->dispatchFront([&]() {
+            parameterSelected_.set(
+                groupA_.getManager().getNumberOfSelected(BrushingTarget::Column) > 0);
+        });
     }
-
-}
-
-void GroupController::invokeEvent(Event* event) {
-
-    if (auto brushingEvent = dynamic_cast<BrushingAndLinkingEvent*>(event)) {
-        auto source = event->getVisitedProcessors();
-        auto groupId = 0;
-        auto B = groupB_.getConnectedInports();
-        if (std::find(B.begin(), B.end(), brushingEvent->getSource()) !=
-            B.end()) {
-            groupId = 1;
-        }
-        if (dynamic_cast<FilteringEvent*>(event)) {
-            managers_[groupId]->setFiltered(brushingEvent->getSource(),
-                                            brushingEvent->getIndices());
-            event->markAsUsed();
-        } else if (dynamic_cast<SelectionEvent*>(event)) {
-            managers_[groupId]->setSelected(brushingEvent->getSource(),
-                                            brushingEvent->getIndices());
-            event->markAsUsed();
-        } else if (dynamic_cast<ColumnSelectionEvent*>(event)) {
-            for (auto& manager : managers_) {
-                manager->setSelectedColumn(brushingEvent->getSource(), brushingEvent->getIndices());
-            }
-            parameterSelected_.set(!brushingEvent->getIndices().empty());
-            event->markAsUsed();
-        }
+    if (groupB_.getManager().isSelectionModified(BrushingTarget::Column)) {
+        getNetwork()->getApplication()->dispatchFront([&]() {
+            parameterSelected_.set(
+                groupB_.getManager().getNumberOfSelected(BrushingTarget::Column) > 0);
+        });
     }
-    Processor::invokeEvent(event);
 }
-
 }  // namespace inviwo

@@ -32,7 +32,7 @@
 #include <modules/visualneuro/visualneuromoduledefine.h>
 #include <inviwo/dataframe/datastructures/dataframe.h>
 #include <inviwo/core/properties/compositeproperty.h>
-#include <inviwo/dataframe/properties/dataframeproperty.h>
+#include <inviwo/dataframe/properties/columnoptionproperty.h>
 
 
 namespace inviwo {
@@ -67,7 +67,7 @@ private:
     DataOutport<DataFrame> output_;
 
     CompositeProperty filter_;
-    DataFrameColumnProperty secondaryFilter_;
+    ColumnOptionProperty secondaryFilter_;
 };
 
 }  // namespace inviwo

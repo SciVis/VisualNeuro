@@ -35,7 +35,7 @@
 #include <inviwo/core/ports/volumeport.h>
 #include <inviwo/core/datastructures/volume/volumeram.h>
 #include <inviwo/dataframe/datastructures/dataframe.h>
-#include <inviwo/dataframe/properties/dataframeproperty.h>
+#include <inviwo/dataframe/properties/columnoptionproperty.h>
 #include <modules/brushingandlinking/ports/brushingandlinkingports.h>
 #include <inviwo/core/processors/poolprocessor.h>
 #include <inviwo/core/properties/boolproperty.h>

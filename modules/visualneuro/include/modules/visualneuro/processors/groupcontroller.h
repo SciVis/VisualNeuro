@@ -62,11 +62,8 @@ public:
     virtual ~GroupController() = default;
 
     virtual void process() override;
-
     virtual const ProcessorInfo getProcessorInfo() const override;
     static const ProcessorInfo processorInfo_;
-
-    virtual void invokeEvent(Event* event) override;
 
 private:
     BrushingAndLinkingOutport groupA_;
@@ -74,8 +71,6 @@ private:
 
     OptionPropertySize_t activeGroup_;
     BoolProperty parameterSelected_;
-
-    std::vector<std::shared_ptr<BrushingAndLinkingManager>> managers_;
 };
 
 }  // namespace inviwo

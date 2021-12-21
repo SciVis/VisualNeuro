@@ -37,7 +37,7 @@
 #include <modules/base/properties/volumeinformationproperty.h>
 #include <modules/brushingandlinking/ports/brushingandlinkingports.h>
 #include <inviwo/dataframe/datastructures/dataframe.h>
-#include <inviwo/dataframe/properties/dataframeproperty.h>
+#include <inviwo/dataframe/properties/columnoptionproperty.h>
 #include <inviwo/core/util/zip.h>
 
 namespace inviwo {
@@ -82,9 +82,7 @@ private:
     VolumeSequenceOutport volumesOutport_;
     DataOutport<DataFrame> dataOutport_;
 
-    DataFrameColumnProperty filenameIdColumn_;
-
-    size_t numberOfBrushed_ = 0;
+    ColumnOptionProperty filenameIdColumn_;
 };
 
 }  // namespace inviwo

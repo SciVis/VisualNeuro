@@ -54,7 +54,7 @@ ParameterVolumeSequenceCorrelation::ParameterVolumeSequenceCorrelation()
     : PoolProcessor()
     , volumes_("volumes")
     , dataFrame_("dataFrame")
-    , brushing_("brushing")
+    , brushing_("brushing", BrushingModification::Filtered | BrushingModification::Selected)
     , mask_("mask")
     , resCorrelationVolume_("correlationVolume")
     , correlationMethod_("correlationMethod", "Compute",
@@ -81,7 +81,7 @@ ParameterVolumeSequenceCorrelation::ParameterVolumeSequenceCorrelation()
 
 void ParameterVolumeSequenceCorrelation::process() {
 
-    const auto calc = [volumes = volumes_.getData(), brushing = brushing_.getData(),
+    const auto calc = [volumes = volumes_.getData(), brushing = brushing_.getManager(),
                        dataFrame = dataFrame_.getData(), mask = mask_.getData(),
                        tailTest = *tailTest_, correlationMethod = *correlationMethod_,
                        pVal = *pVal_](pool::Stop stop,
@@ -129,7 +129,7 @@ void ParameterVolumeSequenceCorrelation::process() {
         float* res = vol->getDataTyped();
 
         dvec2 minMax(std::numeric_limits<double>::max(), std::numeric_limits<double>::lowest());
-        const auto& selectedColumns = brushing->getSelectedColumns();
+        const auto& selectedColumns = brushing.getSelectedIndices(BrushingTarget::Column);
         if (selectedColumns.empty()) {
             for (size_t vxlNmbr = 0; vxlNmbr < nVoxels; vxlNmbr++) {
                 *(res + vxlNmbr) = 0;
@@ -137,7 +137,7 @@ void ParameterVolumeSequenceCorrelation::process() {
         } else {
             size_t selectedParameter = *selectedColumns.begin();
             std::vector<bool> filter(dataFrame->getColumn(selectedParameter)->getSize(), false);
-            auto brushed = brushing->getFilteredIndices();
+            const auto& brushed = brushing.getFilteredIndices();
             for (const auto& brushedId : brushed) {
                 filter[brushedId] = true;
             }

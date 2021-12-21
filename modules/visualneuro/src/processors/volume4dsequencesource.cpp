@@ -206,7 +206,9 @@ void Volume4DSequenceSource::process() {
                         // set basis of first volume
                         if ((*volume4d)[0]) {
                             basis_.updateForNewEntity(*(*volume4d)[0], deserialized_);
-                            information_.updateForNewVolume(*(*volume4d)[0], deserialized_);
+                            information_.updateForNewVolume(
+                                *(*volume4d)[0], deserialized_ ? util::OverwriteState::Yes
+                                                               : util::OverwriteState::No);
                         }
                     }
                 }

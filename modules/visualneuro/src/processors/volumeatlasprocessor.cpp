@@ -264,16 +264,16 @@ void VolumeAtlasProcessor::process() {
 
 void VolumeAtlasProcessor::updateBrushing() {
     brushingDirty_ = false;
-    std::unordered_set<size_t> selectedRegions;
+    BitSet selectedRegions;
 
     for (auto region : selectedVolumeRegions_) {
         auto r = static_cast<BoolProperty *>(region);
         if (r->get()) {
             int val = static_cast<int>((r->getMetaData<IntMetaData>("labelId"))->get());
-            selectedRegions.insert(val);
+            selectedRegions.add(val);
         }
     }
-    brushingAndLinking_.sendSelectionEvent(selectedRegions);
+    brushingAndLinking_.select(selectedRegions);
 }
 
 void VolumeAtlasProcessor::updateSelectableRegionProperties() {
@@ -435,14 +435,9 @@ void VolumeAtlasProcessor::handlePicking(PickingEvent *e) {
                e->getPressItem() == PickingPressItem::Primary &&
                e->modifiers().contains(KeyModifier::Shift)) {
 
-        auto filtered = brushingAndLinking_.getFilteredIndices();
-
-        if (brushingAndLinking_.isFiltered(id - 1)) {
-            filtered.erase(id - 1);
-        } else {
-            filtered.insert(id - 1);
-        }
-        brushingAndLinking_.sendFilterEvent(filtered);
+        BitSet filtered(brushingAndLinking_.getFilteredIndices());
+        filtered.flip(id - 1);
+        brushingAndLinking_.filter("volumeatlas", filtered);
 
         e->markAsUsed();
     }

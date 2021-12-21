@@ -55,9 +55,9 @@ VolumeRegionParameterCorrelation::VolumeRegionParameterCorrelation()
     : PoolProcessor()
     , volumes_("volumes")
     , dataFrame_("dataFrame")
-    , brushing_("brushing")
+    , brushing_("brushing", BrushingModification::Filtered)
     , atlas_("atlas")
-    , atlasBrushing_("atlasBrushing")
+    , atlasBrushing_("atlasBrushing", BrushingModification::Selected)
     , correlations_("correlations")
     , correlationMethod_("correlationMethod", "Compute",
                          {{"pearson", "Pearson", stats::CorrelationMethod::Pearson},
@@ -84,23 +84,23 @@ VolumeRegionParameterCorrelation::VolumeRegionParameterCorrelation()
 
 void VolumeRegionParameterCorrelation::process() {
 
-    const auto calc = [volumes = volumes_.getData(), brushing = brushing_.getData(),
+    const auto calc = [volumes = volumes_.getData(), brushing = brushing_.getManager(),
                        dataFrame = dataFrame_.getData(), atlas = atlas_.getData(),
-                       atlasBrushing = atlasBrushing_.getData(), tailTest = *tailTest_,
+                       atlasBrushing = atlasBrushing_.getManager(), tailTest = *tailTest_,
                        correlationMethod = *correlationMethod_, pVal = *pVal_](
                           pool::Stop stop, pool::Progress progress) -> std::shared_ptr<DataFrame> {
         progress(0.f);
         auto getFormattedData = [brushing = brushing, dataFrame = dataFrame](
                                     std::vector<std::vector<double>>& parameterValues,
                                     std::vector<std::string>& parameterNames) {
-            std::unordered_set<size_t> brushedIndices = brushing->getFilteredIndices();
+            auto brushedIndices = brushing.getFilteredIndices();
 
             auto dfSize = dataFrame->getNumberOfRows();
             auto nParameters = dataFrame->getNumberOfColumns();
             parameterValues.resize(nParameters);
 
             for (auto i = 0u; i < dfSize; i++) {
-                if (brushedIndices.find(i) != brushedIndices.end()) continue;
+                if (brushing.isFiltered(i)) continue;
 
                 for (auto j = 0u; j < nParameters; j++) {
                     double value = dataFrame->getColumn(j)->getAsDouble(i);
@@ -108,7 +108,7 @@ void VolumeRegionParameterCorrelation::process() {
                 }
             }
 
-            for (auto header : dataFrame->getHeaders()) parameterNames.push_back(header.first);
+            for (const auto& col : *dataFrame) parameterNames.push_back(col->getHeader());
         };
 
         auto getVoxelValues = [](const std::vector<const VolumeRAM*>& volumeRAMs,
@@ -131,8 +131,7 @@ void VolumeRegionParameterCorrelation::process() {
 
         std::vector<std::vector<double>> parameterCorrelations;
         parameterCorrelations.resize(dataFrame->getNumberOfColumns());
-        const auto& selectedRegions = atlasBrushing->getSelectedIndices();
-        if (selectedRegions.empty()) {
+        if (atlasBrushing.getNumberOfSelected() == 0) {
             for (auto i = 0u; i < parameterCorrelations.size(); i++) {
                 // Save correlation between parameter i and current voxel
                 std::transform(std::begin(parameterCorrelations[i]),
@@ -192,7 +191,7 @@ void VolumeRegionParameterCorrelation::process() {
 
                 // Calculate a value for the voxel only if it's part of a selected region
                 double voxelValue = atlasRam->getAsDouble(indexCoordinates);
-                if (selectedRegions.find(static_cast<int>(voxelValue)) == selectedRegions.end())
+                if (!atlasBrushing.isSelected(static_cast<int>(voxelValue)))
                     showVoxel = false;
                 if (showVoxel) {
                     // Create a vector with all values for current voxel
@@ -261,7 +260,7 @@ void VolumeRegionParameterCorrelation::process() {
         resDataFrame->addColumn<float>("First_quartile");
         resDataFrame->addColumn<float>("Third_quartile");
         for (size_t i = 0; i < boxPlotData.size(); i++)
-            boxPlotData[i].insert(boxPlotData[i].begin(), dataFrame->getHeader(i));
+            boxPlotData[i].insert(boxPlotData[i].begin(), dataFrame->getColumn(i)->getHeader());
 
         for (auto row : boxPlotData) {
             resDataFrame->addRow(row);
