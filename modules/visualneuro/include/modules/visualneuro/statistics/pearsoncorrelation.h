@@ -78,13 +78,25 @@ double pearsonCorrelation(Iterator firstA, Iterator lastA, Iterator firstB, Iter
     std::transform(firstB, lastB, std::back_inserter(diffB),
                    [meanOfB](auto v) { return v - meanOfB; });
 
-    auto numerator = std::transform_reduce(std::execution::par, diffA.begin(), diffA.end(),
+    auto numerator = std::transform_reduce(
+#ifndef __clang__
+                                           std::execution::par,
+#endif
+                                           diffA.begin(), diffA.end(),
                                            diffB.begin(), 0.0, std::plus<>(), std::multiplies<>());
     auto standardDeviationParameters =
-        std::transform_reduce(std::execution::par, diffA.begin(), diffA.end(), diffA.begin(), 0.0,
+        std::transform_reduce(
+#ifndef __clang__
+                              std::execution::par,
+#endif
+                              diffA.begin(), diffA.end(), diffA.begin(), 0.0,
                               std::plus<>(), std::multiplies<>());
     auto standardDeviationVoxels =
-        std::transform_reduce(std::execution::par, diffB.begin(), diffB.end(), diffB.begin(), 0.0,
+        std::transform_reduce(
+#ifndef __clang__
+                              std::execution::par,
+#endif
+                              diffB.begin(), diffB.end(), diffB.begin(), 0.0,
                               std::plus<>(), std::multiplies<>());
 
     numerator /= nA;

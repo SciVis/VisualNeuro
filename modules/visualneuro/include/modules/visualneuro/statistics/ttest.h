@@ -43,6 +43,12 @@ enum class IVW_MODULE_VISUALNEURO_API TailTest { Both, Greater, Less };
 
 enum class IVW_MODULE_VISUALNEURO_API EqualVariance : bool { Yes = true, No = false };
 
+IVW_MODULE_VISUALNEURO_API double student_t_cdf(double t, double df);
+IVW_MODULE_VISUALNEURO_API double incbeta(double a, double b, double x);
+// Calculate the p-value based on the Student's distribution
+IVW_MODULE_VISUALNEURO_API double tailTest(const double t, double degreesOfFreedom,
+                                           TailTest tailTest);
+
 // Calculate the variance for vector v when vector mean is not previously known
 template <typename T>
 double calculateVariance(const std::vector<T>& v) {
@@ -99,12 +105,6 @@ std::tuple<double, double> tTest(const std::vector<T>& A, const std::vector<T>& 
     double prob = tailTest(t, df, tail);
     return {t, prob};
 }
-
-IVW_MODULE_VISUALNEURO_API double student_t_cdf(double t, double df);
-IVW_MODULE_VISUALNEURO_API double incbeta(double a, double b, double x);
-// Calculate the p-value based on the Student's distribution
-IVW_MODULE_VISUALNEURO_API double tailTest(const double t, double degreesOfFreedom,
-                                           TailTest tailTest);
 
 /*
  * \brief Test if two populations have different variances.

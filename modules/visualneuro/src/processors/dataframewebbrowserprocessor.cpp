@@ -79,8 +79,6 @@ void DataFrameWebBrowserProcessor::process() {
         browser_->GetMainFrame()->ExecuteJavaScript(js_.get(), "", 1);
     }
     if (reloaded_ || dataFramePort_.isChanged()) {
-        using json = nlohmann::json;
-
         auto changed = dataFramePort_.getChangedOutports();
 
         auto dataFrames = dataFramePort_.getSourceVectorData();

@@ -55,9 +55,13 @@ VolumeRegionParameterCorrelation::VolumeRegionParameterCorrelation()
     : PoolProcessor()
     , volumes_("volumes")
     , dataFrame_("dataFrame")
-    , brushing_("brushing", BrushingModification::Filtered)
+    , brushing_("brushing", {
+        {{BrushingTarget::Row}, BrushingModification::Filtered, InvalidationLevel::InvalidOutput}
+    })
     , atlas_("atlas")
-    , atlasBrushing_("atlasBrushing", BrushingModification::Selected)
+    , atlasBrushing_("atlasBrushing", {
+        {{BrushingTarget::Row}, BrushingModification::Selected, InvalidationLevel::InvalidOutput}
+    })
     , correlations_("correlations")
     , correlationMethod_("correlationMethod", "Compute",
                          {{"pearson", "Pearson", stats::CorrelationMethod::Pearson},
@@ -120,7 +124,7 @@ void VolumeRegionParameterCorrelation::process() {
             for (size_t index = 0; index < volumeRAMs.size(); index++) {
                 auto dataMap = (*volumeSequence)[index]->dataMap_;
                 volumeRAMs[index]->dispatch<void, dispatching::filter::Scalars>(
-                    [&values, index, vxlNmbr, &dataMap](auto vr) {
+                    [&values, vxlNmbr, &dataMap](auto vr) {
                         auto ptr_first_vxl = vr->getDataTyped();
                         values.emplace_back(dataMap.mapFromDataToValue(
                             static_cast<double>(*(ptr_first_vxl + vxlNmbr))));

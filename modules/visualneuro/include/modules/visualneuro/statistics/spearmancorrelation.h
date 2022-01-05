@@ -51,7 +51,7 @@ template <typename Iterator>
 std::vector<double> rank(Iterator first, Iterator last) {
     // Create pairs of indices and values
     // pairs[i] == A[i], i
-    std::vector<std::pair<Iterator::value_type, size_t>> pairs;
+    std::vector<std::pair<typename Iterator::value_type, size_t>> pairs;
     auto nElements = std::distance(first, last);
     pairs.reserve(nElements);
     size_t index = 0;
@@ -112,7 +112,11 @@ double spearmanCorrelation(Iterator firstA, Iterator lastA, Iterator firstB, Ite
         return diff * diff;
     };
     double squaredDiffSum =
-        std::transform_reduce(std::execution::par, rankA.begin(), rankA.end(), rankB.begin(), 0.0,
+        std::transform_reduce(
+#ifndef __clang__
+                              std::execution::par,
+#endif
+                              rankA.begin(), rankA.end(), rankB.begin(), 0.0,
                               std::plus<>(), squaredDifference);
 
     return 1.0 - 6.0 * squaredDiffSum /

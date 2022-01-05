@@ -54,7 +54,10 @@ ParameterVolumeSequenceCorrelation::ParameterVolumeSequenceCorrelation()
     : PoolProcessor()
     , volumes_("volumes")
     , dataFrame_("dataFrame")
-    , brushing_("brushing", BrushingModification::Filtered | BrushingModification::Selected)
+    , brushing_("brushing", {
+        {{BrushingTarget::Row}, BrushingModification::Filtered, InvalidationLevel::InvalidOutput},
+        {{BrushingTarget::Column}, BrushingModification::Selected, InvalidationLevel::InvalidOutput}
+    })
     , mask_("mask")
     , resCorrelationVolume_("correlationVolume")
     , correlationMethod_("correlationMethod", "Compute",
@@ -99,7 +102,7 @@ void ParameterVolumeSequenceCorrelation::process() {
 
                 auto dataMap = (*volumeSequence)[index]->dataMap_;
                 volumeRAMs[index]->dispatch<void, dispatching::filter::Scalars>(
-                    [&values, index, vxlNmbr, &dataMap](auto vr) {
+                    [&values, vxlNmbr, &dataMap](auto vr) {
                         auto ptr_first_vxl = vr->getDataTyped();
                         values.emplace_back(dataMap.mapFromDataToValue(
                             static_cast<double>(*(ptr_first_vxl + vxlNmbr))));

@@ -67,7 +67,7 @@ void BrainMask::process() {
             auto maskData = resMask->getDataTyped();
             util::IndexMapper3D im(mask->getDimensions());
             constexpr unsigned char maskBrain{1 << 7};  // 1000 0000
-            for (const auto volume : *volumes) {
+            for (const auto& volume : *volumes) {
                 
                 if (stop) return nullptr;
 

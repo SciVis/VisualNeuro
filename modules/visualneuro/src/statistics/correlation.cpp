@@ -36,7 +36,7 @@ namespace inviwo {
 
 namespace stats {
 
-std::tuple<double, double> inviwo::stats::corrTest(const std::vector<double>& A,
+std::tuple<double, double> corrTest(const std::vector<double>& A,
                                                    const std::vector<double>& B,
                                                    CorrelationMethod method, TailTest tailTest) {
     double r;

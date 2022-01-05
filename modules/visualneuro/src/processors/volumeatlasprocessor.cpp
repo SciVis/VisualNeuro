@@ -194,8 +194,7 @@ void VolumeAtlasProcessor::updateTransferFunction() {
 
     auto setLabelColor = [&](int labelId, vec4 color) {
         if (labelId <= 0) return;
-
-        vec2 dataRange = atlasVolume->dataMap_.dataRange;
+        
         auto normalizedVal = atlas_->getLabelIdNormalized(labelId);
 
         auto it = std::lower_bound(tf.begin(), tf.end(), normalizedVal);
@@ -463,7 +462,7 @@ dvec3 inviwo::VolumeAtlasProcessor::getLabelCenterPoint(int labelId) const {
                 return std::distance(data.begin(), found);
             });
         auto posCol = regionPositions->getColumn(2);
-        if (row >= 0 && row < posCol->getSize()) {
+        if (row >= 0 && row < static_cast<int>(posCol->getSize())) {
             return posCol->getAsDVec3(row);
         }
     }

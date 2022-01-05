@@ -48,7 +48,9 @@ VolumeSequenceFilter::VolumeSequenceFilter()
     : Processor()
     , inport_("inport")
     , dataFrame_("dataFrame_")
-    , brushingAndLinking_("brushingAndLinking", BrushingModification::Filtered)
+    , brushingAndLinking_("brushingAndLinking", {
+        {{BrushingTarget::Row}, BrushingModification::Filtered, InvalidationLevel::InvalidOutput}
+    })
     , volumesOutport_("volumesOutport")
     , dataOutport_("dataOutport")
     , filenameIdColumn_("filenameIdColumn", "Volume Filename Column", dataFrame_,
@@ -109,7 +111,7 @@ void VolumeSequenceFilter::process() {
                             volumes->size(), dfSize));
         }
 
-        for (const auto volume : *volumes) {
+        for (const auto& volume : *volumes) {
 
             std::string defaultFilepath = "No file path found";
             std::string filepath = volume->getMetaData<StringMetaData>("filename", defaultFilepath);
