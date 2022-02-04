@@ -225,50 +225,44 @@ void VolumeRegionParameterCorrelation::process() {
                 }
             }
         }
-        auto calculateBoxPlotData = [](std::vector<std::vector<double>>& parameterCorrelations)
-            -> std::vector<std::vector<std::string>> {
-            std::vector<std::vector<std::string>> boxPlotData;
-
-            for (auto parameter : parameterCorrelations) {
-                if (parameter.empty()) {
-                    boxPlotData.push_back({"nan", "nan", "nan", "nan", "nan"});
-                    continue;
-                }
-
-                std::sort(parameter.begin(), parameter.end());
-
-                double min = parameter[0];
-                double max = parameter[parameter.size() - 1];
-                size_t a = static_cast<int>(parameter.size() / 2.0);
-                double median = parameter[a];
-                size_t b = static_cast<int>(parameter.size() * 0.25);
-                double firstQuartile = parameter[b];
-                size_t c = static_cast<int>(parameter.size() * 0.75);
-                double thirdQuartile = parameter[c];
-
-                boxPlotData.push_back({std::to_string(median), std::to_string(max),
-                                       std::to_string(min), std::to_string(firstQuartile),
-                                       std::to_string(thirdQuartile)});
-            }
-            return boxPlotData;
-        };
         // Create dataframe from correlations
-
         auto resDataFrame = std::make_shared<DataFrame>();
-        std::vector<std::vector<std::string>> boxPlotData =
-            calculateBoxPlotData(parameterCorrelations);
-        resDataFrame->addCategoricalColumn("Parameter");
-        resDataFrame->addColumn<float>("Median_correlation");
-        resDataFrame->addColumn<float>("Max_correlation");
-        resDataFrame->addColumn<float>("Min_correlation");
-        resDataFrame->addColumn<float>("First_quartile");
-        resDataFrame->addColumn<float>("Third_quartile");
-        for (size_t i = 0; i < boxPlotData.size(); i++)
-            boxPlotData[i].insert(boxPlotData[i].begin(), dataFrame->getColumn(i)->getHeader());
+        std::vector<std::string> parameters; 
+        std::vector<float> medians, maxCorrs, minCorrs, firstQuartiles, thirdQuartiles;
+        for (auto&& [i, parameter] : util::enumerate(parameterCorrelations)) {
+            parameters.push_back(dataFrame->getColumn(i)->getHeader());
+            if (parameter.empty()) {
+                medians.push_back(std::numeric_limits<float>::quiet_NaN());
+                maxCorrs.push_back(std::numeric_limits<float>::quiet_NaN());
+                minCorrs.push_back(std::numeric_limits<float>::quiet_NaN());
+                firstQuartiles.push_back(std::numeric_limits<float>::quiet_NaN());
+                thirdQuartiles.push_back(std::numeric_limits<float>::quiet_NaN());
+                continue;
+            }
 
-        for (auto row : boxPlotData) {
-            resDataFrame->addRow(row);
+            std::sort(parameter.begin(), parameter.end());
+
+            double min = parameter[0];
+            double max = parameter[parameter.size() - 1];
+            size_t a = static_cast<int>(parameter.size() / 2.0);
+            double median = parameter[a];
+            size_t b = static_cast<int>(parameter.size() * 0.25);
+            double firstQuartile = parameter[b];
+            size_t c = static_cast<int>(parameter.size() * 0.75);
+            double thirdQuartile = parameter[c];
+            
+            minCorrs.push_back(static_cast<float>(min));
+            maxCorrs.push_back(static_cast<float>(max));
+            medians.push_back(static_cast<float>(median));
+            firstQuartiles.push_back(static_cast<float>(firstQuartile));
+            thirdQuartiles.push_back(static_cast<float>(thirdQuartile));
         }
+        resDataFrame->addCategoricalColumn("Parameter", parameters);
+        resDataFrame->addColumn<float>("Median_correlation", medians);
+        resDataFrame->addColumn<float>("Max_correlation", maxCorrs);
+        resDataFrame->addColumn<float>("Min_correlation", minCorrs);
+        resDataFrame->addColumn<float>("First_quartile", firstQuartiles);
+        resDataFrame->addColumn<float>("Third_quartile", thirdQuartiles);
         resDataFrame->updateIndexBuffer();
 
         progress(1.f);

@@ -29,14 +29,16 @@
 
 #include <modules/visualneuro/processors/joindataframes.h>
 
+#include <inviwo/dataframe/util/dataframeutil.h>
+
 namespace inviwo {
 
 // The Class Identifier has to be globally unique. Use a reverse DNS naming scheme
 const ProcessorInfo JoinDataFrames::processorInfo_{
     "org.inviwo.JoinDataFrames",    // Class identifier
     "Join Data Frames",             // Display name
-    "Data Frame",                    // Category
-    CodeState::Stable,        // Code state
+    "Data Frame",                   // Category
+    CodeState::Stable,              // Code state
     "CPU, DataFrame, Spreadsheet",  // Tags
 };
 const ProcessorInfo JoinDataFrames::getProcessorInfo() const { return processorInfo_; }
@@ -52,15 +54,8 @@ void JoinDataFrames::process() {
 
     auto res = std::make_shared<DataFrame>(*(*dataFrames.begin()));
     for (auto dataFrame = ++dataFrames.begin(); dataFrame != dataFrames.end(); ++dataFrame) {
-        for (auto row = 0u; row < dataFrame->getNumberOfRows(); row++) {
-            auto dataItems = dataFrame->getDataItem(row, true);
-            std::vector<std::string> rowItems;
-            rowItems.reserve(dataItems.size());
-            for (auto item = ++dataItems.begin(); item != dataItems.end(); item++) {
-                rowItems.emplace_back((*item)->toString());
-            }
-            res->addRow(rowItems);
-        }
+        bool matchByName = true;
+        *res = *dataframe::appendRows(*res, *(*dataFrame), matchByName);
     }
     auto fromPortColumn = res->addCategoricalColumn("Processor", res->getNumberOfRows());
     auto idx = 0;
