@@ -111,12 +111,16 @@ public:
      */
     bool hasColors() const;
 
+    vec3 getCenterPoint(int label) const;
+
 
     const_iterator begin() const;
     const_iterator end() const;
 private:
     std::shared_ptr<const Volume> atlas_;
     std::map<int, Label> labels_;
+    std::map<int, vec3> centerPoints_;
+    std::map<int, float> coverage_;
 };
 
 }  // namespace inviwo

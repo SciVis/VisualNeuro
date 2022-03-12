@@ -45,6 +45,7 @@
 #include <inviwo/core/interaction/pickingmapper.h>
 
 #include <inviwo/dataframe/datastructures/dataframe.h>
+#include <inviwo/dataframe/properties/columnoptionproperty.h>
 #include <modules/brushingandlinking/ports/brushingandlinkingports.h>
 
 namespace inviwo {
@@ -110,6 +111,8 @@ private:
     DataOutport<TransferFunction> atlasTFOutport_;
     DataOutport<TransferFunction> pickingTFOutport_;
 
+    ColumnOptionProperty indexCol_;
+    ColumnOptionProperty regionCol_;
     ButtonProperty selectAllRegions_;
     ButtonProperty deselectAllRegions_;
     CompositeProperty selectedVolumeRegions_;

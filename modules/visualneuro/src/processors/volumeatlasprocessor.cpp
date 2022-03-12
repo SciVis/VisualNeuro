@@ -70,6 +70,8 @@ VolumeAtlasProcessor::VolumeAtlasProcessor()
     , outport_("outport")
     , atlasTFOutport_("atlasTF")
     , pickingTFOutport_("pickingTF")
+    , indexCol_("indexCol", "Index Col")
+    , regionCol_("regionCol", "Region col", ColumnOptionProperty::AddNoneOption::No, 1)
     , selectAllRegions_("selectAllRegions", "Select all regions")
     , deselectAllRegions_("deselectAllRegions", "Deselect all regions")
     , selectedVolumeRegions_("selectedVolumeRegion", "Selected Volume Regions")
@@ -115,12 +117,14 @@ VolumeAtlasProcessor::VolumeAtlasProcessor()
     selectedColor_.setSemantics(PropertySemantics::Color);
     notSelectedColor_.setSemantics(PropertySemantics::Color);
     isotfComposite_.setSerializationMode(PropertySerializationMode::None);
-    addProperties(selectedName_, hoverName_, coordinatesString_, visualizeAtlas_, hoverColor_,
-                  hoverMix_, showTooltip_, selectedColor_, selectedOpacity_,
-                  applyNotSelectedForEmptySelection_,
-                  notSelectedColor_, notSelectedMix_, notSelectedOpacity_, isotfComposite_,
-                  enablePicking_, worldPosition_, selectAllRegions_, deselectAllRegions_,
-                  selectedVolumeRegions_);
+
+    indexCol_.setPort(atlasLabels_);
+    regionCol_.setPort(atlasLabels_);
+    addProperties(indexCol_, regionCol_, selectedName_, hoverName_, coordinatesString_,
+                  visualizeAtlas_, hoverColor_, hoverMix_, showTooltip_, selectedColor_,
+                  selectedOpacity_, applyNotSelectedForEmptySelection_, notSelectedColor_,
+                  notSelectedMix_, notSelectedOpacity_, isotfComposite_, enablePicking_,
+                  worldPosition_, selectAllRegions_, deselectAllRegions_, selectedVolumeRegions_);
 
     worldPosition_.onChange([&]() {
         if (!atlas_) {
@@ -148,14 +152,7 @@ VolumeAtlasProcessor::VolumeAtlasProcessor()
                 auto r = dynamic_cast<BoolProperty *>(region);
                 if (region->isModified() && r) {
                     int labelId = static_cast<int>((r->getMetaData<IntMetaData>("labelId"))->get());
-                    auto labelIdCol = regionPositions->getColumn(1);
-                    for (auto row = 0u; row < labelIdCol->getSize(); row++) {
-                        if (labelId == static_cast<int>(labelIdCol->getAsDouble(row))) {
-                            auto regionPosition = regionPositions->getColumn(2)->getAsDVec3(row);
-                            worldPosition_.set(regionPosition);
-                            break;
-                        }
-                    }
+                    worldPosition_.set(getLabelCenterPoint(labelId));
                 }
             }
         }
@@ -194,36 +191,35 @@ void VolumeAtlasProcessor::updateTransferFunction() {
 
     auto setLabelColor = [&](int labelId, vec4 color) {
         if (labelId <= 0) return;
-        
+
         auto normalizedVal = atlas_->getLabelIdNormalized(labelId);
 
         auto it = std::lower_bound(tf.begin(), tf.end(), normalizedVal);
-        it->setColor(color);
+        if (it != tf.end()) {
+            it->setColor(color);
+        }
     };
     for (auto &p : tf) {
         p.setColor(vec4(0.f));
     }
     if (visualizeAtlas_.get()) {
-        if (brushingAndLinking_.isConnected()) {
+        bool applyNotSelected = *applyNotSelectedForEmptySelection_ ||
+                                !brushingAndLinking_.getSelectedIndices().empty();
 
-            bool applyNotSelected = *applyNotSelectedForEmptySelection_ ||
-                                    !brushingAndLinking_.getSelectedIndices().empty();
+        for (auto label : *atlas_) {
+            auto labelId = label.first;
+            auto c = atlas_->getLabelColor(labelId);
+            vec3 labelColor(c ? vec3(c.value()) : *selectedColor_);
+            if (brushingAndLinking_.isSelected(labelId)) {
+                setLabelColor(static_cast<int>(labelId), vec4(labelColor, *selectedOpacity_));
 
-            for (auto label : *atlas_) {
-                auto labelId = label.first;
-                auto c = atlas_->getLabelColor(labelId);
-                vec3 labelColor(c ? vec3(c.value()) : *selectedColor_);
-                if (brushingAndLinking_.isSelected(labelId)) {
-                    setLabelColor(static_cast<int>(labelId), vec4(labelColor, *selectedOpacity_));
-
-                } else if (applyNotSelected) {
-                    setLabelColor(static_cast<int>(labelId),
-                                  vec4(glm::mix(labelColor, *notSelectedColor_, *notSelectedMix_),
-                                       *notSelectedOpacity_));
-                } else {
-                    setLabelColor(static_cast<int>(labelId),
-                                  c ? c.value() : vec4(labelColor, *selectedOpacity_));
-                }
+            } else if (applyNotSelected) {
+                setLabelColor(static_cast<int>(labelId),
+                              vec4(glm::mix(labelColor, *notSelectedColor_, *notSelectedMix_),
+                                   *notSelectedOpacity_));
+            } else {
+                setLabelColor(static_cast<int>(labelId),
+                              c ? c.value() : vec4(labelColor, *selectedOpacity_));
             }
         }
         auto c = atlas_->getLabelColor(hoverAtlasId_);
@@ -283,7 +279,8 @@ void VolumeAtlasProcessor::updateSelectableRegionProperties() {
     for (auto regionProperty : selectedVolumeRegions_.getProperties()) {
         propertiesToRemove.push_back(regionProperty->getIdentifier());
     }
-    auto removeProperties = [&selectedVolumeRegions = selectedVolumeRegions_](const std::vector<std::string>& propertiesToRemove) {
+    auto removeProperties = [&selectedVolumeRegions = selectedVolumeRegions_](
+                                const std::vector<std::string> &propertiesToRemove) {
         for (auto propertyId : propertiesToRemove) {
             selectedVolumeRegions.removeProperty(propertyId);
         }
@@ -294,8 +291,8 @@ void VolumeAtlasProcessor::updateSelectableRegionProperties() {
         return;
     }
 
-    auto regionIndices = atlasLabels_.getData()->getColumn(1);
-    auto regionNames = atlasLabels_.getData()->getColumn(2);
+    auto regionIndices = atlasLabels_.getData()->getColumn(indexCol_.getSelectedValue());
+    auto regionNames = atlasLabels_.getData()->getColumn(regionCol_.getSelectedValue());
     for (size_t i = 0; i < regionIndices->getSize(); i++) {
         auto labelId = static_cast<int>(regionIndices->getAsDouble(i));
         std::string name = regionNames->getAsString(i);
@@ -453,7 +450,7 @@ int VolumeAtlasProcessor::pickingToLabelId(int pickingID) const {
 dvec3 inviwo::VolumeAtlasProcessor::getLabelCenterPoint(int labelId) const {
     if (atlasRegionCenterpoints_.isReady()) {
         auto regionPositions = atlasRegionCenterpoints_.getData();
-        auto labelIdCol = regionPositions->getColumn(1);
+        auto labelIdCol = regionPositions->getColumn("Region index");
         auto row = labelIdCol->getBuffer()->getRepresentation<BufferRAM>()->dispatch<int>(
             [labelId = labelId](auto typedBuf) {
                 using ValueType = util::PrecisionValueType<decltype(typedBuf)>;
@@ -461,9 +458,11 @@ dvec3 inviwo::VolumeAtlasProcessor::getLabelCenterPoint(int labelId) const {
                 auto found = std::find(data.begin(), data.end(), ValueType(labelId));
                 return std::distance(data.begin(), found);
             });
-        auto posCol = regionPositions->getColumn(2);
-        if (row >= 0 && row < static_cast<int>(posCol->getSize())) {
-            return posCol->getAsDVec3(row);
+        auto xCol = regionPositions->getColumn("Center x");
+        auto yCol = regionPositions->getColumn("Center y");
+        auto zCol = regionPositions->getColumn("Center z");
+        if (xCol && yCol && zCol) {
+            return dvec3(xCol->getAsDouble(row), yCol->getAsDouble(row), zCol->getAsDouble(row));
         }
     }
 

@@ -105,22 +105,29 @@ void VolumeAtlasCenterPositions::process() {
     // Create and fill dataframe with calculated region positions
     std::vector<int> indices;
     indices.reserve(regionCenterpoints.size());
-    std::vector<vec3> centerpoints;
-    centerpoints.reserve(regionCenterpoints.size());
+    std::vector<double> centerX;
+    std::vector<double> centerY;
+    std::vector<double> centerZ;
+    centerX.reserve(regionCenterpoints.size());
+    centerY.reserve(regionCenterpoints.size());
+    centerZ.reserve(regionCenterpoints.size());
     std::vector<float> coverage;
     coverage.reserve(regionCenterpoints.size());
     for (auto entry : regionCenterpoints) {
         indices.push_back(entry.first);
-        centerpoints.push_back(entry.second);
+        centerX.push_back(entry.second.x);
+        centerY.push_back(entry.second.y);
+        centerZ.push_back(entry.second.z);
         coverage.push_back(regionVoxelNumber[entry.first] /
                            static_cast<float>(dims.x * dims.y * dims.z));
     }
     auto resDataFrame = std::make_shared<DataFrame>();
     resDataFrame->addColumnFromBuffer("Region index", util::makeBuffer<int>(std::move(indices)));
-    // Since a vec3 buffer cannot be added the regular way, the following three lines are needed
-    auto positionsColumn = resDataFrame->addColumn<vec3>("Region position");
-    auto buffer = util::makeBuffer<vec3>(std::move(centerpoints));
-    positionsColumn->setBuffer(buffer);
+
+    resDataFrame->addColumnFromBuffer("Center x", util::makeBuffer<double>(std::move(centerX)));
+    resDataFrame->addColumnFromBuffer("Center y", util::makeBuffer<double>(std::move(centerY)));
+    resDataFrame->addColumnFromBuffer("Center z", util::makeBuffer<double>(std::move(centerZ)));
+
     resDataFrame->addColumnFromBuffer("Region volume coverage",
                                       util::makeBuffer<float>(std::move(coverage)));
 

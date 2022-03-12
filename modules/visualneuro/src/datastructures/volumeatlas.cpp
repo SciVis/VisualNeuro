@@ -70,14 +70,25 @@ VolumeAtlas::VolumeAtlas(std::shared_ptr<const Volume> atlas,
         }
     } else {
         for (auto i = 0u; i < idCol->getSize(); ++i) {
+            std::optional<glm::vec4> color{};
             std::string colorString = colorCol ? colorCol->getAsString(i) : "";
-            std::stringstream ss(colorString);
-            vec4 c{};
-            for (auto elem = 0; elem < 4; elem++) {
-                ss >> c[elem];
+            try {
+                color = color::hex2rgba(colorString);
+            } catch (Exception&) {
+                std::stringstream ss(colorString);
+                glm::vec4 c{};
+                for (auto elem = 0; elem < 4; elem++) {
+                     ss >> c[elem];
+                }
+                if (ss.fail()) {
+                    color = std::nullopt;
+                } else {
+                    color = c;
+                }
             }
+
             labels_[static_cast<int>(idCol->getAsDouble(i))] = Label{
-                labelCol->getAsString(i), ss.fail() ? std::nullopt : std::optional<glm::vec4>(c)};
+                labelCol->getAsString(i), color};
         }
     }
 }
@@ -144,6 +155,8 @@ bool VolumeAtlas::hasColors() const {
     return std::any_of(labels_.cbegin(), labels_.cend(),
                        [](const auto l) { return l.second.color != std::nullopt; });
 }
+
+vec3 VolumeAtlas::getCenterPoint(int label) const { return vec3(); }
 
 VolumeAtlas::const_iterator VolumeAtlas::begin() const { return labels_.begin(); }
 
