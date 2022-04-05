@@ -485,7 +485,6 @@ var inviwo = new InviwoAPI();
 
 	// Recieve .csv-data from Inviwo and put it into localStorage
 function onInviwoDataChanged(data, port) {
-	//console.log(port.processor);
 	if ( port.processor==="CSVSource3" ) {
 		localStorage.setItem("atlasRegions", JSON.stringify(data));
 		setupBrainRegionTable();
@@ -619,7 +618,9 @@ function syncSelectedColorAxisDropdown(prop) {
 	var htmlId = "selectedColumnSubjectStatusDropDown";
 	var property = document.getElementById(htmlId);
 	var newOptions = prop["options"];
-	if (newOptions.length > 0) {
+	
+    if (newOptions.length > 0 && property.childNodes[0]) {
+        // Remove "No .csv file loaded"
 		property.childNodes[0].remove();
 	} else {
 		let a = document.createElement('A');

@@ -54,7 +54,7 @@ list(APPEND enabled_modules [InviwoVisualNeuroModule])
 # Only include one OpenGL context creation module (remove InviwoGLFWModule)
 # Remove modules not used by this app
 list(REMOVE_ITEM enabled_modules [InviwoAnimationModule InviwoAnimationQtModule InviwoGLFWModule InviwoEigenUtilsModule InviwoPython3Module  
-                                  InviwoPython3QtModule InviwoDataFramePythonModule InviwoVectorFieldVisualizationModule InviwoVectorFieldVisualizationGLModule])
+                                  InviwoPython3QtModule InviwoPython3GLModule InviwoDataFramePythonModule InviwoVectorFieldVisualizationModule InviwoVectorFieldVisualizationGLModule])
 
 set(RES_FILES "")
 if(WIN32)
@@ -66,29 +66,29 @@ endif()
 source_group("Resource Files" FILES ${RES_FILES})
 
 # Create application
-add_executable(VisualNeuro MACOSX_BUNDLE WIN32 
+add_executable(${PROJECT_NAME} MACOSX_BUNDLE WIN32 
     ${SOURCE_FILES} 
     ${HEADER_FILES} 
     ${QRC_FILE} 
     ${MOCED_FILES} 
     ${RES_FILES})
-target_link_libraries(VisualNeuro PUBLIC
+target_link_libraries(${PROJECT_NAME} PUBLIC
     inviwo::core
     inviwo::qtapplicationbase
     Qt${QT_VERSION_MAJOR}::Core
     Qt${QT_VERSION_MAJOR}::Widgets
 )
-target_include_directories(VisualNeuro PUBLIC
+target_include_directories(${PROJECT_NAME} PUBLIC
      ${CMAKE_BINARY_DIR}/apps/visualneuro/include
 )
-ivw_configure_application_module_dependencies(VisualNeuro ${enabled_modules})
-ivw_define_standard_definitions(VisualNeuro VisualNeuro)
-ivw_define_standard_properties(VisualNeuro)
+ivw_configure_application_module_dependencies(${PROJECT_NAME} ${enabled_modules})
+ivw_define_standard_definitions(${PROJECT_NAME} ${PROJECT_NAME})
+ivw_define_standard_properties(${PROJECT_NAME})
 
 
 #--------------------------------------------------------------------
 # Add application to pack
-ivw_default_install_targets(VisualNeuro)
+ivw_default_install_targets(${PROJECT_NAME})
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     # Configure Info.plist
@@ -132,7 +132,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
         DESTINATION ${PROJECT_NAME}.app/Contents/Resources/data
         COMPONENT   Application
     )
-    #set_target_properties(VisualNeuro PROPERTIES
+    #set_target_properties(${PROJECT_NAME} PROPERTIES
     #            MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/mac/VisualNeuro-Info.plist
     #        )
     set(CPACK_BINARY_DRAGNDROP ON)
@@ -140,11 +140,11 @@ endif()
 
 # Debugging only:
 #if (WIN32)
-#    set_property(TARGET VisualNeuro APPEND_STRING PROPERTY LINK_FLAGS 
+#    set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS 
 #        " /SUBSYSTEM:CONSOLE /ENTRY:mainCRTStartup")
 #endif()
 
-ivw_deploy_qt(VisualNeuro)
+ivw_deploy_qt(${PROJECT_NAME})
 
 set_property(CACHE IVW_PACKAGE_SELECT_APP APPEND PROPERTY STRINGS "VisualNeuro")
 
