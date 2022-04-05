@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "cmakeMinimumRequired": { "major": 3, "minor": 19, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "visualneuro",
+      "hidden": true,
+      "cacheVariables": {
+        "IVW_EXTERNAL_MODULES" : "${sourceParentDir}/visualneuro/modules;",
+        "IVW_EXTERNAL_PROJECTS" : "${sourceParentDir}/visualneuro/apps;",
+
+        "BUILD_SHARED_LIBS":                { "type": "BOOL", "value": "ON"},
+        "IVW_CFG_CMAKE_DEBUG":              { "type": "BOOL", "value": "ON"},
+        "IVW_CFG_PROFILING":                { "type": "BOOL", "value": "OFF"},
+        "IVW_CFG_PRECOMPILED_HEADERS":      { "type": "BOOL", "value": "OFF"},
+        "IVW_CFG_FORCE_ASSERTIONS":         { "type": "BOOL", "value": "ON"},
+        "IVW_CFG_BUILD_CHANGELOG":          { "type": "BOOL", "value": "OFF"},
+
+        "IVW_APP_VISUALNEURO":              { "type": "BOOL", "value": "ON"},
+        "IVW_APP_INVIWO":                   { "type": "BOOL", "value": "OFF"},
+        "IVW_APP_PYTHON":                   { "type": "BOOL", "value": "OFF"},
+        "IVW_APP_MINIMAL_GLFW":             { "type": "BOOL", "value": "OFF"},
+        "IVW_APP_MINIMAL_QT":               { "type": "BOOL", "value": "OFF"},
+
+        "IVW_TEST_UNIT_TESTS_RUN_ON_BUILD": { "type": "BOOL", "value": "OFF"},
+        "IVW_TEST_BENCHMARKS":              { "type": "BOOL", "value": "OFF"},
+        "IVW_TEST_INTEGRATION_TESTS":       { "type": "BOOL", "value": "OFF"},
+
+        "IVW_PACKAGE_INSTALLER":            { "type": "BOOL", "value": "ON"},
+        "IVW_PACKAGE_SELECT_APP":           "VisualNeuro",
+
+        "IVW_USE_OPENMP":                   { "type": "BOOL", "value": "OFF"},
+        "IVW_USE_OPENEXR":                  { "type": "BOOL", "value": "ON"},
+
+        "IVW_MODULE_ANIMATION":                  { "type": "BOOL", "value": "OFF"},
+        "IVW_MODULE_ANIMATIONQT":                { "type": "BOOL", "value": "OFF"},
+        "IVW_MODULE_DATAFRAMEPYTHON":            { "type": "BOOL", "value": "OFF"},
+        "IVW_MODULE_DATAFRAMEQT":                { "type": "BOOL", "value": "OFF"},
+        "IVW_MODULE_EIGENUTILS":                 { "type": "BOOL", "value": "OFF"},
+        "IVW_MODULE_PYTHON3":                    { "type": "BOOL", "value": "OFF"},
+        "IVW_MODULE_PYTHON3GL":                  { "type": "BOOL", "value": "OFF"},
+        "IVW_MODULE_PYTHON3QT":                  { "type": "BOOL", "value": "OFF"},
+        "IVW_MODULE_VECTORFIELDVISUALIZATION":   { "type": "BOOL", "value": "OFF"},
+        "IVW_MODULE_VECTORFIELDVISUALIZATIONGL": { "type": "BOOL", "value": "OFF"},
+        "IVW_MODULE_WEBBROWSER":                 { "type": "BOOL", "value": "ON"},
+        "IVW_MODULE_VISUALNEURO":                { "type": "BOOL", "value": "ON"}
+      }
+    },
+    {
+      "name": "msvc-dev-visualneuro",
+      "displayName": "MSVC Development Visual Neuro",
+      "description": "MSVC Development configuration",
+      "generator": "Visual Studio 17 2022",
+      "architecture" : "x64",
+      "binaryDir": "${sourceParentDir}/builds/msvc-dev",
+      "inherits": [ "develop", "visualneuro" ]
+    },
+    {
+      "name": "msvc-dev-vcpkg-visualneuro",
+      "displayName": "MSVC Development VCPKG Visual Neuro",
+      "description": "MSVC Development VCPKG configuration",
+      "generator": "Visual Studio 17 2022",
+      "architecture": "x64",
+      "binaryDir": "${sourceParentDir}/builds/msvc-dev-vcpkg",
+      "inherits": [ "vcpkg", "visualneuro" ]
+    }
+  ]
+}
