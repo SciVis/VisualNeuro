@@ -20,11 +20,11 @@ jobs:
           - os: 'windows-latest'
             triplet: 'x64-windows'
             mono: ''
-            cmake: '-DIVW_MODULE_HDF5=ON'
+            cmake: '-DIVW_MODULE_HDF5=OFF'
             generator: 'Visual Studio 17 2022'
-            targets: 'ALL_BUILD DOXY-Inviwo DOXY-Python package'
-            installer: 'inviwo-installer-win'
-            artifact: 'build/inviwo-v*.exe'
+            targets: 'ALL_BUILD package'
+            installer: 'visualneuro-installer-win'
+            artifact: 'build/visualneuro-v*.exe'
          # - os: 'macos-latest'
          #   triplet: 'x64-osx'
          #   mono: 'mono'
@@ -115,12 +115,16 @@ jobs:
       with: 
         path: visualneuro
         submodules: recursive
-        
-    - name: Configure CMake
-      working-directory: ./visualneuro
+
+    - name: Copy CMakePresets to Inviwo
       shell: bash
       run: >
-        cmake -S ../inviwo -B ../build --preset=msvc-dev-vcpkg-visualneuro
+        cp "visualneuro/CMakePresets.json" "inviwo/CMakeUserPresets.json"
+
+    - name: Configure CMake
+      shell: bash
+      run: >
+        cmake -S inviwo -B build --preset=msvc-dev-vcpkg-visualneuro
         -DVCPKG_TARGET_TRIPLET='${{ matrix.triplet }}'
         -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
         -DIVW_DOXYGEN_PROJECT=OFF
