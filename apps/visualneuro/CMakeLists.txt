@@ -72,6 +72,9 @@ add_executable(${PROJECT_NAME} MACOSX_BUNDLE WIN32
     ${QRC_FILE} 
     ${MOCED_FILES} 
     ${RES_FILES})
+# Do not name the CMake project VisualNeuro because it can be confused with the module
+# However, we still want the the executable to be called VisualNeuro
+set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "VisualNeuro")
 target_link_libraries(${PROJECT_NAME} PUBLIC
     inviwo::core
     inviwo::qtapplicationbase
@@ -95,27 +98,27 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     # https://cmake.org/cmake/help/v3.15/prop_tgt/MACOSX_BUNDLE_INFO_PLIST.html
     string(TIMESTAMP YEAR "%Y")
     set_target_properties(${PROJECT_NAME} PROPERTIES
-        MACOSX_BUNDLE_INFO_STRING "${PROJECT_NAME} ${VISUALNEURO_VERSION}"
+        MACOSX_BUNDLE_INFO_STRING "Visual Neuro ${VISUALNEURO_VERSION}"
         MACOSX_BUNDLE_ICON_FILE "favicon.icns"
         MACOSX_BUNDLE_GUI_IDENTIFIER "com.VisualNeuro"
         MACOSX_BUNDLE_LONG_VERSION_STRING "${VISUALNEURO_VERSION}"
-        MACOSX_BUNDLE_BUNDLE_NAME "${PROJECT_NAME}"
+        MACOSX_BUNDLE_BUNDLE_NAME "Visual Neuro"
         MACOSX_BUNDLE_SHORT_VERSION_STRING "${VISUALNEURO_VERSION}"
         MACOSX_BUNDLE_BUNDLE_VERSION "${VISUALNEURO_VERSION}"
         MACOSX_BUNDLE_COPYRIGHT "C) 2012-${YEAR} Daniel Jönsson"
     )
     # Following http://www.cmake.org/Wiki/BundleUtilitiesExample
     install(
-        TARGETS VisualNeuro
-        RUNTIME   DESTINATION ${PROJECT_NAME}.app/Contents/MacOS/
+        TARGETS ${PROJECT_NAME}
+        RUNTIME   DESTINATION VisualNeuro.app/Contents/MacOS/
         BUNDLE    DESTINATION .
-        ARCHIVE   DESTINATION ${PROJECT_NAME}.app/Contents/MacOS/
-        LIBRARY   DESTINATION ${PROJECT_NAME}.app/Contents/MacOS/
+        ARCHIVE   DESTINATION VisualNeuro.app/Contents/MacOS/
+        LIBRARY   DESTINATION VisualNeuro.app/Contents/MacOS/
         COMPONENT Application
     )
-    set(plugin_dest_dir ${PROJECT_NAME}.app/Contents/MacOS)
-    set(qtconf_dest_dir ${PROJECT_NAME}.app/Contents/Resources)
-    set(APPS "\${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}.app/Contents/MacOS/VisualNeuro")
+    set(plugin_dest_dir VisualNeuro.app/Contents/MacOS)
+    set(qtconf_dest_dir VisualNeuro.app/Contents/Resources)
+    set(APPS "\${CMAKE_INSTALL_PREFIX}/VisualNeuro.app/Contents/MacOS/VisualNeuro")
     set(DIRS "\${CMAKE_INSTALL_PREFIX}/${plugin_dest_dir}/")
 
     # get link errors with out this line.
@@ -123,13 +126,13 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     install(CODE "set(BU_CHMOD_BUNDLE_ITEMS ON)
         include(BundleUtilities)
         file(GLOB_RECURSE LIBS1 \"\${CMAKE_INSTALL_PREFIX}/${plugin_dest_dir}\")
-        file(GLOB_RECURSE LIBS2 \"\${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}.app/Contents/plugins/*${CMAKE_SHARED_LIBRARY_SUFFIX}\")
         fixup_bundle(\"${APPS}\" \"\${LIBS1};\${LIBS2}\" \"${DIRS}\")"
+        file(GLOB_RECURSE LIBS2 \"\${CMAKE_INSTALL_PREFIX}/VisualNeuro.app/Contents/plugins/*${CMAKE_SHARED_LIBRARY_SUFFIX}\")
         COMPONENT Application
     )
     install(
         DIRECTORY   ${IVW_ROOT_DIR}/data/
-        DESTINATION ${PROJECT_NAME}.app/Contents/Resources/data
+        DESTINATION VisualNeuro.app/Contents/Resources/data
         COMPONENT   Application
     )
     #set_target_properties(${PROJECT_NAME} PROPERTIES
