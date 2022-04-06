@@ -118,7 +118,7 @@ jobs:
     - name: Configure CMake
       shell: bash
       run: >
-        cmake -S inviwo -B build --preset='$${{ matrix.triplet }}-vcpkg-visualneuro'
+        cmake -S inviwo -B build --preset='${{ matrix.triplet }}-vcpkg-visualneuro'
         -DVCPKG_TARGET_TRIPLET='${{ matrix.triplet }}'
         -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
         -DIVW_DOXYGEN_PROJECT=OFF
