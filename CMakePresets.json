@@ -69,7 +69,6 @@
       "displayName": "VCPKG Visual Neuro",
       "description": "VCPKG configuration",
       "generator": "Ninja",
-      "architecture": "x64",
       "binaryDir": "${sourceParentDir}/builds/${presetName}",
       "inherits": [ "vcpkg", "visualneuro" ]
     }    
