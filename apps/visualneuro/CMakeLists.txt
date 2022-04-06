@@ -124,10 +124,10 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     # get link errors with out this line.
     install(CODE "file(WRITE \"\${CMAKE_INSTALL_PREFIX}/${qtconf_dest_dir}/qt.conf\" \"\")" COMPONENT qt_app)
     install(CODE "set(BU_CHMOD_BUNDLE_ITEMS ON)
-        include(BundleUtilities)
-        file(GLOB_RECURSE LIBS1 \"\${CMAKE_INSTALL_PREFIX}/${plugin_dest_dir}\")
-        fixup_bundle(\"${APPS}\" \"\${LIBS1};\${LIBS2}\" \"${DIRS}\")"
-        file(GLOB_RECURSE LIBS2 \"\${CMAKE_INSTALL_PREFIX}/VisualNeuro.app/Contents/plugins/*${CMAKE_SHARED_LIBRARY_SUFFIX}\")
+                include(BundleUtilities)
+                file(GLOB_RECURSE LIBS1 \"\${CMAKE_INSTALL_PREFIX}/${plugin_dest_dir}\")
+                file(GLOB_RECURSE LIBS2 \"\${CMAKE_INSTALL_PREFIX}/VisualNeuro.app/Contents/plugins/*${CMAKE_SHARED_LIBRARY_SUFFIX}\")
+                fixup_bundle(\"${APPS}\" \"\${LIBS1};\${LIBS2}\" \"${DIRS}\")"
         COMPONENT Application
     )
     install(
