@@ -63,7 +63,7 @@ option(IVW_PACKAGE_INSTALLER "Use NSIS to create installer" OFF)
 
 if(WIN32)
     if(IVW_PACKAGE_INSTALLER)
-        set(CPACK_GENERATOR "ZIP;NSIS")
+        set(CPACK_GENERATOR "NSIS")
         # The icon to start the application.
         set(CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_SOURCE_DIR}\\\\resources\\\\favicon.ico")
         # Add a link to the application website in the startup menu.
