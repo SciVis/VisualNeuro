@@ -71,6 +71,7 @@ jobs:
       with:
         repository: 'inviwo/inviwo'
         path: 'inviwo' 
+        submodules: 'true'
     
     - name: Clone VCPKG
       uses: actions/checkout@v2
