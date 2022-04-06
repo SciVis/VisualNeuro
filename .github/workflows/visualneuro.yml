@@ -25,22 +25,22 @@ jobs:
             targets: 'ALL_BUILD package'
             installer: 'visualneuro-installer-win'
             artifact: 'build/visualneuro-v*.exe'
-         # - os: 'macos-latest'
-         #   triplet: 'x64-osx'
-         #   mono: 'mono'
-         #   cmake: '-DIVW_MODULE_HDF5=OFF'
-         #   generator: 'Ninja'
-         #   targets: 'ALL_BUILD package'
-         #   installer: 'inviwo-installer-macos'
-         #   artifact: 'build/inviwo-v*.dmg'
+          - os: 'macos-latest'
+            triplet: 'x64-osx'
+            mono: 'mono'
+            cmake: '-DIVW_MODULE_HDF5=OFF'
+            generator: 'Ninja'
+            targets: 'ALL_BUILD package'
+            installer: 'visualneuro-installer-macos'
+            artifact: 'build/inviwo-v*.dmg'
          # - os: 'ubuntu-20.04'
          #   triplet: 'x64-linux'
          #   mono: 'mono'
          #   cmake: '-DIVW_USE_SIGAR=OFF -DIVW_MODULE_HDF5=OFF' 
          #   generator: 'Ninja' 
          #   targets: 'ALL_BUILD package'
-         #   installer: 'inviwo-installer-ubuntu'
-         #   artifact: 'build/inviwo-v*.zip'
+         #   installer: 'visualneuro-installer-ubuntu'
+         #   artifact: 'build/visualneuro-v*.zip'
       fail-fast: false
       
     runs-on: ${{ matrix.os }}
@@ -56,10 +56,6 @@ jobs:
         
         echo "/c/Program Files (x86)/NSIS" >> $GP
 
-    #- name: Setup tmate session
-    #  uses: mxschmitt/action-tmate@v3
-    #  timeout-minutes: 60
-
     - name: Setup Python
       uses: actions/setup-python@v2
       with:
@@ -72,7 +68,13 @@ jobs:
         repository: 'inviwo/inviwo'
         path: 'inviwo' 
         submodules: 'true'
-    
+
+    - name: Clone VisualNeuro
+      uses: actions/checkout@v2
+      with: 
+        path: visualneuro
+        submodules: recursive
+
     - name: Clone VCPKG
       uses: actions/checkout@v2
       with:
@@ -100,22 +102,13 @@ jobs:
       shell: bash
       if: runner.os == 'macOS'
       run: |
-        brew install ninja doxygen
-        brew cask install basictex
-        eval "$(/usr/libexec/path_helper)"
-        echo "$(dirname $(which latex))" >> $GITHUB_PATH
+        brew install ninja 
 
     - name: Install Qt
       uses: jurplel/install-qt-action@v2
       with:
         version: 6.2.3
         dir: ${{ github.workspace }}
-    
-    - name: Clone VisualNeuro
-      uses: actions/checkout@v2
-      with: 
-        path: visualneuro
-        submodules: recursive
 
     - name: Copy CMakePresets to Inviwo
       shell: bash
