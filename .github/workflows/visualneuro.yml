@@ -30,7 +30,7 @@ jobs:
             mono: 'mono'
             cmake: '-DIVW_MODULE_HDF5=OFF'
             generator: 'Ninja'
-            targets: 'Release package'
+            targets: 'all package'
             installer: 'visualneuro-installer-macos'
             artifact: 'build/inviwo-v*.dmg'
          # - os: 'ubuntu-20.04'
