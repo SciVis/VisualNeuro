@@ -107,37 +107,13 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
         MACOSX_BUNDLE_BUNDLE_VERSION "${VISUALNEURO_VERSION}"
         MACOSX_BUNDLE_COPYRIGHT "C) 2012-${YEAR} Daniel Jönsson"
     )
-    # Following http://www.cmake.org/Wiki/BundleUtilitiesExample
-    install(
-        TARGETS ${PROJECT_NAME}
-        RUNTIME   DESTINATION VisualNeuro.app/Contents/MacOS/
-        BUNDLE    DESTINATION .
-        ARCHIVE   DESTINATION VisualNeuro.app/Contents/MacOS/
-        LIBRARY   DESTINATION VisualNeuro.app/Contents/MacOS/
-        COMPONENT Application
-    )
-    set(plugin_dest_dir VisualNeuro.app/Contents/MacOS)
-    set(qtconf_dest_dir VisualNeuro.app/Contents/Resources)
-    set(APPS "\${CMAKE_INSTALL_PREFIX}/VisualNeuro.app/Contents/MacOS/VisualNeuro")
-    set(DIRS "\${CMAKE_INSTALL_PREFIX}/${plugin_dest_dir}/")
 
-    # get link errors with out this line.
-    install(CODE "file(WRITE \"\${CMAKE_INSTALL_PREFIX}/${qtconf_dest_dir}/qt.conf\" \"\")" COMPONENT qt_app)
-    install(CODE "set(BU_CHMOD_BUNDLE_ITEMS ON)
-                include(BundleUtilities)
-                file(GLOB_RECURSE LIBS1 \"\${CMAKE_INSTALL_PREFIX}/${plugin_dest_dir}\")
-                file(GLOB_RECURSE LIBS2 \"\${CMAKE_INSTALL_PREFIX}/VisualNeuro.app/Contents/plugins/*${CMAKE_SHARED_LIBRARY_SUFFIX}\")
-                fixup_bundle(\"${APPS}\" \"\${LIBS1};\${LIBS2}\" \"${DIRS}\")"
-        COMPONENT Application
-    )
     install(
         DIRECTORY   ${IVW_ROOT_DIR}/data/
         DESTINATION VisualNeuro.app/Contents/Resources/data
         COMPONENT   Application
     )
-    #set_target_properties(${PROJECT_NAME} PROPERTIES
-    #            MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/mac/VisualNeuro-Info.plist
-    #        )
+    
     set(CPACK_BINARY_DRAGNDROP ON)
 endif()
 

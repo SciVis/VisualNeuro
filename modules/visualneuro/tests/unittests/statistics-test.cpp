@@ -1,4 +1,4 @@
-﻿/*********************************************************************************
+/*********************************************************************************
  *
  * Inviwo - Interactive Visualization Workshop
  *
@@ -167,7 +167,7 @@ TEST(spearman, spearmanIsCorrect) {
     EXPECT_DOUBLE_EQ(corr, -29.0 / 165.0) << "Spearman is not correct.";
 
     auto pExpected = 0.62718834477648455;
-    EXPECT_DOUBLE_EQ(p, pExpected) << "Spearman p-value is not correct.";
+    EXPECT_NEAR(p, pExpected, maximumError) << "Spearman p-value is not correct.";
 }
 
 }  // namespace inviwo
