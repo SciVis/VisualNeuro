@@ -32,6 +32,7 @@ set(CMAKE_INSTALL_SYSTEM_RUNTIME_COMPONENT Application)
 include (InstallRequiredSystemLibraries)
 
 set(CPACK_PACKAGE_NAME                "VisualNeuro")
+set(CPACK_PACKAGE_CONTACT             "Daniel Jönsson <info@visualneuro.com>")
 set(CPACK_PACKAGE_VENDOR              "Daniel Jönsson")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Interactive brain cohort analysis")
 set(CPACK_PACKAGE_VERSION_MAJOR       "${VISUALNEURO_MAJOR_VERSION}")
@@ -84,7 +85,13 @@ if(WIN32)
     else()
         set(CPACK_GENERATOR "ZIP")
     endif()
-
+    get_target_property(qmake_executable Qt${QT_VERSION_MAJOR}::qmake IMPORTED_LOCATION)
+    get_filename_component(qt_bin_dir "${qmake_executable}" DIRECTORY)
+    find_program(WINDEPLOYQT windeployqt HINTS "${qt_bin_dir}")
+    
+    # Copies necessary Qt libraries to the staging install directory
+    configure_file("${IVW_ROOT_DIR}/cmake/deploy-windows.cmake.in" "${PROJECT_BINARY_DIR}/deploy-windows.cmake" @ONLY)
+    set(CPACK_PRE_BUILD_SCRIPTS "${PROJECT_BINARY_DIR}/deploy-windows.cmake")
 elseif(APPLE)
     if(IVW_PACKAGE_INSTALLER)
         #http://www.cmake.org/cmake/help/v3.2/module/CPackBundle.html
@@ -95,9 +102,9 @@ elseif(APPLE)
         set(CPACK_GENERATOR "TGZ")
     endif()
 
-    get_target_property(_qmake_executable Qt${QT_VERSION_MAJOR}::qmake IMPORTED_LOCATION)
-    get_filename_component(_qt_bin_dir "${_qmake_executable}" DIRECTORY)
-    find_program(MACDEPLOYQT macdeployqt HINTS "${_qt_bin_dir}")
+    get_target_property(qmake_executable Qt${QT_VERSION_MAJOR}::qmake IMPORTED_LOCATION)
+    get_filename_component(qt_bin_dir "${qmake_executable}" DIRECTORY)
+    find_program(MACDEPLOYQT macdeployqt HINTS "${qt_bin_dir}")
     
     # In summary, macdeloyqt will find and copy all used qt libraries and qt plugins
     # to the Contents/Frameworks directory. Then, it will change the RPATH of all 
@@ -110,7 +117,8 @@ elseif(APPLE)
     set(CPACK_PRE_BUILD_SCRIPTS "${PROJECT_BINARY_DIR}/deploy-osx.cmake")
 else()
     if(IVW_PACKAGE_INSTALLER)
-        set(CPACK_GENERATOR "TGZ;DEB")
+        set(CPACK_GENERATOR "DEB")
+        set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "https://www.visualneuro.com")
     else()
         set(CPACK_GENERATOR "TGZ")
     endif()

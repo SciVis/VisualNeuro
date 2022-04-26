@@ -23,7 +23,7 @@ jobs:
             cmake: '--preset msvc-dev-vcpkg-visualneuro -DIVW_MODULE_HDF5=OFF'
             targets: 'ALL_BUILD package'
             installer: 'visualneuro-installer-win'
-            artifact: 'build/visualneuro-v*.exe'
+            artifact: 'build/VisualNeuro-v*.exe'
           - os: 'macos-latest'
             triplet: 'x64-osx'
             mono: 'mono'
@@ -31,7 +31,7 @@ jobs:
             generator: 'Ninja'
             targets: 'all package'
             installer: 'visualneuro-installer-macos'
-            artifact: 'build/inviwo-v*.dmg'
+            artifact: 'build/VisualNeuro-v*.dmg'
          # - os: 'ubuntu-20.04'
          #   triplet: 'x64-linux'
          #   mono: 'mono'
@@ -39,7 +39,7 @@ jobs:
          #   generator: 'Ninja' 
          #   targets: 'ALL_BUILD package'
          #   installer: 'visualneuro-installer-ubuntu'
-         #   artifact: 'build/visualneuro-v*.zip'
+         #   artifact: 'build/VisualNeuro-v*.zip'
       fail-fast: false
       
     runs-on: ${{ matrix.os }}
@@ -119,7 +119,7 @@ jobs:
     - name: Configure CMake
       shell: bash
       run: >
-        cmake -S inviwo -B build
+        cmake -S VisualNeuroApp -B build
         -DVCPKG_TARGET_TRIPLET='${{ matrix.triplet }}'
         -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
         ${{ matrix.cmake }}

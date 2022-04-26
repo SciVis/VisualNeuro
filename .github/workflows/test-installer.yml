@@ -1,0 +1,76 @@
+name: Test Installer
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: [Build VisualNeuro]
+    types: 
+      - completed
+
+jobs:
+  test-installer:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest]
+        include:
+          - os: 'windows-latest'
+            installer: 'visualneuro-installer-win'
+            artifact: 'build/VisualNeuro-v*.exe'
+            app: 
+          - os: 'macos-latest'
+            installer: 'visualneuro-installer-macos'
+            artifact: 'build/VisualNeuro-v*.dmg'
+    runs-on: ${{ matrix.os }}
+    steps:
+    - name: Download artifact
+      uses: dawidd6/action-download-artifact@v2
+      with:
+        name: ${{ matrix.installer }}
+        workflow: visualneuro.yml
+
+    ###############################################################################
+    # Windows
+    ###############################################################################
+    - name: Run Windows Installer
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        # find the name of the installer
+        $exe = Get-ChildItem -Name VisualNeuro-*.exe
+        # launch the nsis installer in "silent mode" (/S), should run without user interaction
+        Invoke-expression "./$exe /S"
+        # this will spawn the installer in the background so we need to wait for it to finish
+        $proc = Get-Process | where {$_.ProcessName -like "VisualNeuro-*"} | Select-Object -First 1
+        if ($proc) { 
+          Wait-Process -Id $proc.id
+        }
+        
+    - name: Run VisualNeuro
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        $ver = (Get-ChildItem -Name C:/"Program Files"/VisualNeuro/*)
+        Invoke-expression "C:/'Program Files'/VisualNeuro/$ver/bin/VisualNeuro.exe --logconsole --quit"
+    
+    ###############################################################################
+    # Macos
+    ###############################################################################
+    - name: Run MacOS Installer
+      if: runner.os == 'macOS'
+      shell: bash
+      run: |
+        # Find the name of the installer 
+        DMG=$(ls ${{ matrix.artifact }})
+        # Mount installer image
+        hdiutil attach $DMG
+        # Install by copying VisualNeuro.app to applications folder
+        cp -r /Volumes/${DMG%%.dmg}/VisualNeuro.app /Applications/
+        hdiutil detach /Volumes/${DMG%%.dmg}/
+
+    - name: Run VisualNeuro
+      if: runner.os == 'macOS'
+      shell: bash
+      run: |
+        cd /Applications/VisualNeuro.app/Contents/MacOS/
+        ./VisualNeuro --logconsole --quit
