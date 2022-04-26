@@ -119,7 +119,7 @@ jobs:
     - name: Configure CMake
       shell: bash
       run: >
-        cmake -S VisualNeuroApp -B build
+        cmake -S inviwo -B build
         -DVCPKG_TARGET_TRIPLET='${{ matrix.triplet }}'
         -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
         ${{ matrix.cmake }}
