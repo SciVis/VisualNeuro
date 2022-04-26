@@ -20,15 +20,14 @@ jobs:
           - os: 'windows-latest'
             triplet: 'x64-windows'
             mono: ''
-            cmake: '-DIVW_MODULE_HDF5=OFF'
-            generator: 'Visual Studio 17 2022'
+            cmake: '--preset msvc-dev-vcpkg-visualneuro -DIVW_MODULE_HDF5=OFF'
             targets: 'ALL_BUILD package'
             installer: 'visualneuro-installer-win'
             artifact: 'build/visualneuro-v*.exe'
           - os: 'macos-latest'
             triplet: 'x64-osx'
             mono: 'mono'
-            cmake: '-DIVW_MODULE_HDF5=OFF'
+            cmake: '--preset ninja-vcpkg-visualneuro -DIVW_MODULE_HDF5=OFF'
             generator: 'Ninja'
             targets: 'all package'
             installer: 'visualneuro-installer-macos'
@@ -36,7 +35,7 @@ jobs:
          # - os: 'ubuntu-20.04'
          #   triplet: 'x64-linux'
          #   mono: 'mono'
-         #   cmake: '-DIVW_USE_SIGAR=OFF -DIVW_MODULE_HDF5=OFF' 
+         #   cmake: '--preset ninja-vcpkg-visualneuro -DIVW_USE_SIGAR=OFF -DIVW_MODULE_HDF5=OFF' 
          #   generator: 'Ninja' 
          #   targets: 'ALL_BUILD package'
          #   installer: 'visualneuro-installer-ubuntu'
@@ -47,7 +46,7 @@ jobs:
     timeout-minutes: 360
     
     steps:
-    - name: Install Chocolatey
+    - name: Chocolatey Install
       if: runner.os == 'Windows'
       shell: bash
       run: |
@@ -92,13 +91,15 @@ jobs:
         -username "visualneuro"
         -password "${{ secrets.GITHUB_TOKEN }}"
 
-    - name: Install Apt
+    - name: Apt Install, switch to gcc-11
       shell: bash
       if: runner.os == 'Linux'
       run: |
-        sudo apt install libxinerama-dev libxcursor-dev xorg-dev libglu1-mesa-dev libglew-dev ninja-build
+        sudo apt install libxinerama-dev libxcursor-dev xorg-dev libglu1-mesa-dev libglew-dev ninja-build gcc-11 g++-11
+        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 110 --slave /usr/bin/g++ g++ /usr/bin/g++-11 --slave /usr/bin/gcov gcov /usr/bin/gcov-11
+        sudo update-alternatives --set gcc /usr/bin/gcc-11
       
-    - name: Install Brew
+    - name: Brew Install
       shell: bash
       if: runner.os == 'macOS'
       run: |
@@ -118,10 +119,9 @@ jobs:
     - name: Configure CMake
       shell: bash
       run: >
-        cmake -S inviwo -B build --preset='${{ matrix.triplet }}-vcpkg-visualneuro'
+        cmake -S inviwo -B build
         -DVCPKG_TARGET_TRIPLET='${{ matrix.triplet }}'
         -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
-        -DIVW_DOXYGEN_PROJECT=OFF
         ${{ matrix.cmake }}
 
     - name: Setup C++ Log matchers

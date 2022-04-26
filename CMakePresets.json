@@ -47,7 +47,7 @@
       }
     },
     {
-      "name": "x64-windows-visualneuro",
+      "name": "msvc-dev-visualneuro",
       "displayName": "MSVC Development Visual Neuro",
       "description": "MSVC Development configuration",
       "generator": "Visual Studio 17 2022",
@@ -56,7 +56,7 @@
       "inherits": [ "develop", "visualneuro" ]
     },
     {
-      "name": "x64-windows-vcpkg-visualneuro",
+      "name": "msvc-dev-vcpkg-visualneuro",
       "displayName": "MSVC Development VCPKG Visual Neuro",
       "description": "MSVC Development VCPKG configuration",
       "generator": "Visual Studio 17 2022",
@@ -65,11 +65,10 @@
       "inherits": [ "vcpkg", "visualneuro" ]
     },
     {
-      "name": "x64-osx-vcpkg-visualneuro",
-      "displayName": "VCPKG Visual Neuro",
-      "description": "VCPKG configuration",
+      "name": "ninja-vcpkg-visualneuro",
+      "displayName": "Ninja VCPKG Visual Neuro",
+      "description": "Ninja development using vcpkg configuration",
       "generator": "Ninja",
-      "binaryDir": "${sourceParentDir}/builds/${presetName}",
       "inherits": [ "vcpkg", "visualneuro" ]
     }    
   ]
