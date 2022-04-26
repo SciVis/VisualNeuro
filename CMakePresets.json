@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 3,
   "cmakeMinimumRequired": { "major": 3, "minor": 19, "patch": 0 },
   "configurePresets": [
     {
@@ -48,17 +48,16 @@
     },
     {
       "name": "msvc-dev-visualneuro",
-      "displayName": "MSVC Development Visual Neuro",
-      "description": "MSVC Development configuration",
+      "displayName": "MSVC 2022 Visual Neuro",
+      "description": "MSVC 2022 Development configuration",
       "generator": "Visual Studio 17 2022",
       "architecture" : "x64",
       "inherits": ["develop", "visualneuro"]
     },
     {
       "name": "msvc-dev-vcpkg-visualneuro",
-      "displayName": "MSVC Development VCPKG Visual Neuro",
+      "displayName": "MSVC 2022 VCPKG Visual Neuro",
       "description": "MSVC Development VCPKG configuration",
-      "architecture": "x64",
       "inherits": ["vcpkg", "msvc-dev-visualneuro"]
     },
     {
