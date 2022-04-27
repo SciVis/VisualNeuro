@@ -22,10 +22,11 @@
         "IVW_APP_MINIMAL_GLFW":             { "type": "BOOL", "value": "OFF"},
         "IVW_APP_MINIMAL_QT":               { "type": "BOOL", "value": "OFF"},
 
+        "IVW_TEST_UNIT_TESTS":              { "type": "BOOL", "value": "OFF"},
         "IVW_TEST_UNIT_TESTS_RUN_ON_BUILD": { "type": "BOOL", "value": "OFF"},
         "IVW_TEST_BENCHMARKS":              { "type": "BOOL", "value": "OFF"},
         "IVW_TEST_INTEGRATION_TESTS":       { "type": "BOOL", "value": "OFF"},
-
+        
         "IVW_PACKAGE_INSTALLER":            { "type": "BOOL", "value": "ON"},
         "IVW_APP_INSTALL_NAME":             "VisualNeuro",
         "IVW_PACKAGE_SELECT_APP":           "VisualNeuro",
@@ -33,6 +34,7 @@
         "IVW_USE_OPENMP":                   { "type": "BOOL", "value": "OFF"},
         "IVW_USE_OPENEXR":                  { "type": "BOOL", "value": "ON"},
 
+        "IVW_MODULE_ASSIMP":                     { "type": "BOOL", "value": "OFF"},
         "IVW_MODULE_ANIMATION":                  { "type": "BOOL", "value": "OFF"},
         "IVW_MODULE_ANIMATIONQT":                { "type": "BOOL", "value": "OFF"},
         "IVW_MODULE_DATAFRAMEPYTHON":            { "type": "BOOL", "value": "OFF"},
@@ -63,10 +65,24 @@
     },
     {
       "name": "ninja-vcpkg-visualneuro",
-      "displayName": "Ninja VCPKG Visual Neuro",
+      "displayName": "Visual Neuro Ninja VCPKG",
       "description": "Ninja development using vcpkg configuration",
       "generator": "Ninja",
       "inherits": ["vcpkg", "visualneuro"]
-    }    
+    },
+    {
+      "name": "ninja-visualneuro",
+      "displayName": "Visual Neuro Ninja",
+      "description": "Ninja development configuration",
+      "generator": "Ninja",
+      "inherits": ["visualneuro"]
+    } ,
+    {
+      "name": "xcode-visualneuro",
+      "displayName": "Visual Neuro XCode",
+      "description": "XCode development configuration",
+      "generator": "Xcode",
+      "inherits": ["visualneuro"]
+    }  
   ]
 }
