@@ -27,7 +27,7 @@ jobs:
           - os: 'macos-latest'
             triplet: 'x64-osx'
             mono: 'mono'
-            cmake: '--preset ninja-visualneuro -DIVW_MODULE_HDF5=OFF'
+            cmake: '--preset ninja-vcpkg-visualneuro -DIVW_MODULE_HDF5=OFF -DVCPKG_APPLOCAL_DEPS=OFF'
             generator: 'Ninja'
             targets: 'all package'
             installer: 'visualneuro-installer-macos'
