@@ -1,0 +1,26 @@
+<!DOCTYPE RCC><RCC version="1.0">
+    <qresource prefix="/">
+        <file>splashscreen.png</file>
+        <file>favicon.ico</file>
+        <file>stylesheets/visualneuro.qss</file>
+
+        <file>svgicons/dock-docked.svg</file>
+        <file>svgicons/dock-floating.svg</file>
+        <file>svgicons/dock-help.svg</file>
+        <file>svgicons/dock-sticky.svg</file>
+        <file>svgicons/dock-unsticky.svg</file>
+
+        <file>svgicons/info-enabled.svg</file>    
+        <file>svgicons/info-disabled.svg</file> 
+        <file>svgicons/warning-enabled.svg</file>    
+        <file>svgicons/warning-disabled.svg</file> 
+        <file>svgicons/error-enabled.svg</file>    
+        <file>svgicons/error-disabled.svg</file> 
+
+        <file>svgicons/console-clear.svg</file>    
+
+        <file>svgicons/log-append.svg</file>
+        <file>svgicons/log-clear.svg</file>
+        <file>svgicons/log-clear-on-run.svg</file>
+    </qresource>
+</RCC>

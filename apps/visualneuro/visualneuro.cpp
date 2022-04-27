@@ -37,6 +37,7 @@
 #include <inviwo/core/util/raiiutils.h>
 #include <inviwo/qt/applicationbase/inviwoapplicationqt.h>
 #include <inviwo/core/util/consolelogger.h>
+#include <inviwo/core/util/logerrorcounter.h>
 #include <inviwo/core/moduleregistration.h>
 
 #include "splashscreen.h"
@@ -53,10 +54,10 @@
 using namespace inviwo;
 
 int main(int argc, char** argv) {
-    LogCentral::init();
-    inviwo::util::OnScopeExit deleteLogcentral([]() { inviwo::LogCentral::deleteInstance(); });
-    auto logger = std::make_shared<inviwo::ConsoleLogger>();
-    LogCentral::getPtr()->registerLogger(logger);
+    inviwo::LogCentral logger;
+    inviwo::LogCentral::init(&logger);
+    auto logCounter = std::make_shared<inviwo::LogErrorCounter>();
+    logger.registerLogger(logCounter);
 #ifdef __linux__
     /*
      * Suppress warning "QApplication: invalid style override passed, ignoring it." when starting
@@ -69,12 +70,13 @@ int main(int argc, char** argv) {
     QApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
     QApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
     // Setup default context format
-    QSurfaceFormat surfaceFormat;
-    surfaceFormat.setRenderableType(QSurfaceFormat::OpenGL);
-    surfaceFormat.setMajorVersion(10);  // We want latest OpenGL version
+    QSurfaceFormat defaultFormat;
+    defaultFormat.setMajorVersion(10); // We want latest OpenGL version
+    defaultFormat.setProfile(QSurfaceFormat::CoreProfile);
+    QSurfaceFormat::setDefaultFormat(defaultFormat);
 
     InviwoApplicationQt inviwoApp(argc, argv, "VisualNeuro");
-    inviwoApp.setStyleSheetFile(":/stylesheets/inviwo.qss");
+    inviwoApp.setStyleSheetFile(":/stylesheets/visualneuro.qss");
     
     inviwoApp.setProgressCallback([](std::string m) {
         LogCentral::getPtr()->log("VisualNeuro", LogLevel::Info, LogAudience::User, "", "", 0, m);

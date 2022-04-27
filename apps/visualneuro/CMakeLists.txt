@@ -11,17 +11,17 @@ find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Widgets REQUIRED)
 #--------------------------------------------------------------------
 # Add MOC files
 set(MOC_FILES 
-	consolewidget.h 
+    consolewidget.h 
     visualneuromainwindow.h 
     splashscreen.h
 )
 # Add resource file
 if(QT_VERSION_MAJOR EQUAL 6)
-    qt_add_resources(QRC_FILE "visualneuro.qrc")
+    qt_add_resources(QRC_FILE "resources/visualneuro.qrc")
 else()
-    qt5_add_resources(QRC_FILE "visualneuro.qrc")
+    qt5_add_resources(QRC_FILE "resources/visualneuro.qrc")
 endif()
-source_group("Resource Files" FILES visualneuro.qrc ${QRC_FILE})
+source_group("Resource Files" FILES "resources/visualneuro.qrc" ${QRC_FILE})
 
 #--------------------------------------------------------------------
 # Add header files
@@ -58,7 +58,7 @@ list(REMOVE_ITEM enabled_modules [InviwoAnimationModule InviwoAnimationQtModule 
 
 set(RES_FILES "")
 if(WIN32)
-    set(RES_FILES ${RES_FILES} "visualneuro.rc")
+    set(RES_FILES ${RES_FILES} "resources/visualneuro.rc")
 elseif(APPLE)
     set_source_files_properties(resources/favicon.icns PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
     set(RES_FILES ${RES_FILES} resources/favicon.icns)

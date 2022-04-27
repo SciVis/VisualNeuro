@@ -1,6 +1,0 @@
-<!DOCTYPE RCC><RCC version="1.0">
-    <qresource prefix="/">
-        <file>resources/splashscreen.png</file>
-        <file>resources/favicon.ico</file>
-    </qresource>
-</RCC>

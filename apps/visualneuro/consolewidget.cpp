@@ -2,7 +2,7 @@
  *
  * Inviwo - Interactive Visualization Workshop
  *
- * Copyright (c) 2012-2019 Inviwo Foundation
+ * Copyright (c) 2012-2021 Inviwo Foundation
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -53,6 +53,7 @@
 #include <QResizeEvent>
 #include <QWheelEvent>
 #include <QMessageBox>
+#include <QTimer>
 #include <warn/pop>
 
 #include <inviwo/core/common/inviwoapplication.h>
@@ -62,7 +63,16 @@
 #include <inviwo/core/processors/processor.h>
 #include <inviwo/core/util/ostreamjoiner.h>
 
+#include <inviwo/core/network/processornetwork.h>
+#include <inviwo/core/network/processornetworkobserver.h>
+
 namespace inviwo {
+
+namespace detail {
+
+enum Roles { Fulltext = Qt::UserRole + 1 };
+
+}  // namespace detail
 
 TextSelectionDelegate::TextSelectionDelegate(QWidget* parent) : QItemDelegate(parent) {}
 
@@ -79,10 +89,24 @@ QWidget* TextSelectionDelegate::createEditor(QWidget* parent, const QStyleOption
     }
 }
 
-void TextSelectionDelegate::setModelData([[maybe_unused]] QWidget* editor, [[maybe_unused]] QAbstractItemModel* model,
+void TextSelectionDelegate::setModelData([[maybe_unused]] QWidget* editor,
+                                         [[maybe_unused]] QAbstractItemModel* model,
                                          [[maybe_unused]] const QModelIndex& index) const {
     // dummy function to prevent changing the model
 }
+
+struct BackgroundJobs : QLabel, ProcessorNetworkObserver {
+    BackgroundJobs(QWidget* parent, ProcessorNetwork* net) : QLabel(parent) {
+        net->addObserver(this);
+        update(0);
+    }
+
+    void update(int jobs) { setText(QString("Backgrund Jobs: %1").arg(jobs)); }
+
+    virtual void onProcessorBackgroundJobsChanged(Processor*, int, int total) override {
+        update(total);
+    }
+};
 
 ConsoleWidget::ConsoleWidget(QWidget* parent)
     : InviwoDockWidget(tr("Console"), parent, "ConsoleWidget")
@@ -94,7 +118,7 @@ ConsoleWidget::ConsoleWidget(QWidget* parent)
     , filterPattern_(new QLineEdit(this)) {
 
     setAllowedAreas(Qt::BottomDockWidgetArea);
-    resize(utilqt::emToPx(this, QSizeF(60, 10)));  // default size
+    resize(utilqt::emToPx(this, QSizeF(60, 60)));  // default size
 
     qRegisterMetaType<LogTableModelEntry>("LogTableModelEntry");
 
@@ -235,8 +259,23 @@ ConsoleWidget::ConsoleWidget(QWidget* parent)
     statusBar->addSpacing(5);
 
     statusBar->addStretch(3);
-    statusBar->addWidget(new QLabel("Filter", this));
+/*
+    threadPoolInfo_ = new QLabel("Pool: 0 Queued Jobs / 0 Threads", this);
+    statusBar->addWidget(threadPoolInfo_);
+    auto timer = new QTimer(this);
+    connect(timer, &QTimer::timeout, threadPoolInfo_, [this]() {
+        const auto threads = mainwindow_->getInviwoApplication()->getThreadPool().getSize();
+        const auto queueSize = mainwindow_->getInviwoApplication()->getThreadPool().getQueueSize();
+        threadPoolInfo_->setText(
+            QString("Pool: %1 Queued Jobs / %2 Threads").arg(queueSize, 3).arg(threads, 2));
+    });
+    timer->start(1000);
 
+    statusBar->addWidget(
+        new BackgroundJobs(this, mainwindow_->getInviwoApplication()->getProcessorNetwork()));
+ */
+    statusBar->addSpacing(20);
+    statusBar->addWidget(new QLabel("Filter", this));
     filterPattern_->setMinimumWidth(200);
     statusBar->addWidget(filterPattern_, 1);
     statusBar->addSpacing(5);
@@ -300,8 +339,6 @@ ConsoleWidget::ConsoleWidget(QWidget* parent)
     connect(this, &ConsoleWidget::logSignal, this, &ConsoleWidget::logEntry);
     connect(this, &ConsoleWidget::clearSignal, this, &ConsoleWidget::clear);
 
-    levels[1].action->setChecked(false);
-    levels[2].action->setChecked(false);
     // Restore State
     QSettings settings;
     settings.beginGroup(objectName());
@@ -331,39 +368,39 @@ ConsoleWidget::ConsoleWidget(QWidget* parent)
     filterPattern_->setText(filterText.toString());
 
     settings.endGroup();
-    /*
+/*
     auto editmenu = mainwindow_->getInviwoEditMenu();
-    editActionsHandle_ = editmenu->registerItem(
-        std::make_shared<MenuItem>(this,
-                                   [this](MenuItemType t) -> bool {
-                                       switch (t) {
-                                           case MenuItemType::copy:
-                                               return tableView_->selectionModel()->hasSelection();
-                                           case MenuItemType::cut:
-                                           case MenuItemType::paste:
-                                           case MenuItemType::del:
-                                           case MenuItemType::select:
-                                           default:
-                                               return false;
-                                       }
-                                   },
-                                   [this](MenuItemType t) -> void {
-                                       switch (t) {
-                                           case MenuItemType::copy: {
-                                               if (tableView_->selectionModel()->hasSelection()) {
-                                                   copy();
-                                               }
-                                               break;
-                                           }
-                                           case MenuItemType::cut:
-                                           case MenuItemType::paste:
-                                           case MenuItemType::del:
-                                           case MenuItemType::select:
-                                           default:
-                                               break;
-                                       }
-                                   }));
-                                   */
+    editActionsHandle_ = editmenu->registerItem(std::make_shared<MenuItem>(
+        this,
+        [this](MenuItemType t) -> bool {
+            switch (t) {
+                case MenuItemType::copy:
+                    return tableView_->selectionModel()->hasSelection();
+                case MenuItemType::cut:
+                case MenuItemType::paste:
+                case MenuItemType::del:
+                case MenuItemType::select:
+                default:
+                    return false;
+            }
+        },
+        [this](MenuItemType t) -> void {
+            switch (t) {
+                case MenuItemType::copy: {
+                    if (tableView_->selectionModel()->hasSelection()) {
+                        copy();
+                    }
+                    break;
+                }
+                case MenuItemType::cut:
+                case MenuItemType::paste:
+                case MenuItemType::del:
+                case MenuItemType::select:
+                default:
+                    break;
+            }
+        }));
+ */
 }
 
 ConsoleWidget::~ConsoleWidget() = default;
@@ -510,7 +547,11 @@ void ConsoleWidget::copy() {
             } else if (!first) {
                 text.append('\n');
             }
-            text.append(ind.data(Qt::DisplayRole).toString());
+            if (auto v = ind.data(detail::Roles::Fulltext); !v.isNull()) {
+                text.append(v.toString());
+            } else {
+                text.append(ind.data(Qt::DisplayRole).toString());
+            }
             first = false;
         }
         prevrow = ind.row();
@@ -652,8 +693,12 @@ QStandardItem* LogTableModelEntry::get(ColumnID ind) const {
             return new QStandardItem(utilqt::toQString(toString(lineNumber)));
         case ColumnID::Function:
             return new QStandardItem(utilqt::toQString(funcionName));
-        case ColumnID::Message:
-            return new QStandardItem(utilqt::toQString(message));
+        case ColumnID::Message: {
+            auto item = std::make_unique<QStandardItem>();
+            item->setData(utilqt::toQString(message), detail::Roles::Fulltext);
+            item->setData(utilqt::toQString(util::elideLines(message)), Qt::DisplayRole);
+            return item.release();
+        }
         default:
             return new QStandardItem();
     }
