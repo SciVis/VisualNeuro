@@ -1,6 +1,6 @@
 # Download and extract the Brain atlases since they are too large to store in git
 include("cmake/DownloadBrainAtlas.cmake")
-DownloadBrainAtlas("${CMAKE_CURRENT_SOURCE_DIR}/data/atlases/MNI/colin27")
+DownloadBrainAtlas("${CMAKE_CURRENT_SOURCE_DIR}/data/atlases/MNI/Colin27")
 
 #--------------------------------------------------------------------
 # Inviwo VisualNeuro Module
