@@ -21,7 +21,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     
     steps:
-    - name: Download Windows artifact
+    - name: Download installer
       uses: dawidd6/action-download-artifact@v2
       with:
         name: ${{ matrix.installer }}
