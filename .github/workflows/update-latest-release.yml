@@ -10,20 +10,22 @@ on:
 jobs:
   upload_artifact:
     if: ${{ github.event.workflow_run.conclusion == 'success' && github.ref == 'refs/heads/master'}}
-    runs-on: windows-latest
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest]
+        include:
+          - os: 'windows-latest'
+            installer: 'visualneuro-installer-win'
+          - os: 'macos-latest'
+            installer: 'visualneuro-installer-macos'
+    runs-on: ${{ matrix.os }}
     
     steps:
     - name: Download Windows artifact
       uses: dawidd6/action-download-artifact@v2
       with:
-        name: visualneuro-installer-win
+        name: ${{ matrix.installer }}
         workflow: visualneuro.yml
-
-    - name: Download MacOS artifact
-      uses: dawidd6/action-download-artifact@v2
-      with:
-        name: visualneuro-installer-macos
-        workflow: inviwo.yml
 
     - name: Upload binaries to release
       uses: svenstaro/upload-release-action@v2
