@@ -16,7 +16,6 @@ jobs:
         include:
           - os: 'windows-latest'
             installer: 'visualneuro-installer-win'
-            app: 
           - os: 'macos-latest'
             installer: 'visualneuro-installer-macos'
     runs-on: ${{ matrix.os }}
