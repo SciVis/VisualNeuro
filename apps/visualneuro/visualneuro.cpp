@@ -127,7 +127,7 @@ int main(int argc, char** argv) {
     const std::string workspace =
         clp.getLoadWorkspaceFromArg()
             ? clp.getWorkspacePath()
-            : brainModule->getPath(ModulePath::Workspaces) + "/visualneuro.inv";
+            : brainModule->getPath(ModulePath::Workspaces) + "/VisualNeuro.inv";
 
     if (!workspace.empty()) {
         mainWin.openLastWorkspace(workspace);
