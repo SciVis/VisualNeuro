@@ -75,7 +75,7 @@ int main(int argc, char** argv) {
     defaultFormat.setProfile(QSurfaceFormat::CoreProfile);
     QSurfaceFormat::setDefaultFormat(defaultFormat);
 
-    InviwoApplicationQt inviwoApp(argc, argv, "VisualNeuro");
+    InviwoApplicationQt inviwoApp(argc, argv, "Visual Neuro");
     inviwoApp.setStyleSheetFile(":/stylesheets/visualneuro.qss");
     
     inviwoApp.setProgressCallback([](std::string m) {

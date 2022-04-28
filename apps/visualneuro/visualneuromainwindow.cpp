@@ -290,7 +290,7 @@ void VisualNeuroMainWindow::addActions() {
             // The following code snippet allows to reload the Qt style sheets during
             // runtime, which is handy while we change them.
             app_->setStyleSheetFile(QString::fromStdString(app_->getPath(PathType::Resources) +
-                                                           "/stylesheets/inviwo.qss"));
+                                                           "/stylesheets/visualneuro.qss"));
         });
     }
 #endif

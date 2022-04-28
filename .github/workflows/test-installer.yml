@@ -36,7 +36,7 @@ jobs:
         # find the name of the installer
         $exe = Get-ChildItem -Name "Visual Neuro-*.exe"
         # launch the nsis installer in "silent mode" (/S), should run without user interaction
-        Invoke-expression "./$exe /S"
+        Invoke-expression ./"$exe" /S
         # this will spawn the installer in the background so we need to wait for it to finish
         $proc = Get-Process | where {$_.ProcessName -like "Visual Neuro-*"} | Select-Object -First 1
         if ($proc) { 
@@ -62,7 +62,7 @@ jobs:
         # Mount installer image
         hdiutil attach "$DMG"
         # Install by copying VisualNeuro.app to applications folder
-        cp -r "/Volumes/${DMG%%.dmg}/VisualNeuro.app /Applications/"
+        cp -r "/Volumes/${DMG%%.dmg}/Visual Neuro.app" /Applications/
         hdiutil detach "/Volumes/${DMG%%.dmg}/"
 
     - name: Run VisualNeuro
