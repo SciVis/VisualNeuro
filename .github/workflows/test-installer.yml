@@ -12,12 +12,14 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     strategy:
       matrix:
-        os: [macos-latest, windows-latest]
+        os: [macos-latest, windows-latest, ubuntu-20.04]
         include:
           - os: 'windows-latest'
             installer: 'visualneuro-installer-win'
           - os: 'macos-latest'
             installer: 'visualneuro-installer-macos'
+          - os: 'ubuntu-20.04'
+            installer: 'visualneuro-installer-ubuntu'
     runs-on: ${{ matrix.os }}
     steps:
     - name: Download artifact
@@ -36,14 +38,14 @@ jobs:
         # find the name of the installer
         $exe = Get-ChildItem -Name "Visual Neuro-*.exe"
         # launch the nsis installer in "silent mode" (/S), should run without user interaction
-        Invoke-expression ./"$exe" /S
+        Invoke-expression "./'$exe' /S"
         # this will spawn the installer in the background so we need to wait for it to finish
         $proc = Get-Process | where {$_.ProcessName -like "Visual Neuro-*"} | Select-Object -First 1
         if ($proc) { 
           Wait-Process -Id $proc.id
         }
         
-    - name: Run VisualNeuro
+    - name: Run Visual Neuro
       if: runner.os == 'Windows'
       shell: pwsh
       run: |
@@ -61,13 +63,31 @@ jobs:
         DMG=$(ls "Visual Neuro-*.dmg")
         # Mount installer image
         hdiutil attach "$DMG"
-        # Install by copying VisualNeuro.app to applications folder
+        # Install by copying Visual Neuro.app to applications folder
         cp -r "/Volumes/${DMG%%.dmg}/Visual Neuro.app" /Applications/
         hdiutil detach "/Volumes/${DMG%%.dmg}/"
 
-    - name: Run VisualNeuro
+    - name: Run Visual Neuro
       if: runner.os == 'macOS'
       shell: bash
       run: |
         cd "/Applications/Visual Neuro.app/Contents/MacOS/"
         ./"Visual Neuro" --logconsole --quit
+
+    ###############################################################################
+    # Linux
+    ###############################################################################
+    - name: Extract Installer
+      if: runner.os == 'Linux'
+      shell: bash
+      run: |
+        # Find the name of the installer 
+        TGZ=$(ls "Visual Neuro-*.tgz")
+        # Extract
+        tar zxvf "$TGZ"
+
+    - name: Run Visual Neuro
+      if: runner.os == 'ubuntu'
+      shell: bash
+      run: |
+        ./"bin/Visual Neuro" --logconsole --quit

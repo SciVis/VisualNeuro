@@ -15,7 +15,7 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [windows-latest, macos-latest] #, ubuntu-20.04]
+        os: [windows-latest, macos-latest, ubuntu-20.04]
         include:
           - os: 'windows-latest'
             triplet: 'x64-windows'
@@ -32,14 +32,14 @@ jobs:
             targets: 'all package'
             installer: 'visualneuro-installer-macos'
             artifact: 'build/Visual Neuro-v*.dmg'
-         # - os: 'ubuntu-20.04'
-         #   triplet: 'x64-linux'
-         #   mono: 'mono'
-         #   cmake: '--preset ninja-vcpkg-visualneuro -DIVW_USE_SIGAR=OFF -DIVW_MODULE_HDF5=OFF' 
-         #   generator: 'Ninja' 
-         #   targets: 'ALL_BUILD package'
-         #   installer: 'visualneuro-installer-ubuntu'
-         #   artifact: 'build/Visual Neuro-v*.zip'
+          - os: 'ubuntu-20.04'
+            triplet: 'x64-linux'
+            mono: 'mono'
+            cmake: '--preset ninja-vcpkg-visualneuro -DIVW_USE_SIGAR=OFF -DIVW_MODULE_HDF5=OFF -DIVW_PACKAGE_INSTALLER=OFF' 
+            generator: 'Ninja' 
+            targets: 'ALL_BUILD package'
+            installer: 'visualneuro-installer-ubuntu'
+            artifact: 'build/Visual Neuro-v*.tgz'
       fail-fast: false
       
     runs-on: ${{ matrix.os }}
