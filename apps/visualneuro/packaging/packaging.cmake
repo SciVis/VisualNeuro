@@ -31,7 +31,7 @@ set(CMAKE_INSTALL_OPENMP_LIBRARIES TRUE)
 set(CMAKE_INSTALL_SYSTEM_RUNTIME_COMPONENT Application)
 include (InstallRequiredSystemLibraries)
 
-set(CPACK_PACKAGE_NAME                "VisualNeuro")
+set(CPACK_PACKAGE_NAME                "Visual Neuro")
 set(CPACK_PACKAGE_CONTACT             "Daniel Jönsson <info@visualneuro.com>")
 set(CPACK_PACKAGE_VENDOR              "Daniel Jönsson")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Interactive brain cohort analysis")

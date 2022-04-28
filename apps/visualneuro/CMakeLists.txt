@@ -74,7 +74,7 @@ add_executable(${PROJECT_NAME} MACOSX_BUNDLE WIN32
     ${RES_FILES})
 # Do not name the CMake project VisualNeuro because it can be confused with the module
 # However, we still want the the executable to be called VisualNeuro
-set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "VisualNeuro")
+set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "Visual Neuro")
 target_link_libraries(${PROJECT_NAME} PUBLIC
     inviwo::core
     inviwo::qtapplicationbase
@@ -125,8 +125,8 @@ endif()
 
 ivw_deploy_qt(${PROJECT_NAME})
 
-set_property(CACHE IVW_PACKAGE_SELECT_APP APPEND PROPERTY STRINGS "VisualNeuro")
+set_property(CACHE IVW_PACKAGE_SELECT_APP APPEND PROPERTY STRINGS "Visual Neuro")
 
-if(IVW_PACKAGE_SELECT_APP STREQUAL "VisualNeuro")
+if(IVW_PACKAGE_SELECT_APP STREQUAL "Visual Neuro")
     include(packaging/packaging.cmake) # Package creation
 endif()
