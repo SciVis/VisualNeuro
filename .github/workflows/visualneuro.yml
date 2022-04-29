@@ -77,7 +77,8 @@ jobs:
     - name: Clone VCPKG
       uses: actions/checkout@v2
       with:
-        repository: 'JackBoosY/vcpkg/tree/dev/jack/24447'
+        repository: 'JackBoosY/vcpkg'
+        ref: 'tree/dev/jack/24447'
         path: 'vcpkg' # The cmake vcpkg   present expects vcpkg to be next to the inviwo source folder
             
     - name: 'Setup NuGet Credentials'
