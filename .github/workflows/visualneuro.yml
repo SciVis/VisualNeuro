@@ -37,7 +37,7 @@ jobs:
             mono: 'mono'
             cmake: '--preset ninja-vcpkg-visualneuro -DIVW_USE_SIGAR=OFF -DIVW_MODULE_HDF5=OFF -DIVW_PACKAGE_INSTALLER=OFF' 
             generator: 'Ninja' 
-            targets: 'ALL_BUILD package'
+            targets: 'all package'
             installer: 'visualneuro-installer-ubuntu'
             artifact: 'build/Visual Neuro-v*.tgz'
       fail-fast: false
