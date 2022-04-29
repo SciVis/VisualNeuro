@@ -27,7 +27,7 @@ jobs:
           - os: 'macos-latest'
             triplet: 'x64-osx'
             mono: 'mono'
-            cmake: '--preset ninja-vcpkg-visualneuro -DIVW_MODULE_HDF5=OFF -DVCPKG_APPLOCAL_DEPS=OFF'
+            cmake: '--preset ninja-vcpkg-visualneuro -DIVW_MODULE_HDF5=OFF'
             generator: 'Ninja'
             targets: 'all package'
             installer: 'visualneuro-installer-macos'
@@ -77,7 +77,7 @@ jobs:
     - name: Clone VCPKG
       uses: actions/checkout@v2
       with:
-        repository: 'microsoft/vcpkg'
+        repository: 'JackBoosY/vcpkg/tree/dev/jack/24447'
         path: 'vcpkg' # The cmake vcpkg   present expects vcpkg to be next to the inviwo source folder
             
     - name: 'Setup NuGet Credentials'
