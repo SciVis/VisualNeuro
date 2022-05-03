@@ -27,14 +27,12 @@
  *
  *********************************************************************************/
 
-#ifndef IVW_PEARSONCORRELATION_H
-#define IVW_PEARSONCORRELATION_H
+#pragma once
 
 #include <inviwo/core/common/inviwo.h>
 #include <modules/visualneuro/visualneuromoduledefine.h>
 #include <execution>
-
-
+#include <cmath>
 
 IVW_MODULE_VISUALNEURO_API double calculateMeanIgnoreNaNs(const std::vector<double>& v);
 
@@ -43,7 +41,7 @@ double calculateMeanIgnoreNaNs(Iterator first, Iterator last) {
     double mean = 0.0;
     size_t validElements = 0;
     for (auto element = first; element != last; element++) {
-        if (isnan(*element)) continue;
+        if (std::isnan(*element)) continue;
         mean += static_cast<double>(*element);
         validElements++;
     }
@@ -115,8 +113,3 @@ double pearsonCorrelation(Iterator firstA, Iterator lastA, Iterator firstB, Iter
     return pearsonCorrelation(firstA, lastA, firstB, lastB, meanOfA, meanOfB);
 }
 
-
-
-
-
-#endif  // IVW_PEARSONCORRELATION_H
