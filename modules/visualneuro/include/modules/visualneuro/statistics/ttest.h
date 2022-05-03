@@ -34,6 +34,7 @@
 #include <algorithm>
 #include <vector>
 #include <numeric>
+#include <math.h>
 
 namespace inviwo {
 
