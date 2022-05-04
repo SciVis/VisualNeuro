@@ -82,7 +82,7 @@ jobs:
       shell: bash
       run: |
         # Find the name of the installer 
-        TGZ=$(ls "Visual Neuro-*.tgz")
+        TGZ=$(ls "Visual Neuro-*.tar.gz")
         # Extract
         tar zxvf "$TGZ"
 
