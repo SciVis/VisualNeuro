@@ -39,7 +39,7 @@ jobs:
             generator: 'Ninja' 
             targets: 'all package'
             installer: 'visualneuro-installer-ubuntu'
-            artifact: 'build/Visual Neuro-v*.tgz'
+            artifact: 'build/Visual Neuro-v*.tar.gz'
       fail-fast: false
       
     runs-on: ${{ matrix.os }}
