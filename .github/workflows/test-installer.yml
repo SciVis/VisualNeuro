@@ -82,6 +82,7 @@ jobs:
       shell: bash
       run: |
         # Find the name of the installer 
+        ls
         TGZ=$(ls "Visual*.tar.gz")
         # Extract
         tar zxvf "$TGZ"
