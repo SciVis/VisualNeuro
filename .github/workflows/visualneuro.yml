@@ -83,13 +83,16 @@ jobs:
     - name: 'Setup NuGet Credentials'
       shell: bash
       run: >
-        ${{ matrix.mono }} `vcpkg fetch nuget | tail -n 1`
-        sources add
+        ${{ matrix.mono }} `vcpkg fetch nuget | tail -n 1` \
+        sources add \
+        -source "https://nuget.pkg.github.com/visualneuro/index.json" \
+        -storepasswordincleartext \
+        -name "GitHub" \
+        -username "visualneuro" \
+        -password "${{ secrets.GITHUB_TOKEN }}" 
+        ${{ matrix.mono }} `vcpkg fetch nuget | tail -n 1` \
+        setapikey "${{ secrets.GITHUB_TOKEN }}" \
         -source "https://nuget.pkg.github.com/visualneuro/index.json"
-        -storepasswordincleartext
-        -name "GitHub"
-        -username "visualneuro"
-        -password "${{ secrets.GITHUB_TOKEN }}"
 
     - name: Apt Install, switch to gcc-11
       shell: bash
