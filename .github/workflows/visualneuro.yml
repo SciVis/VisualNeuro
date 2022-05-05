@@ -82,7 +82,7 @@ jobs:
             
     - name: 'Setup NuGet Credentials'
       shell: bash
-      run: >
+      run: |
         ${{ matrix.mono }} `vcpkg fetch nuget | tail -n 1` \
         sources add \
         -source "https://nuget.pkg.github.com/visualneuro/index.json" \
