@@ -85,8 +85,8 @@ jobs:
         TGZ=$(ls Visual*.tar.gz)
         # Extract
         tar zxvf "$TGZ"
-        # Get folder name and move to the folder 
-        cd ${$TGZ%.*}
+        # Get folder name and move into the folder 
+        cd ${TGZ%.tar.gz}
         echo $PWD
 
     - name: Run Visual Neuro
