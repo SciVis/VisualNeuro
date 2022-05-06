@@ -85,14 +85,14 @@ jobs:
       run: |
         ${{ matrix.mono }} `vcpkg fetch nuget | tail -n 1` \
         sources add \
-        -source "https://nuget.pkg.github.com/visualneuro/index.json" \
+        -source "https://nuget.pkg.github.com/VisualNeuro/index.json" \
         -storepasswordincleartext \
         -name "GitHub" \
-        -username "visualneuro" \
+        -username "VisualNeuro" \
         -password "${{ secrets.GITHUB_TOKEN }}" 
         ${{ matrix.mono }} `vcpkg fetch nuget | tail -n 1` \
         setapikey "${{ secrets.GITHUB_TOKEN }}" \
-        -source "https://nuget.pkg.github.com/visualneuro/index.json"
+        -source "https://nuget.pkg.github.com/VisualNeuro/index.json"
 
     - name: Apt Install, switch to gcc-11
       shell: bash
