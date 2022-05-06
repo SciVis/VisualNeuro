@@ -77,7 +77,7 @@ jobs:
     ###############################################################################
     # Linux
     ###############################################################################
-    - name: Extract Installer
+    - name: Extract Linux installer and run Visual Neuro
       if: runner.os == 'Linux'
       shell: bash
       run: |
@@ -87,10 +87,4 @@ jobs:
         tar zxvf "$TGZ"
         # Get folder name and move into the folder 
         cd "${TGZ%.tar.gz}"
-        echo $PWD
-
-    - name: Run Visual Neuro
-      if: runner.os == 'Linux'
-      shell: bash
-      run: |
         ./"bin/Visual Neuro" --logconsole --quit
