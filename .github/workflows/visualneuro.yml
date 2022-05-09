@@ -8,7 +8,7 @@ on:
 
 env:
   BUILD_TYPE: Release
-  VCPKG_BINARY_SOURCES: 'clear;nuget,GitHub,readwrite;debug'         # recognized by vcpkg
+  VCPKG_BINARY_SOURCES: 'clear;nuget,GitHub,readwrite'         # recognized by vcpkg
   # QT_DEBUG_PLUGINS: 1                                        # print qt plugin debug info
 
 jobs:
@@ -22,6 +22,7 @@ jobs:
             mono: ''
             cmake: '--preset msvc-dev-vcpkg-visualneuro -DIVW_MODULE_HDF5=OFF'
             targets: 'ALL_BUILD package'
+            bootstrap_vcpkg: "./vcpkg/bootstrap-vcpkg.bat"
             installer: 'visualneuro-installer-win'
             artifact: 'build/Visual Neuro-v*.exe'
           - os: 'macos-latest'
@@ -30,6 +31,7 @@ jobs:
             cmake: '--preset ninja-vcpkg-visualneuro -DIVW_MODULE_HDF5=OFF -DVCPKG_APPLOCAL_DEPS=OFF'
             generator: 'Ninja'
             targets: 'all package'
+            bootstrap_vcpkg: "./vcpkg/bootstrap-vcpkg.sh"
             installer: 'visualneuro-installer-macos'
             artifact: 'build/Visual Neuro-v*.dmg'
           - os: 'ubuntu-20.04'
@@ -38,6 +40,7 @@ jobs:
             cmake: '--preset ninja-vcpkg-visualneuro -DIVW_USE_SIGAR=OFF -DIVW_MODULE_HDF5=OFF -DIVW_PACKAGE_INSTALLER=OFF' 
             generator: 'Ninja' 
             targets: 'all package'
+            bootstrap_vcpkg: "./vcpkg/bootstrap-vcpkg.sh"
             installer: 'visualneuro-installer-ubuntu'
             artifact: 'build/Visual Neuro-v*.tar.gz'
       fail-fast: false
@@ -79,7 +82,12 @@ jobs:
       with:
         repository: 'microsoft/vcpkg'
         path: 'vcpkg' # The cmake vcpkg   present expects vcpkg to be next to the inviwo source folder
-            
+
+    - name: 'Bootstrap vcpkg'
+      shell: bash
+      run: >
+        ${{ matrix.bootstrap_vcpkg }} 
+
     - name: 'Setup NuGet Credentials'
       shell: bash
       run: |
