@@ -18,8 +18,8 @@ jobs:
             installer: 'visualneuro-installer-win'
           - os: 'macos-latest'
             installer: 'visualneuro-installer-macos'
-          - os: 'ubuntu-20.04'
-            installer: 'visualneuro-installer-ubuntu'
+          #- os: 'ubuntu-20.04'
+          #  installer: 'visualneuro-installer-ubuntu'
     runs-on: ${{ matrix.os }}
     steps:
     - name: Download artifact
