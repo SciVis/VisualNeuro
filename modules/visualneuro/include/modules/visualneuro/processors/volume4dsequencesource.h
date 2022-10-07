@@ -87,7 +87,7 @@ private:
 
     Volume4DSequenceOutport outport_;
 
-    TemplateOptionProperty<InputType> inputType_;
+    OptionProperty<InputType> inputType_;
     FileProperty file_;
     DirectoryProperty folder_;
     StringProperty filter_;

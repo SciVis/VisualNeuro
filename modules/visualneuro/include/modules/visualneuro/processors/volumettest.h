@@ -84,7 +84,7 @@ private:
     VolumeOutport outport_;
 
     FloatProperty pVal_;
-    TemplateOptionProperty<stats::TailTest> tailTest_;
+    OptionProperty<stats::TailTest> tailTest_;
     BoolProperty equalVariance_;
 };
 

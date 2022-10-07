@@ -27,8 +27,7 @@
  *
  *********************************************************************************/
 
-#ifndef IVW_CONSOLEWIDGET_H
-#define IVW_CONSOLEWIDGET_H
+#pragma once
 
 #include <inviwo/core/util/logcentral.h>
 #include <modules/qtwidgets/inviwodockwidget.h>
@@ -58,7 +57,7 @@ class QWheelEvent;
 namespace inviwo {
 
 class MenuItem;
-class InviwoMainWindow;
+//class InviwoMainWindow;
 
 struct LogTableModelEntry {
     enum class ColumnID {
@@ -206,4 +205,3 @@ private:
 
 Q_DECLARE_METATYPE(inviwo::LogTableModelEntry)
 
-#endif  // IVW_CONSOLELISTWIDGET_H

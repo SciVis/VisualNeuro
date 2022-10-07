@@ -95,9 +95,9 @@ private:
     VolumeOutport resCorrelationVolume_;  // Correlation between selected parameter/input volumes
 
     // properties
-    TemplateOptionProperty<stats::CorrelationMethod> correlationMethod_;
+    OptionProperty<stats::CorrelationMethod> correlationMethod_;
     FloatProperty pVal_;
-    TemplateOptionProperty<stats::TailTest> tailTest_;
+    OptionProperty<stats::TailTest> tailTest_;
 };
 
 }  // namespace inviwo

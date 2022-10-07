@@ -29,7 +29,9 @@
 
 #include <modules/visualneuro/processors/volumeatlasprocessor.h>
 #include <modules/opengl/openglutils.h>
+#include <modules/opengl/texture/textureunit.h>
 #include <modules/opengl/texture/textureutils.h>
+
 
 #include <inviwo/core/interaction/events/pickingevent.h>
 #include <inviwo/core/interaction/events/mouseevent.h>
@@ -54,8 +56,8 @@ const ProcessorInfo VolumeAtlasProcessor::getProcessorInfo() const { return proc
 OrdinalPropertyState<float> ordinalAlpha(
     const float &value, InvalidationLevel invalidationLevel = InvalidationLevel::InvalidOutput) {
     return {value,
-            {0.0f, ConstraintBehavior::Immutable},
-            {1.0f, ConstraintBehavior::Immutable},
+            0.0f, ConstraintBehavior::Immutable,
+            1.0f, ConstraintBehavior::Immutable,
             0.01f,
             invalidationLevel,
             PropertySemantics::Default};

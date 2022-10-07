@@ -66,6 +66,8 @@
 #include <inviwo/core/network/processornetwork.h>
 #include <inviwo/core/network/processornetworkobserver.h>
 
+#include <iomanip>
+
 namespace inviwo {
 
 namespace detail {
