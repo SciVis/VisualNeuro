@@ -56,13 +56,13 @@
       "description": "MSVC 2022 Development configuration",
       "generator": "Visual Studio 17 2022",
       "architecture" : "x64",
-      "inherits": ["develop", "visualneuro"]
+      "inherits": ["user", "visualneuro"]
     },
     {
       "name": "msvc-dev-vcpkg-visualneuro",
       "displayName": "MSVC 2022 VCPKG Visual Neuro",
       "description": "MSVC Development VCPKG configuration",
-      "inherits": ["vcpkg", "msvc-dev-visualneuro"]
+      "inherits": ["vcpkg", "vcpkg-cache", "msvc-dev-visualneuro"]
     },
     {
       "name": "ninja-vcpkg-visualneuro",
