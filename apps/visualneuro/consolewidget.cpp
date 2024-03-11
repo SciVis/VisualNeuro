@@ -124,7 +124,7 @@ ConsoleWidget::ConsoleWidget(QWidget* parent)
 
     qRegisterMetaType<LogTableModelEntry>("LogTableModelEntry");
 
-    filter_->setSourceModel(model_.model());
+    filter_->setSourceModel(&model_);
     filter_->setFilterKeyColumn(static_cast<int>(LogTableModelEntry::ColumnID::Message));
 
     levelFilter_->setSourceModel(filter_);
@@ -173,17 +173,18 @@ ConsoleWidget::ConsoleWidget(QWidget* parent)
     auto visibleColumnsAction = new QAction("Visible Columns", this);
     visibleColumnsAction->setMenu(viewColGroup);
 
+    tableView_->horizontalHeader()->setContextMenuPolicy(Qt::ActionsContextMenu);
     tableView_->horizontalHeader()->setResizeContentsPrecision(0);
     tableView_->horizontalHeader()->setSectionResizeMode(cols - 1, QHeaderView::Stretch);
+
+    tableView_->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
     tableView_->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
 
     tableView_->verticalHeader()->setVisible(false);
     tableView_->verticalHeader()->setResizeContentsPrecision(0);
-    tableView_->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
-    const auto height = QFontMetrics(QFontDatabase::systemFont(QFontDatabase::FixedFont)).height();
-    constexpr int margin = 2;
-    tableView_->verticalHeader()->setMinimumSectionSize(height + margin);
-    tableView_->verticalHeader()->setDefaultSectionSize(height + margin);
+    tableView_->verticalHeader()->setMinimumSectionSize(1);
+    tableView_->verticalHeader()->setDefaultSectionSize(1);
+    tableView_->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
 
     QHBoxLayout* statusBar = new QHBoxLayout();
     statusBar->setObjectName("StatusBar");
@@ -213,21 +214,7 @@ ConsoleWidget::ConsoleWidget(QWidget* parent)
         return action;
     };
 
-    auto updateRowsHeights = [=]() {
-        tableView_->setUpdatesEnabled(false);
-
-        auto vrows = tableView_->verticalHeader()->count();
-        for (int i = 0; i < vrows; ++i) {
-            auto mind = mapToSource(i, static_cast<int>(LogTableModelEntry::ColumnID::Message));
-            const auto message = mind.data(Qt::DisplayRole).toString();
-            const auto lines = std::count(message.begin(), message.end(), '\n') + 1;
-            tableView_->verticalHeader()->resizeSection(i,
-                                                        margin + static_cast<int>(lines) * height);
-        }
-        tableView_->setUpdatesEnabled(true);
-    };
-
-    auto levelCallback = [this, updateRowsHeights](bool /*checked*/) {
+    auto levelCallback = [this](bool /*checked*/) {
         if (util::all_of(levels, [](const auto& level) { return level.action->isChecked(); })) {
             levelFilter_->setFilterRegularExpression("");
         } else {
@@ -239,7 +226,6 @@ ConsoleWidget::ConsoleWidget(QWidget* parent)
             }
             levelFilter_->setFilterRegularExpression(QString::fromStdString(ss.str()));
         }
-        updateRowsHeights();
     };
 
     auto levelGroup = new QMenu(this);
@@ -261,21 +247,21 @@ ConsoleWidget::ConsoleWidget(QWidget* parent)
     statusBar->addSpacing(5);
 
     statusBar->addStretch(3);
-/*
-    threadPoolInfo_ = new QLabel("Pool: 0 Queued Jobs / 0 Threads", this);
-    statusBar->addWidget(threadPoolInfo_);
-    auto timer = new QTimer(this);
-    connect(timer, &QTimer::timeout, threadPoolInfo_, [this]() {
-        const auto threads = mainwindow_->getInviwoApplication()->getThreadPool().getSize();
-        const auto queueSize = mainwindow_->getInviwoApplication()->getThreadPool().getQueueSize();
-        threadPoolInfo_->setText(
-            QString("Pool: %1 Queued Jobs / %2 Threads").arg(queueSize, 3).arg(threads, 2));
-    });
-    timer->start(1000);
 
-    statusBar->addWidget(
-        new BackgroundJobs(this, mainwindow_->getInviwoApplication()->getProcessorNetwork()));
- */
+    //threadPoolInfo_ = new QLabel("Pool: 0 Queued Jobs / 0 Threads", this);
+    //statusBar->addWidget(threadPoolInfo_);
+    //auto timer = new QTimer(this);
+    //connect(timer, &QTimer::timeout, threadPoolInfo_, [this]() {
+    //    const auto threads = mainWindow_->getInviwoApplication()->getThreadPool().getSize();
+    //    const auto queueSize = mainWindow_->getInviwoApplication()->getThreadPool().getQueueSize();
+    //    threadPoolInfo_->setText(
+    //        QString("Pool: %1 Queued Jobs / %2 Threads").arg(queueSize, 3).arg(threads, 2));
+    //});
+    //timer->start(1000);
+
+    //statusBar->addWidget(
+    //    new BackgroundJobs(this, mainWindow_->getInviwoApplication()->getProcessorNetwork()));
+
     statusBar->addSpacing(20);
     statusBar->addWidget(new QLabel("Filter", this));
     filterPattern_->setMinimumWidth(200);
@@ -285,12 +271,10 @@ ConsoleWidget::ConsoleWidget(QWidget* parent)
     auto clearFilter = new QAction(makeIcon("find-clear"), "C&lear Filter", this);
     clearFilter->setEnabled(false);
 
-    connect(filterPattern_, &QLineEdit::textChanged,
-            [this, updateRowsHeights, clearFilter](const QString& text) {
-                filter_->setFilterRegularExpression(text);
-                updateRowsHeights();
-                clearFilter->setEnabled(!text.isEmpty());
-            });
+    connect(filterPattern_, &QLineEdit::textChanged, [this, clearFilter](const QString& text) {
+        filter_->setFilterRegularExpression(text);
+        clearFilter->setEnabled(!text.isEmpty());
+    });
 
     connect(clearFilter, &QAction::triggered, [this]() { filterPattern_->setText(""); });
 
@@ -338,7 +322,12 @@ ConsoleWidget::ConsoleWidget(QWidget* parent)
     tableView_->setItemDelegateForColumn(static_cast<int>(LogTableModelEntry::ColumnID::Message),
                                          textSelectionDelegate_);
 
-    connect(this, &ConsoleWidget::logSignal, this, &ConsoleWidget::logEntry);
+    connect(this, &ConsoleWidget::hasNewEntries, this, &ConsoleWidget::onNewEntries,
+            Qt::QueuedConnection);
+
+    connect(this, &ConsoleWidget::scrollToBottom, tableView_, &QTableView::scrollToBottom,
+            Qt::QueuedConnection);
+
     connect(this, &ConsoleWidget::clearSignal, this, &ConsoleWidget::clear);
 
     // Restore State
@@ -362,7 +351,9 @@ ConsoleWidget::ConsoleWidget(QWidget* parent)
         auto levelsActive = settings.value("levelsActive", QVariantList());
         int i = 0;
         for (const auto& level : levelsActive.toList()) {
-            levels[i++].action->setChecked(level.toBool());
+            if (i < levels.size()) {
+                levels[i++].action->setChecked(level.toBool());
+            }
         }
     }
 
@@ -370,9 +361,9 @@ ConsoleWidget::ConsoleWidget(QWidget* parent)
     filterPattern_->setText(filterText.toString());
 
     settings.endGroup();
-/*
-    auto editmenu = mainwindow_->getInviwoEditMenu();
-    editActionsHandle_ = editmenu->registerItem(std::make_shared<MenuItem>(
+
+ /*   auto editMenu = mainWindow_->getInviwoEditMenu();
+    editActionsHandle_ = editMenu->registerItem(std::make_shared<MenuItem>(
         this,
         [this](MenuItemType t) -> bool {
             switch (t) {
@@ -401,8 +392,7 @@ ConsoleWidget::ConsoleWidget(QWidget* parent)
                 default:
                     break;
             }
-        }));
- */
+        }));*/
 }
 
 ConsoleWidget::~ConsoleWidget() = default;
@@ -432,54 +422,48 @@ void ConsoleWidget::updateIndicators(LogLevel level) {
 void ConsoleWidget::log(std::string_view source, LogLevel level, LogAudience audience,
                         std::string_view file, std::string_view function, int line,
                         std::string_view msg) {
-    LogTableModelEntry e = {std::chrono::system_clock::now(),
-                            std::string(source),
-                            level,
-                            audience,
-                            std::string(file),
-                            line,
-                            std::string(function),
-                            std::string(msg)};
+    LogTableModelEntry e{
+        std::chrono::system_clock::now(), source, level, audience, file, line, function, msg};
     logEntry(std::move(e));
 }
 
 void ConsoleWidget::logProcessor(Processor* processor, LogLevel level, LogAudience audience,
                                  std::string_view msg, std::string_view file,
                                  std::string_view function, int line) {
-    LogTableModelEntry e = {std::chrono::system_clock::now(),
-                            processor->getIdentifier(),
-                            level,
-                            audience,
-                            std::string(file),
-                            line,
-                            std::string(function),
-                            std::string(msg)};
+    LogTableModelEntry e{std::chrono::system_clock::now(),
+                         processor->getIdentifier(),
+                         level,
+                         audience,
+                         file,
+                         line,
+                         function,
+                         msg};
     logEntry(std::move(e));
 }
 
 void ConsoleWidget::logNetwork(LogLevel level, LogAudience audience, std::string_view msg,
                                std::string_view file, std::string_view function, int line) {
-    LogTableModelEntry e = {std::chrono::system_clock::now(),
-                            "ProcessorNetwork",
-                            level,
-                            audience,
-                            std::string(file),
-                            line,
-                            std::string(function),
-                            std::string(msg)};
+    LogTableModelEntry e{std::chrono::system_clock::now(),
+                         "ProcessorNetwork",
+                         level,
+                         audience,
+                         file,
+                         line,
+                         function,
+                         msg};
     logEntry(std::move(e));
 }
 
 void ConsoleWidget::logAssertion(std::string_view file, std::string_view function, int line,
                                  std::string_view msg) {
-    LogTableModelEntry e = {std::chrono::system_clock::now(),
-                            "Assertion",
-                            LogLevel::Error,
-                            LogAudience::Developer,
-                            std::string(file),
-                            line,
-                            std::string(function),
-                            std::string(msg)};
+    LogTableModelEntry e{std::chrono::system_clock::now(),
+                         "Assertion",
+                         LogLevel::Error,
+                         LogAudience::Developer,
+                         file,
+                         line,
+                         function,
+                         msg};
     logEntry(std::move(e));
 
     auto error = QString{"<b>Assertion Failed</b><br>File: %1:%2<br>Function: %3<p>%4"}
@@ -491,30 +475,26 @@ void ConsoleWidget::logAssertion(std::string_view file, std::string_view functio
 }
 
 void ConsoleWidget::logEntry(LogTableModelEntry e) {
-    if (QThread::currentThread() != QCoreApplication::instance()->thread()) {
-        emit logSignal(e);
-        return;
+    {
+        std::unique_lock lock{entriesMutex_};
+        newEntries_.push_back(std::move(e));
     }
+    emit hasNewEntries();
+}
 
-    auto lines = std::count(e.message.begin(), e.message.end(), '\n') + 1;
-    auto height = QFontMetrics(QFontDatabase::systemFont(QFontDatabase::FixedFont)).height();
+void ConsoleWidget::onNewEntries() {
+    {
+        std::unique_lock lock{entriesMutex_};
+        if (newEntries_.empty()) return;
 
-    tableView_->setUpdatesEnabled(false);
-
-    model_.log(e);
-    updateIndicators(e.level);
-
-    // Faster but messes with filters.
-    if (lines != 1) {
-        auto vind = mapFromSource(model_.model()->rowCount() - 1, 0);
-        if (vind.isValid()) {
-            tableView_->verticalHeader()->resizeSection(vind.row(),
-                                                        2 + static_cast<int>(lines) * height);
+        for (auto& e : newEntries_) {
+            updateIndicators(e.level);
         }
+        model_.log(newEntries_);
+        newEntries_.clear();
     }
 
-    tableView_->scrollToBottom();
-    tableView_->setUpdatesEnabled(true);
+    emit scrollToBottom();
 }
 
 void ConsoleWidget::keyPressEvent(QKeyEvent* keyEvent) {
@@ -530,7 +510,7 @@ QModelIndex ConsoleWidget::mapToSource(int row, int col) {
 }
 
 QModelIndex ConsoleWidget::mapFromSource(int row, int col) {
-    auto mind = model_.model()->index(row, col);
+    auto mind = model_.index(row, col);
     auto lind = filter_->mapFromSource(mind);
     return levelFilter_->mapFromSource(lind);
 }
@@ -590,46 +570,154 @@ void ConsoleWidget::closeEvent(QCloseEvent* event) {
     InviwoDockWidget::closeEvent(event);
 }
 
-LogTableModel::LogTableModel() : model_(0, static_cast<int>(LogTableModelEntry::size())) {
-    for (size_t i = 0; i < LogTableModelEntry::size(); ++i) {
-        auto item = new QStandardItem(getName(static_cast<LogTableModelEntry::ColumnID>(i)));
-        item->setTextAlignment(Qt::AlignLeft);
-        model_.setHorizontalHeaderItem(static_cast<int>(i), item);
+namespace {
+std::pair<int, int> getLineHeightAndMargin(const QFont& font) {
+    QStyleOptionViewItem opt;
+    opt.font = font;
+    opt.fontMetrics = QFontMetrics{font};
+    opt.features |= QStyleOptionViewItem::HasDisplay;
+    opt.styleObject = nullptr;
+    opt.text = "One line text";
+    auto* style = qApp->style();
+    auto size1 = style->sizeFromContents(QStyle::CT_ItemViewItem, &opt, QSize(), nullptr);
+    opt.text = "One line text\nAnother line";
+    opt.text.replace(QLatin1Char('\n'), QChar::LineSeparator);
+    auto size2 = style->sizeFromContents(QStyle::CT_ItemViewItem, &opt, QSize(), nullptr);
+
+    int lineHeight = size2.height() - size1.height();
+    int margin = size1.height() - lineHeight;
+
+    return {lineHeight, margin};
+}
+}  // namespace
+
+LogTableModel::LogTableModel() : QAbstractTableModel{} {}
+
+void LogTableModel::log(std::vector<LogTableModelEntry>& entries) {
+    if (entries.empty()) return;
+
+    beginInsertRows(QModelIndex{}, static_cast<int>(entries_.size()),
+                    static_cast<int>(entries_.size() + entries.size()) - 1);
+
+    entries_.insert(entries_.end(), std::make_move_iterator(entries.begin()),
+                    std::make_move_iterator(entries.end()));
+
+    endInsertRows();
+}
+
+void LogTableModel::clear() {
+    beginResetModel();
+    entries_.clear();
+    endResetModel();
+}
+
+QVariant LogTableModel::data(const QModelIndex& index, int role) const {
+    if (!index.isValid()) return {};
+    if (index.row() >= entries_.size()) return {};
+
+    static const QColor infoTextColor = {153, 153, 153};
+    static const QColor warnTextColor = {221, 165, 8};
+    static const QColor errorTextColor = {255, 107, 107};
+
+    const auto& entry = entries_[index.row()];
+    const auto id = static_cast<LogTableModelEntry::ColumnID>(index.column());
+
+    switch (role) {
+        case Qt::DisplayRole: {
+            switch (id) {
+                case LogTableModelEntry::ColumnID::Date:
+                    return entry.date;
+                case LogTableModelEntry::ColumnID::Time:
+                    return entry.time;
+                case LogTableModelEntry::ColumnID::Source:
+                    return entry.source;
+                case LogTableModelEntry::ColumnID::Level:
+                    return entry.levelStr;
+                case LogTableModelEntry::ColumnID::Audience:
+                    return entry.audience;
+                case LogTableModelEntry::ColumnID::Path:
+                    return entry.path;
+                case LogTableModelEntry::ColumnID::File:
+                    return entry.file;
+                case LogTableModelEntry::ColumnID::Line:
+                    return entry.line;
+                case LogTableModelEntry::ColumnID::Function:
+                    return entry.function;
+                case LogTableModelEntry::ColumnID::Message:
+                    return entry.message;
+                default:
+                    return {};
+            }
+        }
+        case Qt::TextAlignmentRole:
+            return Qt::AlignLeft;
+        case Qt::ForegroundRole: {
+            switch (entry.level) {
+                case LogLevel::Info:
+                    return QBrush(infoTextColor);
+                case LogLevel::Warn:
+                    return QBrush(warnTextColor);
+                case LogLevel::Error:
+                    return QBrush(errorTextColor);
+                default:
+                    return QBrush(infoTextColor);
+            }
+        }
+        case Qt::FontRole:
+            return LogTableModelEntry::logFont();
+
+        case Qt::EditRole:
+            [[fallthrough]];
+        case detail::Roles::Fulltext:
+            if (id == LogTableModelEntry::ColumnID::Message) {
+                return entry.fullMessage;
+            } else {
+                return {};
+            }
+
+        default:
+            return {};
     }
 }
 
-void LogTableModel::log(LogTableModelEntry entry) {
-    QList<QStandardItem*> items;
-    items.reserve(static_cast<int>(LogTableModelEntry::size()));
-    for (size_t i = 0; i < LogTableModelEntry::size(); ++i) {
-        items.append(entry.get(static_cast<LogTableModelEntry::ColumnID>(i)));
-        items.last()->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
-        items.last()->setTextAlignment(Qt::AlignLeft);
-        items.last()->setEditable(false);
-        // items.last()->setSizeHint(QSize(1, lines * height));
-
-        switch (entry.level) {
-            case LogLevel::Info:
-                items.last()->setForeground(QBrush(infoTextColor_));
-                break;
-            case LogLevel::Warn:
-                items.last()->setForeground(QBrush(warnTextColor_));
-                break;
-            case LogLevel::Error:
-                items.last()->setForeground(QBrush(errorTextColor_));
-                break;
-            default:
-                items.last()->setForeground(QBrush(infoTextColor_));
-                break;
+QVariant LogTableModel::headerData(int section, Qt::Orientation orientation, int role) const {
+    switch (orientation) {
+        case Qt::Horizontal: {
+            switch (role) {
+                case Qt::DisplayRole:
+                    return section < static_cast<int>(LogTableModelEntry::size())
+                               ? getName(static_cast<LogTableModelEntry::ColumnID>(section))
+                               : QVariant{};
+                case Qt::TextAlignmentRole:
+                    return Qt::AlignLeft;
+                default:
+                    return {};
+            }
+        }
+        case Qt::Vertical: {
+            switch (role) {
+                case Qt::SizeHintRole: {
+                    if (section >= entries_.size()) return {};
+                    const auto& entry = entries_[section];
+                    return QSize{1, entry.height};
+                }
+                default:
+                    return {};
+            }
         }
     }
-
-    model_.appendRow(items);
+    return {};
 }
 
-LogModel* LogTableModel::model() { return &model_; }
-
-void LogTableModel::clear() { model_.removeRows(0, model_.rowCount()); }
+Qt::ItemFlags LogTableModel::flags(const QModelIndex& index) const {
+    auto flags = QAbstractTableModel::flags(index);
+    // make only the message column editable
+    const auto col = static_cast<LogTableModelEntry::ColumnID>(index.column());
+    if (col == LogTableModelEntry::ColumnID::Message) {
+        flags |= Qt::ItemIsEditable;
+    }
+    return flags;
+}
 
 QString LogTableModel::getName(LogTableModelEntry::ColumnID ind) const {
     switch (ind) {
@@ -658,65 +746,54 @@ QString LogTableModel::getName(LogTableModelEntry::ColumnID ind) const {
     }
 }
 
-std::string LogTableModelEntry::getDate() const {
+const QFont& LogTableModelEntry::logFont() {
+    static QFont font{QFontDatabase::systemFont(QFontDatabase::FixedFont)};
+    return font;
+}
+
+const std::pair<int, int>& LogTableModelEntry::lineHeightAndMargin() {
+    static std::pair<int, int> lineAndMargin{getLineHeightAndMargin(logFont())};
+    return lineAndMargin;
+}
+
+LogTableModelEntry::LogTableModelEntry(std::chrono::system_clock::time_point time,
+                                       std::string_view source, LogLevel level,
+                                       LogAudience audience, const std::filesystem::path& file,
+                                       int line, std::string_view function, std::string_view msg)
+
+    : level{level}
+    , date{utilqt::toQString(getDate(time))}
+    , time{utilqt::toQString(getTime(time))}
+    , source{utilqt::toQString(source)}
+    , levelStr{utilqt::toQString(toString(level))}
+    , audience{utilqt::toQString(toString(audience))}
+    , path{utilqt::toQString(file.parent_path())}
+    , file{utilqt::toQString(file.filename())}
+    , line{utilqt::toQString(toString(line))}
+    , function{utilqt::toQString(function)}
+    , message{utilqt::toQString(util::elideLines(util::rtrim(msg)))}
+    , fullMessage{utilqt::toQString(util::rtrim(msg))}
+    , height{0} {
+
+    const auto lines = std::count(msg.begin(), msg.end(), '\n') + 1;
+    const auto& [lineHeight, margin] = lineHeightAndMargin();
+    height = static_cast<int>(margin + lines * lineHeight);
+}
+
+std::string LogTableModelEntry::getDate(std::chrono::system_clock::time_point time) {
     auto in_time_t = std::chrono::system_clock::to_time_t(time);
     std::stringstream ss;
     ss << std::put_time(std::localtime(&in_time_t), "%F");
-    return ss.str();
+    return std::move(ss).str();
 }
-std::string LogTableModelEntry::getTime() const {
+std::string LogTableModelEntry::getTime(std::chrono::system_clock::time_point time) {
     auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(time.time_since_epoch()) % 1000;
 
     auto in_time_t = std::chrono::system_clock::to_time_t(time);
     std::stringstream ss;
     ss << std::put_time(std::localtime(&in_time_t), "%T");
     ss << '.' << std::setfill('0') << std::setw(3) << ms.count();
-    return ss.str();
-}
-
-QStandardItem* LogTableModelEntry::get(ColumnID ind) const {
-    switch (ind) {
-        case ColumnID::Date:
-            return new QStandardItem(utilqt::toQString(getDate()));
-        case ColumnID::Time:
-            return new QStandardItem(utilqt::toQString(getTime()));
-        case ColumnID::Source:
-            return new QStandardItem(utilqt::toQString(source));
-        case ColumnID::Level:
-            return new QStandardItem(utilqt::toQString(toString(level)));
-        case ColumnID::Audience:
-            return new QStandardItem(utilqt::toQString(toString(audience)));
-        case ColumnID::Path:
-            return new QStandardItem(utilqt::toQString(filesystem::getFileDirectory(fileName)));
-        case ColumnID::File:
-            return new QStandardItem(
-                utilqt::toQString(filesystem::getFileNameWithExtension(fileName)));
-        case ColumnID::Line:
-            return new QStandardItem(utilqt::toQString(toString(lineNumber)));
-        case ColumnID::Function:
-            return new QStandardItem(utilqt::toQString(funcionName));
-        case ColumnID::Message: {
-            auto item = std::make_unique<QStandardItem>();
-            item->setData(utilqt::toQString(message), detail::Roles::Fulltext);
-            item->setData(utilqt::toQString(util::elideLines(message)), Qt::DisplayRole);
-            return item.release();
-        }
-        default:
-            return new QStandardItem();
-    }
-}
-
-LogModel::LogModel(int rows, int columns, QObject* parent)
-    : QStandardItemModel(rows, columns, parent) {}
-
-Qt::ItemFlags LogModel::flags(const QModelIndex& index) const {
-    auto flags = QStandardItemModel::flags(index);
-    // make only the message column editable
-    const auto col = static_cast<LogTableModelEntry::ColumnID>(index.column());
-    if (col == LogTableModelEntry::ColumnID::Message) {
-        flags |= Qt::ItemIsEditable;
-    }
-    return flags;
+    return std::move(ss).str();
 }
 
 }  // namespace inviwo

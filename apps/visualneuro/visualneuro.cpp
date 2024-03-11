@@ -27,27 +27,32 @@
  *
  *********************************************************************************/
 
+#include <inviwo/qt/applicationbase/qtapptools.h>
+#include <inviwo/qt/applicationbase/qtlocale.h>
 #include <inviwo/core/common/defaulttohighperformancegpu.h>
-#include <inviwo/core/common/inviwo.h>
+#include <inviwo/core/common/inviwoapplication.h>
 #include <inviwo/core/common/inviwomodule.h>
-#include <inviwo/core/network/processornetwork.h>
-#include <inviwo/core/network/workspacemanager.h>
+#include <inviwo/core/common/modulemanager.h>
+
 #include <inviwo/core/util/commandlineparser.h>
-#include <inviwo/core/util/utilities.h>
-#include <inviwo/core/util/raiiutils.h>
-#include <inviwo/qt/applicationbase/inviwoapplicationqt.h>
-#include <inviwo/core/util/consolelogger.h>
+#include <inviwo/core/util/filesystem.h>
+#include <inviwo/core/util/localetools.h>
+#include <inviwo/core/util/logcentral.h>
 #include <inviwo/core/util/logerrorcounter.h>
-#include <inviwo/core/moduleregistration.h>
+#include <inviwo/core/util/raiiutils.h>
+#include <inviwo/core/util/threadutil.h>
+#include <inviwo/core/network/processornetwork.h>
+#include <inviwo/core/util/ostreamjoiner.h>
+#include <inviwo/core/util/filelogger.h>
+#include <inviwo/core/util/settings/systemsettings.h>
+#include <inviwo/sys/moduleloading.h>
+
 
 #include "splashscreen.h"
 #include "visualneuromainwindow.h"
 
-#include <warn/push>
-#include <warn/ignore/all>
 #include <QMessageBox>
-#include <QSurfaceFormat>
-#include <warn/pop>
+#include <QApplication>
 
 
 
@@ -70,15 +75,22 @@ int main(int argc, char** argv) {
     QApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
     QApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
     // Setup default context format
-    QSurfaceFormat defaultFormat;
-    defaultFormat.setMajorVersion(10); // We want latest OpenGL version
-    defaultFormat.setProfile(QSurfaceFormat::CoreProfile);
-    QSurfaceFormat::setDefaultFormat(defaultFormat);
+    //QSurfaceFormat defaultFormat;
+    //defaultFormat.setMajorVersion(10); // We want latest OpenGL version
+    //defaultFormat.setProfile(QSurfaceFormat::CoreProfile);
+    //QSurfaceFormat::setDefaultFormat(defaultFormat);
 
-    InviwoApplicationQt inviwoApp(argc, argv, "Visual Neuro");
-    inviwoApp.setStyleSheetFile(":/stylesheets/visualneuro.qss");
-    
-    inviwoApp.setProgressCallback([](std::string m) {
+    QApplication qtApp{argc, argv};
+    InviwoApplication inviwoApp(argc, argv, "Visual Neuro");
+
+    //inviwo::utilqt::configureInviwoDefaultNames();
+    inviwo::utilqt::configureFileSystemObserver(inviwoApp);
+    inviwo::utilqt::configurePostEnqueueFront(inviwoApp);
+    inviwo::utilqt::setStyleSheetFile(":/stylesheets/visualneuro.qss");
+    //inviwo::utilqt::configurePalette();
+    inviwoApp.setUILocale(inviwo::utilqt::getCurrentStdLocale());
+
+    inviwoApp.setProgressCallback([](std::string_view m) {
         LogCentral::getPtr()->log("VisualNeuro", LogLevel::Info, LogAudience::User, "", "", 0, m);
     });
     auto& clp = inviwoApp.getCommandLineParser();
@@ -88,25 +100,30 @@ int main(int argc, char** argv) {
 
     // initialize and show splash screen
     inviwo::InviwoSplashScreen splashScreen(clp.getShowSplashScreen());
-    inviwoApp.setProgressCallback([&splashScreen](std::string s) { splashScreen.showMessage(s); });
+    inviwoApp.setProgressCallback([&splashScreen](std::string_view s) { splashScreen.showMessage(s); });
 
     splashScreen.show();
     splashScreen.showMessage("Loading application...");
 
     // Initialize application and register modules
     splashScreen.showMessage("Initializing modules...");
-    inviwoApp.registerModules(inviwo::getModuleList());
+    // Remove GLFW module register since we will use Qt for the OpenGL context
+    auto filter = [](const inviwo::ModuleContainer& m) { return m.identifier() == "glfw"; };
+    inviwo::util::registerModulesFiltered(inviwoApp.getModuleManager(), filter,
+                                          inviwoApp.getSystemSettings().moduleSearchPaths_.get(),
+                                          clp.getModuleSearchPaths());
 
-    inviwoApp.processEvents();
+    qtApp.processEvents();
 
 
     // Do this after registerModules if some arguments were added
     clp.parse(inviwo::CommandLineParser::Mode::Normal);
 
-    inviwoApp.processEvents();  // Update GUI
+    qtApp.processEvents();  // Update GUI
     splashScreen.showMessage("Loading workspace...");
-    inviwoApp.processEvents();
-
+    qtApp.processEvents();
+    mainWin.showWindow();
+    qtApp.processEvents();  // Make sure the gui is done loading before loading workspace
 
     // Need to clear the network and (will delete processors and processorwidgets)
     // before QMainWindoes is deleted, otherwise it will delete all processorWidgets
@@ -120,14 +137,13 @@ int main(int argc, char** argv) {
         QMessageBox::critical(
                     &mainWin, "Fatal Error", "Missing VisualNeuro module. Enable the module in CMake.",
                     QMessageBox::Close, QMessageBox::Close);
-        inviwoApp.closeInviwoApplication();
-        inviwoApp.quit();
+        mainWin.exitInviwo(false);
         return 0;
     }
-    const std::string workspace =
+    const auto workspace =
         clp.getLoadWorkspaceFromArg()
             ? clp.getWorkspacePath()
-            : brainModule->getPath(ModulePath::Workspaces) + "/VisualNeuro.inv";
+            : brainModule->getPath(ModulePath::Workspaces) / "VisualNeuro.inv";
 
     if (!workspace.empty()) {
         mainWin.openLastWorkspace(workspace);
@@ -137,57 +153,49 @@ int main(int argc, char** argv) {
     inviwoApp.getProcessorNetwork()->unlock();
 
     mainWin.showWindow();
-    inviwoApp.processEvents();
+    qtApp.processEvents();
     splashScreen.finish(&mainWin);
 
     clp.processCallbacks();  // run any command line callbacks from modules.
     inviwoApp.processEvents();
 
     if (clp.getQuitApplicationAfterStartup()) {
-        inviwoApp.closeInviwoApplication();
-        inviwoApp.quit();
+        mainWin.exitInviwo(false);
         return 0;
     } 
+
+    inviwo::util::setThreadDescription("Visual Neuro Main");
+
     while (true) {
         try {
-            return inviwoApp.exec();
+            return qtApp.exec();
         } catch (const inviwo::Exception& e) {
-            {
-                std::stringstream ss;
-                ss << e.getMessage() << "\n";
-                if (!e.getStack().empty()) {
-                    ss << "\nStack Trace:\n";
-                    e.getStack(ss);
-                }
-                inviwo::util::log(e.getContext(), ss.str(), inviwo::LogLevel::Error);
-            }
-            {
-                std::stringstream ss;
-                e.getFullMessage(ss, 10);
-                ss << "\nApplication state might be corrupted, be warned.";
-                auto res = QMessageBox::critical(
-                    &mainWin, "Fatal Error", QString::fromStdString(ss.str()),
-                    QMessageBox::Ignore | QMessageBox::Close, QMessageBox::Close);
-                if (res == QMessageBox::Close) {
-                    mainWin.askToSaveWorkspaceChanges();
-                    return 1;
-                }
+            inviwo::util::log(e.getContext(), e.getFullMessage(), inviwo::LogLevel::Error);
+            const auto message = fmt::format(
+                "{}\nApplication state might be corrupted, be warned.", e.getFullMessage(10));
+
+            auto res = QMessageBox::critical(
+                &mainWin, "Fatal Error", inviwo::utilqt::str(message),
+                QMessageBox::Ignore | QMessageBox::Close, QMessageBox::Close);
+            if (res == QMessageBox::Close) {
+                mainWin.askToSaveWorkspaceChanges();
+                return 1;
             }
 
         } catch (const std::exception& e) {
-            LogErrorCustom("Visual Neuro", e.what());
-            std::stringstream ss;
-            ss << e.what();
-            ss << "\nApplication state might be corrupted, be warned.";
+            inviwo::util::log(IVW_CONTEXT_CUSTOM("Visual Neuro"), e.what(), inviwo::LogLevel::Error);
+            const auto message =
+                fmt::format("{}\nApplication state might be corrupted, be warned.", e.what());
             auto res =
-                QMessageBox::critical(&mainWin, "Fatal Error", QString::fromStdString(ss.str()),
+                QMessageBox::critical(&mainWin, "Fatal Error", inviwo::utilqt::str(message),
                                       QMessageBox::Ignore | QMessageBox::Close, QMessageBox::Close);
             if (res == QMessageBox::Close) {
                 mainWin.askToSaveWorkspaceChanges();
                 return 1;
             }
         } catch (...) {
-            LogErrorCustom("Visual Neuro", "Uncaught exception, terminating");
+            inviwo::util::log(IVW_CONTEXT_CUSTOM("Visual Neuro"), "Uncaught exception, terminating",
+                              inviwo::LogLevel::Error);
             QMessageBox::critical(nullptr, "Fatal Error", "Uncaught exception, terminating");
             return 1;
         }

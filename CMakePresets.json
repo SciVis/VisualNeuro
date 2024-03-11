@@ -29,7 +29,7 @@
         
         "IVW_PACKAGE_INSTALLER":            { "type": "BOOL", "value": "ON"},
         "IVW_APP_INSTALL_NAME":             "Visual Neuro",
-        "IVW_PACKAGE_SELECT_APP":           "Visual Neuro",
+        "IVW_PACKAGE_SELECT_APP":           "VisualNeuroApp",
 
         "IVW_USE_OPENMP":                   { "type": "BOOL", "value": "OFF"},
         "IVW_USE_OPENEXR":                  { "type": "BOOL", "value": "ON"},
@@ -40,6 +40,7 @@
         "IVW_MODULE_DATAFRAMEPYTHON":            { "type": "BOOL", "value": "OFF"},
         "IVW_MODULE_DATAFRAMEQT":                { "type": "BOOL", "value": "OFF"},
         "IVW_MODULE_EIGENUTILS":                 { "type": "BOOL", "value": "OFF"},
+        "IVW_MODULE_OIT":                        { "type": "BOOL", "value": "OFF"},
         "IVW_MODULE_PYTHON3":                    { "type": "BOOL", "value": "OFF"},
         "IVW_MODULE_PYTHON3GL":                  { "type": "BOOL", "value": "OFF"},
         "IVW_MODULE_PYTHON3QT":                  { "type": "BOOL", "value": "OFF"},

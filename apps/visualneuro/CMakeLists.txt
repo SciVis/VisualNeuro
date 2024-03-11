@@ -4,9 +4,8 @@ project(VisualNeuroApp)
 
 include(version.cmake)
 
-# https://doc-snapshots.qt.io/qt6-dev/cmake-qt5-and-qt6-compatibility.html#supporting-older-qt-5-versions   
-find_package(QT NAMES Qt6 Qt5 COMPONENTS Core Widgets REQUIRED)
-find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Widgets REQUIRED)
+
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
 
 #--------------------------------------------------------------------
 # Add MOC files
@@ -16,11 +15,8 @@ set(MOC_FILES
     splashscreen.h
 )
 # Add resource file
-if(QT_VERSION_MAJOR EQUAL 6)
-    qt_add_resources(QRC_FILE "resources/visualneuro.qrc")
-else()
-    qt5_add_resources(QRC_FILE "resources/visualneuro.qrc")
-endif()
+qt_add_resources(QRC_FILE "resources/visualneuro.qrc")
+
 source_group("Resource Files" FILES "resources/visualneuro.qrc" ${QRC_FILE})
 
 #--------------------------------------------------------------------
@@ -40,21 +36,9 @@ set(SOURCE_FILES
 ivw_group("Source Files" ${SOURCE_FILES})
 
 # Add moc files
-if(QT_VERSION_MAJOR EQUAL 6)
-    qt_wrap_cpp(MOCED_FILES ${MOC_FILES})
-else()
-    qt5_wrap_cpp(MOCED_FILES ${MOC_FILES})
-endif()
+qt_wrap_cpp(MOCED_FILES ${MOC_FILES})
 source_group("MOC Files" FILES ${MOCED_FILES})
 
-
-ivw_retrieve_all_modules(enabled_modules)
-
-list(APPEND enabled_modules [InviwoVisualNeuroModule])
-# Only include one OpenGL context creation module (remove InviwoGLFWModule)
-# Remove modules not used by this app
-list(REMOVE_ITEM enabled_modules [InviwoAnimationModule InviwoAnimationQtModule InviwoGLFWModule InviwoEigenUtilsModule InviwoPython3Module  
-                                  InviwoPython3QtModule InviwoPython3GLModule InviwoDataFramePythonModule InviwoVectorFieldVisualizationModule InviwoVectorFieldVisualizationGLModule])
 
 set(RES_FILES "")
 if(WIN32)
@@ -77,14 +61,15 @@ add_executable(${PROJECT_NAME} MACOSX_BUNDLE WIN32
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "Visual Neuro")
 target_link_libraries(${PROJECT_NAME} PUBLIC
     inviwo::core
+    inviwo::module-system
     inviwo::qtapplicationbase
-    Qt${QT_VERSION_MAJOR}::Core
-    Qt${QT_VERSION_MAJOR}::Widgets
+    inviwo::module::qtwidgets
+    Qt6::Core
+    Qt6::Widgets
 )
 target_include_directories(${PROJECT_NAME} PUBLIC
      ${CMAKE_BINARY_DIR}/apps/visualneuro/include
 )
-ivw_configure_application_module_dependencies(${PROJECT_NAME} ${enabled_modules})
 ivw_define_standard_definitions(${PROJECT_NAME} ${PROJECT_NAME})
 ivw_define_standard_properties(${PROJECT_NAME})
 

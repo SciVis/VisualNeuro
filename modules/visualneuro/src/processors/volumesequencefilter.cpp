@@ -115,11 +115,11 @@ void VolumeSequenceFilter::process() {
 
             std::string defaultFilepath = "No file path found";
             std::filesystem::path filepath(volume->getMetaData<StringMetaData>("filename", defaultFilepath));
-            std::filesystem::path filename = filesystem::getFileNameWithExtension(filepath);
 
-            auto mapIterator = volumeIdMapping.find(filename.generic_string());
+            auto mapIterator = volumeIdMapping.find(filepath.filename().generic_string());
             if (mapIterator == volumeIdMapping.end()) {
-                LogWarn("Volume: " << filename << " cannot be mapped to any value in column "
+                LogWarn("Volume: " << filepath.filename()
+                                   << " cannot be mapped to any value in column "
                                    << filenameIdColumn_.get());
                 continue;
             }

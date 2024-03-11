@@ -59,7 +59,8 @@ namespace inviwo {
 class MenuItem;
 //class InviwoMainWindow;
 
-struct LogTableModelEntry {
+class LogTableModelEntry {
+public:
     enum class ColumnID {
         Date = 0,
         Time,
@@ -73,23 +74,33 @@ struct LogTableModelEntry {
         Message
     };
 
-    LogTableModelEntry() = default;
-    LogTableModelEntry(const LogTableModelEntry& other) = default;
-    ~LogTableModelEntry() = default;
+    LogTableModelEntry(std::chrono::system_clock::time_point time, std::string_view source,
+                       LogLevel level, LogAudience audience, const std::filesystem::path& file,
+                       int line, std::string_view function, std::string_view msg);
 
-    std::chrono::system_clock::time_point time;
-    std::string source;
-    LogLevel level;
-    LogAudience audience;
-    std::string fileName;
-    int lineNumber;
-    std::string funcionName;
-    std::string message;
-
-    std::string getDate() const;
-    std::string getTime() const;
     static constexpr size_t size() { return 10; }
-    QStandardItem* get(ColumnID ind) const;
+
+    LogLevel level;
+    QString date;
+    QString time;
+    QString source;
+    QString levelStr;
+    QString audience;
+    QString path;
+    QString file;
+    QString line;
+    QString function;
+    QString message;
+    QString fullMessage;
+    int height;
+
+    static const QFont& logFont();
+
+private:
+    static std::string getDate(std::chrono::system_clock::time_point time);
+    static std::string getTime(std::chrono::system_clock::time_point time);
+
+    static const std::pair<int, int>& lineHeightAndMargin();
 };
 
 class TextSelectionDelegate : public QItemDelegate {
@@ -105,31 +116,30 @@ public:
                               const QModelIndex& index) const override;
 };
 
-class LogModel : public QStandardItemModel {
-public:
-    LogModel(int rows, int columns, QObject* parent = nullptr);
-    virtual ~LogModel() = default;
-
-    virtual Qt::ItemFlags flags(const QModelIndex& index) const override;
-};
-
-class LogTableModel {
+class LogTableModel : public QAbstractTableModel {
 public:
     LogTableModel();
 
     QString getName(LogTableModelEntry::ColumnID ind) const;
-    LogModel* model();
 
     void clear();
-    void log(LogTableModelEntry entry);
+    void log(std::vector<LogTableModelEntry>& entries);
+
+    virtual int rowCount(const QModelIndex& = QModelIndex()) const override {
+        return static_cast<int>(entries_.size());
+    }
+    virtual int columnCount(const QModelIndex& = QModelIndex()) const override {
+        return static_cast<int>(LogTableModelEntry::size());
+    }
+    virtual QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
+    virtual QVariant headerData(int section, Qt::Orientation orientation,
+                                int role = Qt::DisplayRole) const override;
+    virtual Qt::ItemFlags flags(const QModelIndex& index) const override;
 
 private:
-    QColor infoTextColor_ = {153, 153, 153};
-    QColor warnTextColor_ = {221, 165, 8};
-    QColor errorTextColor_ = {255, 107, 107};
-
-    LogModel model_;
+    std::vector<LogTableModelEntry> entries_;
 };
+
 
 class ConsoleWidget : public InviwoDockWidget, public Logger {
 #include <warn/push>
@@ -158,19 +168,22 @@ public:
     QTableView* view() { return tableView_; }
 
 public slots:
-    void logEntry(LogTableModelEntry);
     void updateIndicators(LogLevel level);
     void clear();
+    void onNewEntries();
 
 signals:
-    void logSignal(LogTableModelEntry level);
     void clearSignal();
+    void hasNewEntries();
+    void scrollToBottom();
 
 protected:
     virtual void keyPressEvent(QKeyEvent* keyEvent) override;
     virtual void closeEvent(QCloseEvent* event) override;
 
 private:
+    void logEntry(LogTableModelEntry);
+
     QModelIndex mapToSource(int row, int col);
     QModelIndex mapFromSource(int row, int col);
     void copy();
@@ -199,6 +212,9 @@ private:
     QAction* clearAction_;
     //InviwoMainWindow* mainwindow_;
     std::shared_ptr<MenuItem> editActionsHandle_;
+
+    std::mutex entriesMutex_;
+    std::vector<LogTableModelEntry> newEntries_;
 };
 
 }  // namespace inviwo

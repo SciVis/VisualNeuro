@@ -44,7 +44,7 @@ public:
 
     virtual void show();
     virtual void drawContents(QPainter* painter);
-    virtual void showMessage(std::string message);
+    virtual void showMessage(std::string_view message);
     virtual void finish(QWidget* waitfor);
 
 private:
