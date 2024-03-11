@@ -6,13 +6,18 @@ on:
         - master
   pull_request:
 
+permissions:
+  contents: write  # Enable vcpkg to write to the dependency graph
+
 env:
   BUILD_TYPE: Release
-  VCPKG_BINARY_SOURCES: 'clear;nuget,GitHub,readwrite'         # recognized by vcpkg
-  # QT_DEBUG_PLUGINS: 1                                        # print qt plugin debug info
+  VCPKG_BINARY_SOURCES: 'clear;x-gha,readwrite'   # recognized by vcpkg
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  VCPKG_FEATURE_FLAGS: dependencygraph
 
 jobs:
   build:
+    name: "Build"
     strategy:
       matrix:
         os: [windows-latest, macos-latest, ubuntu-20.04]
@@ -20,7 +25,8 @@ jobs:
           - os: 'windows-latest'
             triplet: 'x64-windows'
             mono: ''
-            cmake: '--preset msvc-dev-vcpkg-visualneuro -DIVW_MODULE_HDF5=OFF'
+            cmake: '-DIVW_MODULE_HDF5=OFF'
+            preset: msvc-dev-vcpkg-visualneuro
             targets: 'ALL_BUILD package'
             bootstrap_vcpkg: "./vcpkg/bootstrap-vcpkg.bat"
             installer: 'visualneuro-installer-win'
@@ -28,8 +34,8 @@ jobs:
           - os: 'macos-latest'
             triplet: 'x64-osx'
             mono: 'mono'
-            cmake: '--preset ninja-vcpkg-visualneuro -DIVW_MODULE_HDF5=OFF -DVCPKG_APPLOCAL_DEPS=OFF'
-            generator: 'Ninja'
+            cmake: '-DIVW_MODULE_HDF5=OFF -DVCPKG_APPLOCAL_DEPS=OFF'
+            preset: ninja-vcpkg-visualneuro
             targets: 'all package'
             bootstrap_vcpkg: "./vcpkg/bootstrap-vcpkg.sh"
             installer: 'visualneuro-installer-macos'
@@ -37,8 +43,8 @@ jobs:
           - os: 'ubuntu-20.04'
             triplet: 'x64-linux'
             mono: 'mono'
-            cmake: '--preset ninja-vcpkg-visualneuro -DIVW_USE_SIGAR=OFF -DIVW_MODULE_HDF5=OFF -DIVW_PACKAGE_INSTALLER=OFF' 
-            generator: 'Ninja' 
+            cmake: ' -DIVW_USE_SIGAR=OFF -DIVW_MODULE_HDF5=OFF -DIVW_PACKAGE_INSTALLER=OFF' 
+            preset: ninja-vcpkg-visualneuro
             targets: 'all package'
             bootstrap_vcpkg: "./vcpkg/bootstrap-vcpkg.sh"
             installer: 'visualneuro-installer-ubuntu'
@@ -51,18 +57,30 @@ jobs:
     steps:
     - name: Chocolatey Install
       if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        # Choco-Install is GH Actions wrappers around choco, which does retries
+        # https://github.com/actions/runner-images/blob/main/images/windows/scripts/helpers/ChocoHelpers.ps1
+        Install-ChocoPackage -PackageName nsis
+
+    - name: "Chocolatey update paths"
+      if: runner.os == 'Windows'
       shell: bash
       run: |
-        choco install nsis
         GP=`cygpath -u $GITHUB_PATH` 
-        
+        echo "/c/Program Files/doxygen/bin" >> $GP
         echo "/c/Program Files (x86)/NSIS" >> $GP
+        echo "/c/tools/TinyTeX/bin/win32" >> $GP
 
     - name: Setup Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: '3.10'
         architecture: 'x64'
+
+    - name: "Install Python Modules" 
+      shell: bash
+      run: pip3 install numpy
 
     - name: Clone Inviwo
       uses: actions/checkout@v2
@@ -103,24 +121,30 @@ jobs:
         setapikey "${{ secrets.GITHUB_TOKEN }}" \
         -source "https://nuget.pkg.github.com/VisualNeuro/index.json"
 
-    - name: Apt Install, switch to gcc-11
+    - name: "Apt Install, switch to gcc-13"
       shell: bash
       if: runner.os == 'Linux'
       run: |
-        sudo apt install libxinerama-dev libxcursor-dev xorg-dev libglu1-mesa-dev libglew-dev ninja-build gcc-11 g++-11
-        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 110 --slave /usr/bin/g++ g++ /usr/bin/g++-11 --slave /usr/bin/gcov gcov /usr/bin/gcov-11
-        sudo update-alternatives --set gcc /usr/bin/gcc-11
+        sudo apt-get update
+        sudo apt install --fix-missing libxinerama-dev libxcursor-dev xorg-dev libglu1-mesa-dev \
+                         libglew-dev ninja-build gcc-13 g++-13 nasm
+        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 130 \
+                                 --slave /usr/bin/g++ g++ /usr/bin/g++-13 \
+                                 --slave /usr/bin/gcov gcov /usr/bin/gcov-12
+        sudo update-alternatives --set gcc /usr/bin/gcc-13
       
     - name: Brew Install
       shell: bash
       if: runner.os == 'macOS'
+      # xcode 14.3 is currently default.
       run: |
-        brew install ninja 
+        brew install ninja pkg-config nasm
+        sudo xcode-select --switch /Applications/Xcode_15.0.app/Contents/Developer
 
-    - name: Install Qt
-      uses: jurplel/install-qt-action@v2
+    - name: "Install Qt"
+      uses: jurplel/install-qt-action@v3
       with:
-        version: 6.2.3
+        version: 6.6.0
         dir: ${{ github.workspace }}
 
     - name: Copy CMakePresets to Inviwo
@@ -131,8 +155,11 @@ jobs:
     - name: Configure CMake
       shell: bash
       run: >
-        cmake -S inviwo -B build
-        -DVCPKG_TARGET_TRIPLET='${{ matrix.triplet }}'
+        VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT && cmake -S inviwo -B build --preset ${{ matrix.preset }}
+        --toolchain $VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake
+        -DCMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake
+        -DVCPKG_TARGET_TRIPLET=${{ matrix.triplet }}
+        -DVCPKG_INSTALL_OPTIONS='--clean-after-build'
         -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
         ${{ matrix.cmake }}
 
@@ -145,7 +172,7 @@ jobs:
       run: cmake --build build --config ${{ env.BUILD_TYPE }} --parallel --target ${{ matrix.targets }}
 
     - name: Upload installer
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.installer }}
         path: ${{ matrix.artifact }}
