@@ -40,6 +40,8 @@
         "IVW_MODULE_DATAFRAMEPYTHON":            { "type": "BOOL", "value": "OFF"},
         "IVW_MODULE_DATAFRAMEQT":                { "type": "BOOL", "value": "OFF"},
         "IVW_MODULE_EIGENUTILS":                 { "type": "BOOL", "value": "OFF"},
+        "IVW_MODULE_FFMPEG":                     { "type": "BOOL", "value": "OFF"},
+        "IVW_MODULE_HDF5":                       { "type": "BOOL", "value": "OFF"},
         "IVW_MODULE_OIT":                        { "type": "BOOL", "value": "OFF"},
         "IVW_MODULE_PYTHON3":                    { "type": "BOOL", "value": "OFF"},
         "IVW_MODULE_PYTHON3GL":                  { "type": "BOOL", "value": "OFF"},
