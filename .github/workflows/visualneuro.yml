@@ -10,7 +10,6 @@ permissions:
   contents: write  # Enable vcpkg to write to the dependency graph
 
 env:
-  BUILD_TYPE: Release
   VCPKG_BINARY_SOURCES: 'clear;x-gha,readwrite'   # recognized by vcpkg
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   VCPKG_FEATURE_FLAGS: dependencygraph
@@ -21,6 +20,9 @@ jobs:
     strategy:
       matrix:
         system: [windows, macos, linux]
+        linkage: [dynamic]
+        configuration: [Release]
+
         include:
           - system: windows
             os: 'windows-latest'
@@ -67,7 +69,6 @@ jobs:
         GP=`cygpath -u $GITHUB_PATH` 
         echo "/c/Program Files/doxygen/bin" >> $GP
         echo "/c/Program Files (x86)/NSIS" >> $GP
-        echo "/c/tools/TinyTeX/bin/win32" >> $GP
 
     - name: Brew Install
       shell: bash
@@ -152,7 +153,8 @@ jobs:
         -DCMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake
         -DVCPKG_TARGET_TRIPLET=${{ matrix.triplet }}
         -DVCPKG_INSTALL_OPTIONS='--clean-after-build'
-        -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
+        -DBUILD_SHARED_LIBS=${{ matrix.cmake_linkage }}
+        -DCMAKE_BUILD_TYPE=${{ matrix.configuration }}
         ${{ matrix.cmake }}
 
     - name: "Setup C++ Log matchers"
@@ -161,7 +163,7 @@ jobs:
     - name: "Build"
       timeout-minutes: 360
       shell: bash
-      run: cmake --build build --config ${{ env.BUILD_TYPE }} --parallel --target ${{ matrix.targets }}
+      run: cmake --build build --config ${{ matrix.configuration }} --parallel --target ${{ matrix.targets }}
 
     - name: "Upload installer"
       uses: actions/upload-artifact@v4
