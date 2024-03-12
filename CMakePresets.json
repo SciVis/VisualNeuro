@@ -53,39 +53,23 @@
       }
     },
     {
-      "name": "msvc-dev-visualneuro",
-      "displayName": "MSVC 2022 Visual Neuro",
-      "description": "MSVC 2022 Development configuration",
-      "generator": "Visual Studio 17 2022",
-      "architecture" : "x64",
-      "inherits": ["user", "visualneuro"]
-    },
-    {
-      "name": "msvc-dev-vcpkg-visualneuro",
-      "displayName": "MSVC 2022 VCPKG Visual Neuro",
-      "description": "MSVC Development VCPKG configuration",
-      "inherits": ["vcpkg", "vcpkg-cache", "msvc-dev-visualneuro"]
-    },
-    {
-      "name": "ninja-vcpkg-visualneuro",
-      "displayName": "Visual Neuro Ninja VCPKG",
-      "description": "Ninja development using vcpkg configuration",
-      "generator": "Ninja",
-      "inherits": ["vcpkg", "visualneuro"]
+      "name": "msvc-visualneuro",
+      "displayName": "MSVC Visual Neuro",
+      "description": "Visual Studio configuration",
+      "inherits": ["msvc", "user", "vcpkg", "visualneuro"]
     },
     {
       "name": "ninja-visualneuro",
-      "displayName": "Visual Neuro Ninja",
-      "description": "Ninja development configuration",
-      "generator": "Ninja",
-      "inherits": ["visualneuro"]
-    } ,
+      "displayName": "Ninja Visual Neuro",
+      "description": "Ninja configuration",
+      "inherits": ["ninja", "user", "vcpkg", "visualneuro"]
+    },
     {
       "name": "xcode-visualneuro",
       "displayName": "Visual Neuro XCode",
       "description": "XCode development configuration",
       "generator": "Xcode",
-      "inherits": ["visualneuro"]
+      "inherits": ["user", "visualneuro"]
     }  
   ]
 }

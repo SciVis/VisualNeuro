@@ -20,31 +20,28 @@ jobs:
     name: "Build"
     strategy:
       matrix:
-        os: [windows-latest, macos-latest, ubuntu-20.04]
+        os: [windows, macos, linux]
         include:
           - os: 'windows-latest'
             triplet: 'x64-windows'
-            mono: ''
             cmake: '-DIVW_MODULE_HDF5=OFF'
-            preset: msvc-dev-vcpkg-visualneuro
+            preset: msvc-visualneuro
             targets: 'ALL_BUILD package'
             installer: 'visualneuro-installer-win'
             artifact: 'build/Visual Neuro-v*.exe'
           - system: macos
             os: 'macos-13' # for now macos-latest == macos-12 since macos-13 is still "beta"
             triplet: 'x64-osx'
-            mono: 'mono'
             cmake: '-DVCPKG_APPLOCAL_DEPS=OFF'
-            preset: ninja-vcpkg-visualneuro
+            preset: ninja-visualneuro
             targets: 'all package'
             installer: 'visualneuro-installer-macos'
             artifact: 'build/Visual Neuro-v*.dmg'
           - system: linux
             os: 'ubuntu-22.04'
             triplet: 'x64-linux'
-            mono: 'mono'
             cmake: '-DIVW_PACKAGE_INSTALLER=OFF' 
-            preset: ninja-vcpkg-visualneuro
+            preset: ninja-visualneuro
             targets: 'all package'
             installer: 'visualneuro-installer-ubuntu'
             artifact: 'build/Visual Neuro-v*.tar.gz'
