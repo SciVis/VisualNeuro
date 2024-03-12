@@ -20,9 +20,10 @@ jobs:
     name: "Build"
     strategy:
       matrix:
-        os: [windows, macos, linux]
+        system: [windows, macos, linux]
         include:
-          - os: 'windows-latest'
+          - system: windows
+            os: 'windows-latest'
             triplet: 'x64-windows'
             cmake: '-DIVW_MODULE_HDF5=OFF'
             preset: msvc-visualneuro

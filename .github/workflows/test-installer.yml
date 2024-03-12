@@ -12,13 +12,16 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     strategy:
       matrix:
-        os: [macos-latest, windows-latest, ubuntu-20.04]
+        os: [windows, macos, linux]
         include:
-          - os: 'windows-latest'
+          - system: windows
+            os: 'windows-latest'
             installer: 'visualneuro-installer-win'
-          - os: 'macos-latest'
+          - system: macos
+            os: 'macos-13' # for now macos-latest == macos-12 since macos-13 is still "beta"
             installer: 'visualneuro-installer-macos'
-          #- os: 'ubuntu-20.04'
+          #- system: linux
+          #  os: 'ubuntu-22.04'
           #  installer: 'visualneuro-installer-ubuntu'
     runs-on: ${{ matrix.os }}
     steps:
