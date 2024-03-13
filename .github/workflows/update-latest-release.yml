@@ -31,7 +31,8 @@ jobs:
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: 'Visual Neuro-*'
+        asset_name: ${{ matrix.installer }} 
+        file: 'Visual*'
         file_glob: true
         tag: latest
         overwrite: true

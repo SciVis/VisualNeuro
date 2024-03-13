@@ -30,16 +30,15 @@
 #include "splashscreen.h"
 #include <inviwo/core/inviwocommondefines.h>
 #include <inviwo/core/util/commandlineparser.h>
+#include <inviwo/core/util/stringconversion.h>
+#include <modules/qtwidgets/inviwoqtutils.h>
 
 #include <visualneuro/visualneurocommondefines.h>
 
-#include <warn/push>
-#include <warn/ignore/all>
 #include <QApplication>
 #include <QPainter>
 #include <QSplashScreen>
 #include <QTextStream>
-#include <warn/pop>
 
 namespace inviwo {
 
@@ -68,8 +67,8 @@ void InviwoSplashScreen::drawContents(QPainter* painter) {
     painter->drawText(12, 346, message());
 }
 
-void InviwoSplashScreen::showMessage(std::string message) {
-    if (showSplashScreen_) QSplashScreen::showMessage(QString::fromStdString(message));
+void InviwoSplashScreen::showMessage(std::string_view message) {
+    if (showSplashScreen_) QSplashScreen::showMessage(utilqt::toQString(message));
 }
 
 void InviwoSplashScreen::finish(QWidget* waitFor) {

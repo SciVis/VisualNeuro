@@ -94,11 +94,12 @@ VisualNeuroModule::VisualNeuroModule(InviwoApplication* app) : InviwoModule(app,
     // Properties
     // registerProperty<VisualNeuroProperty>();
     auto jsonModule = app->getModuleByType<JSONModule>();
-    jsonModule->registerPropertyJSONConverter<TemplateOptionProperty<stats::StatisticsType>>();
-    jsonModule->registerPropertyJSONConverter<TemplateOptionProperty<stats::TailTest>>();
+    jsonModule->registerPropertyJSONConverter<OptionProperty<stats::StatisticsType>>();
+    jsonModule->registerPropertyJSONConverter<OptionProperty<stats::TailTest>>();
     auto browserModule = app->getModuleByType<WebBrowserModule>();
-    browserModule->registerPropertyWidgetCEF<PropertyWidgetCEF, TemplateOptionProperty<stats::StatisticsType>>();
-    browserModule->registerPropertyWidgetCEF<PropertyWidgetCEF, TemplateOptionProperty<stats::TailTest>>();
+    browserModule
+        ->registerPropertyWidgetCEF<PropertyWidgetCEF, OptionProperty<stats::StatisticsType>>();
+    browserModule->registerPropertyWidgetCEF<PropertyWidgetCEF, OptionProperty<stats::TailTest>>();
     // Readers and writes
     // registerDataReader(std::make_unique<VisualNeuroReader>());
     // registerDataWriter(std::make_unique<VisualNeuroWriter>());

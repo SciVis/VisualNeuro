@@ -76,15 +76,15 @@ void BrainMask::process() {
                     throw inviwo::Exception("Expected all volumes to have same resolution");
                 }
                 auto brainRAM = volume->getRepresentation<VolumeRAM>();
-                brainRAM->dispatch<void, dispatching::filter::Scalars>([&](auto vr) {
-                    auto data = vr->getDataTyped();
-                    using ValueType = util::PrecisionValueType<decltype(vr)>;
-                    util::forEachVoxelParallel(*resMask, [&](const size3_t& ind) {
-                        if (data[im(ind)] != ValueType{0}) {
-                            maskData[im(ind)] = maskBrain;
-                        }
-                    });
-                });
+                //brainRAM->dispatch<void, dispatching::filter::Scalars>([&](auto vr) {
+                //    auto data = vr->getDataTyped();
+                //    using ValueType = util::PrecisionValueType<decltype(vr)>;
+                //    util::forEachVoxelParallel(*resMask, [&](const size3_t& ind) {
+                //        if (data[im(ind)] != ValueType{0}) {
+                //            maskData[im(ind)] = maskBrain;
+                //        }
+                //    });
+                //});
             }
             progress(1.f);
             return mask;

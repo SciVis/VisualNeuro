@@ -6,40 +6,48 @@ on:
         - master
   pull_request:
 
+permissions:
+  contents: write  # Enable vcpkg to write to the dependency graph
+
 env:
-  BUILD_TYPE: Release
-  VCPKG_BINARY_SOURCES: 'clear;nuget,GitHub,readwrite'         # recognized by vcpkg
-  # QT_DEBUG_PLUGINS: 1                                        # print qt plugin debug info
+  VCPKG_BINARY_SOURCES: 'clear;x-gha,readwrite'   # recognized by vcpkg
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  VCPKG_FEATURE_FLAGS: dependencygraph
 
 jobs:
   build:
+    name: "Build"
     strategy:
       matrix:
-        os: [windows-latest, macos-latest, ubuntu-20.04]
+        system: [windows, macos, linux]
+        linkage: [dynamic]
+        configuration: [Release]
+
         include:
-          - os: 'windows-latest'
+          - system: windows
+            os: 'windows-latest'
             triplet: 'x64-windows'
-            mono: ''
-            cmake: '--preset msvc-dev-vcpkg-visualneuro -DIVW_MODULE_HDF5=OFF'
+            cmake: '-DIVW_MODULE_HDF5=OFF'
+            preset: msvc-visualneuro
             targets: 'ALL_BUILD package'
             installer: 'visualneuro-installer-win'
             artifact: 'build/Visual Neuro-v*.exe'
-          - os: 'macos-latest'
+          - system: macos
+            os: 'macos-13' # for now macos-latest == macos-12 since macos-13 is still "beta"
             triplet: 'x64-osx'
-            mono: 'mono'
-            cmake: '--preset ninja-vcpkg-visualneuro -DIVW_MODULE_HDF5=OFF'
-            generator: 'Ninja'
+            cmake: '-DVCPKG_APPLOCAL_DEPS=OFF'
+            preset: ninja-visualneuro
             targets: 'all package'
             installer: 'visualneuro-installer-macos'
             artifact: 'build/Visual Neuro-v*.dmg'
-          - os: 'ubuntu-20.04'
+          - system: linux
+            os: 'ubuntu-22.04'
             triplet: 'x64-linux'
-            mono: 'mono'
-            cmake: '--preset ninja-vcpkg-visualneuro -DIVW_USE_SIGAR=OFF -DIVW_MODULE_HDF5=OFF -DIVW_PACKAGE_INSTALLER=OFF' 
-            generator: 'Ninja' 
-            targets: 'ALL_BUILD package'
+            cmake: '-DIVW_PACKAGE_INSTALLER=OFF' 
+            preset: ninja-visualneuro
+            targets: 'all package'
             installer: 'visualneuro-installer-ubuntu'
-            artifact: 'build/Visual Neuro-v*.tgz'
+            artifact: 'build/Visual Neuro-v*.tar.gz'
       fail-fast: false
       
     runs-on: ${{ matrix.os }}
@@ -48,93 +56,117 @@ jobs:
     steps:
     - name: Chocolatey Install
       if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        # Choco-Install is GH Actions wrappers around choco, which does retries
+        # https://github.com/actions/runner-images/blob/main/images/windows/scripts/helpers/ChocoHelpers.ps1
+        Install-ChocoPackage -PackageName nsis
+
+    - name: "Chocolatey update paths"
+      if: runner.os == 'Windows'
       shell: bash
       run: |
-        choco install nsis
         GP=`cygpath -u $GITHUB_PATH` 
-        
+        echo "/c/Program Files/doxygen/bin" >> $GP
         echo "/c/Program Files (x86)/NSIS" >> $GP
 
-    - name: Setup Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.10'
-        architecture: 'x64'
-
-    - name: Clone Inviwo
-      uses: actions/checkout@v2
-      with:
-        repository: 'inviwo/inviwo'
-        path: 'inviwo' 
-        submodules: 'true'
-
-    - name: Clone VisualNeuro
-      uses: actions/checkout@v2
-      with: 
-        path: visualneuro
-        submodules: recursive
-
-    - name: Clone VCPKG
-      uses: actions/checkout@v2
-      with:
-        repository: 'JackBoosY/vcpkg'
-        ref: 'dev/jack/24447'
-        path: 'vcpkg' # The cmake vcpkg   present expects vcpkg to be next to the inviwo source folder
-            
-    - name: 'Setup NuGet Credentials'
-      shell: bash
-      run: >
-        ${{ matrix.mono }} `vcpkg fetch nuget | tail -n 1`
-        sources add
-        -source "https://nuget.pkg.github.com/visualneuro/index.json"
-        -storepasswordincleartext
-        -name "GitHub"
-        -username "visualneuro"
-        -password "${{ secrets.GITHUB_TOKEN }}"
-
-    - name: Apt Install, switch to gcc-11
-      shell: bash
-      if: runner.os == 'Linux'
-      run: |
-        sudo apt install libxinerama-dev libxcursor-dev xorg-dev libglu1-mesa-dev libglew-dev ninja-build gcc-11 g++-11
-        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 110 --slave /usr/bin/g++ g++ /usr/bin/g++-11 --slave /usr/bin/gcov gcov /usr/bin/gcov-11
-        sudo update-alternatives --set gcc /usr/bin/gcc-11
-      
     - name: Brew Install
       shell: bash
       if: runner.os == 'macOS'
+      # xcode 14.3 is currently default.
       run: |
-        brew install ninja 
+        brew install ninja pkg-config nasm
+        sudo xcode-select --switch /Applications/Xcode_15.0.app/Contents/Developer   
 
-    - name: Install Qt
-      uses: jurplel/install-qt-action@v2
+    - name: "Apt Install, switch to gcc-13"
+      shell: bash
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt install --fix-missing libxinerama-dev libxcursor-dev xorg-dev libglu1-mesa-dev \
+                         libglew-dev ninja-build gcc-13 g++-13 nasm
+        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 130 \
+                                 --slave /usr/bin/g++ g++ /usr/bin/g++-13 \
+                                 --slave /usr/bin/gcov gcov /usr/bin/gcov-12
+        sudo update-alternatives --set gcc /usr/bin/gcc-13       
+
+    - name: "Install Qt"
+      uses: jurplel/install-qt-action@v3
       with:
-        version: 6.2.3
+        version: 6.6.0
         dir: ${{ github.workspace }}
 
-    - name: Copy CMakePresets to Inviwo
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+        architecture: 'x64'
+
+    - name: "Install Python Modules" 
+      shell: bash
+      run: pip3 install numpy
+
+    - name: "Setup MSVC"
+      if: runner.os == 'Windows'
+      uses: ilammy/msvc-dev-cmd@v1
+      
+    - name: "VCPKG Update"
+      shell: bash
+      run: |
+        echo $VCPKG_INSTALLATION_ROOT
+        cd $VCPKG_INSTALLATION_ROOT
+        git reset --hard
+        git pull
+    
+    - name: "VCPKG Cache config"
+      # Cache built dependencies for faster subsequent builds
+      # https://learn.microsoft.com/en-us/vcpkg/users/binarycaching#gha
+      uses: actions/github-script@v7
+      with:
+        script: |
+          core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+          core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
+    - name: "Clone Inviwo"
+      uses: actions/checkout@v4
+      with:
+        repository: 'inviwo/inviwo'
+        path: 'inviwo' 
+        submodules: recursive
+
+    - name: "Clone VisualNeuro"
+      uses: actions/checkout@v4
+      with: 
+        path: visualneuro
+        submodules: recursive 
+
+    - name: "Copy CMakePresets to Inviwo"
       shell: bash
       run: >
         cp "visualneuro/CMakePresets.json" "inviwo/CMakeUserPresets.json"
 
-    - name: Configure CMake
+    - name: "Configure CMake"
       shell: bash
       run: >
-        cmake -S inviwo -B build
-        -DVCPKG_TARGET_TRIPLET='${{ matrix.triplet }}'
-        -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
+        VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT && cmake -S inviwo -B build --preset ${{ matrix.preset }}
+        --toolchain $VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake
+        -DCMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake
+        -DVCPKG_TARGET_TRIPLET=${{ matrix.triplet }}
+        -DVCPKG_INSTALL_OPTIONS='--clean-after-build'
+        -DBUILD_SHARED_LIBS=${{ matrix.cmake_linkage }}
+        -DCMAKE_BUILD_TYPE=${{ matrix.configuration }}
         ${{ matrix.cmake }}
 
-    - name: Setup C++ Log matchers
+    - name: "Setup C++ Log matchers"
       uses: Trass3r/setup-cpp@v1
 
-    - name: Build
+    - name: "Build"
       timeout-minutes: 360
       shell: bash
-      run: cmake --build build --config ${{ env.BUILD_TYPE }} --parallel --target ${{ matrix.targets }}
+      run: cmake --build build --config ${{ matrix.configuration }} --parallel --target ${{ matrix.targets }}
 
-    - name: Upload installer
-      uses: actions/upload-artifact@v2
+    - name: "Upload installer"
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.installer }}
         path: ${{ matrix.artifact }}

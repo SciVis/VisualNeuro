@@ -29,21 +29,23 @@
 
 #include "visualneuromainwindow.h"
 #include <inviwo/core/common/inviwo.h>
+#include <inviwo/core/common/inviwoapplication.h>
 #include <inviwo/core/network/processornetwork.h>
 #include <inviwo/core/common/inviwocore.h>
 #include <inviwo/core/util/commandlineparser.h>
 #include <inviwo/core/util/filesystem.h>
 #include <inviwo/core/util/settings/systemsettings.h>
 #include <inviwo/core/util/utilities.h>
-#include <inviwo/core/util/systemcapabilities.h>
 #include <inviwo/core/util/licenseinfo.h>
 #include <inviwo/core/util/vectoroperations.h>
 #include <inviwo/core/util/stringconversion.h>
 #include <inviwo/core/util/stdextensions.h>
+#include <inviwo/core/util/rendercontext.h>
 #include <inviwo/core/network/workspacemanager.h>
+#include <inviwo/core/processors/exporter.h>
+#include <inviwo/qt/applicationbase/qtapptools.h>
 
 #include "consolewidget.h"
-#include <inviwo/qt/applicationbase/inviwoapplicationqt.h>
 #include <modules/qtwidgets/inviwofiledialog.h>
 #include <modules/qtwidgets/propertylistwidget.h>
 #include <modules/qtwidgets/inviwoqtutils.h>
@@ -56,13 +58,11 @@
 #include <inviwo/core/processors/compositeprocessor.h>
 #include <inviwo/core/processors/compositeprocessorutils.h>
 
-
 #include <inviwo/core/processors/canvasprocessorwidget.h>
 
 #include <inviwo/core/rendering/datavisualizermanager.h>
 
-#include <warn/push>
-#include <warn/ignore/all>
+#include <fmt/std.h>
 
 #include <QScreen>
 #include <QStandardPaths>
@@ -81,12 +81,14 @@
 #include <QDragEnterEvent>
 #include <QBuffer>
 #include <QTabWidget>
+#include <QScreen>
 #include <QToolButton>
-#include <warn/pop>
+#include <QStackedWidget>
+#include <QApplication>
 
 #include <algorithm>
 
-//#define QWEBENGINE_TEST
+// #define QWEBENGINE_TEST
 #ifdef QWEBENGINE_TEST
 #include <warn/push>
 #include <warn/ignore/all>
@@ -97,7 +99,7 @@
 
 namespace inviwo {
 
-VisualNeuroMainWindow::VisualNeuroMainWindow(InviwoApplicationQt* app)
+VisualNeuroMainWindow::VisualNeuroMainWindow(InviwoApplication* app)
     : QMainWindow()
     , app_(app)
     , consoleWidget_{[this]() {
@@ -107,11 +109,11 @@ VisualNeuroMainWindow::VisualNeuroMainWindow(InviwoApplicationQt* app)
         return cw;
     }()}
     , maximized_(false)
-    , untitledWorkspaceName_{"untitled"} {
+    , untitledWorkspaceName_{"untitled"}
+    , undoManager_(app->getWorkspaceManager(), app->getProcessorNetwork())
+    , visibleWidgetsClearHandle_{
+          app->getWorkspaceManager()->onClear([&]() { visibleWidgetState_.processors.clear(); })} {
 
-    
-
-    app_->setMainWindow(this);
     // Ensure that modules do not add widgets to this window
     setObjectName("VisualNeuroMainWindow");
     setAcceptDrops(true);
@@ -129,39 +131,38 @@ VisualNeuroMainWindow::VisualNeuroMainWindow(InviwoApplicationQt* app)
     size.setWidth(std::min(size.width(), static_cast<int>(ssize.width() * maxRatio)));
     size.setHeight(std::min(size.height(), static_cast<int>(ssize.height() * maxRatio)));
 
-
     // Center Window
     QPoint pos{ssize.width() / 2 - ssize.width() / 2, ssize.height() / 2 - ssize.height() / 2};
 
     resize(size);
     move(pos);
 
-
     addDockWidget(Qt::BottomDockWidgetArea, consoleWidget_.get());
     consoleWidget_->setMaximumHeight(utilqt::emToPx(this, QSizeF(192, 15)).height());
     consoleWidget_->setVisible(true);
     consoleWidget_->loadState();
-
 
     // load settings and restore window state
     loadWindowState();
 
     QSettings settings;
     settings.beginGroup(objectName());
-    QString firstWorkspace = filesystem::getPath(PathType::Workspaces, "/boron.inv").c_str();
+    QString firstWorkspace =
+        utilqt::toQString(filesystem::getPath(PathType::Workspaces) / "boron.inv");
     workspaceOnLastSuccessfulExit_ =
-        settings.value("workspaceOnLastSuccessfulExit", firstWorkspace).toString();
+        utilqt::toPath(settings.value("workspaceOnLastSuccessfulExit", firstWorkspace).toString());
     settings.setValue("workspaceOnLastSuccessfulExit", "");
     settings.endGroup();
 
-    rootDir_ = QString::fromStdString(filesystem::getPath(PathType::Data));
-    workspaceFileDir_ = rootDir_ + "/workspaces";
+    workspaceFileDir_ = filesystem::getPath(PathType::Workspaces);
 
     // initialize menus
     addActions();
+
+    utilqt::configurePoolResizeWait(*app_, this);
 }
 
-VisualNeuroMainWindow::~VisualNeuroMainWindow() = default;
+VisualNeuroMainWindow::~VisualNeuroMainWindow() { app_->setPoolResizeWaitCallback(nullptr); }
 
 void VisualNeuroMainWindow::showWindow() {
     if (maximized_)
@@ -170,21 +171,31 @@ void VisualNeuroMainWindow::showWindow() {
         show();
 }
 
-void VisualNeuroMainWindow::saveCanvases(std::string path, std::string fileName) {
-    if (path.empty()) path = app_->getPath(PathType::Images);
-
+void VisualNeuroMainWindow::saveSnapshots(const std::filesystem::path& path,
+                                          std::string_view fileName) {
     repaint();
-    app_->processEvents();
-    util::saveAllCanvases(app_->getProcessorNetwork(), path, fileName);
+    qApp->processEvents();
+    app_->waitForPool();
+
+    while (app_->getProcessorNetwork()->runningBackgroundJobs() > 0) {
+        qApp->processEvents();
+        app_->processFront();
+    }
+
+    rendercontext::activateDefault();
+    util::exportAllFiles(
+        *app_->getProcessorNetwork(), path, fileName,
+        {FileExtension{"png", ""}, FileExtension{"csv", ""}, FileExtension{"txt", ""}},
+        Overwrite::Yes);
 }
 
-void VisualNeuroMainWindow::getScreenGrab(std::string path, std::string fileName) {
-    if (path.empty()) path = filesystem::getPath(PathType::Images);
-
+void VisualNeuroMainWindow::getScreenGrab(const std::filesystem::path& path,
+                                          std::string_view fileName) {
     repaint();
-    app_->processEvents();
-    QPixmap screenGrab = QGuiApplication::primaryScreen()->grabWindow(this->winId());
-    screenGrab.save(QString::fromStdString(path + "/" + fileName), "png");
+    qApp->processEvents();
+    app_->waitForPool();
+    QPixmap screenGrab = QGuiApplication::primaryScreen()->grabWindow(winId());
+    screenGrab.save(utilqt::toQString(path / fileName), "png");
 }
 
 void VisualNeuroMainWindow::addActions() {
@@ -209,8 +220,9 @@ void VisualNeuroMainWindow::addActions() {
         saveAction->setShortcut(QKeySequence::Save);
         saveAction->setShortcutContext(Qt::WidgetWithChildrenShortcut);
         this->addAction(saveAction);
-        connect(saveAction, &QAction::triggered, this,
-                static_cast<void (VisualNeuroMainWindow::*)()>(&VisualNeuroMainWindow::saveWorkspace));
+        connect(
+            saveAction, &QAction::triggered, this,
+            static_cast<bool (VisualNeuroMainWindow::*)()>(&VisualNeuroMainWindow::saveWorkspace));
         fileMenuItem->addAction(saveAction);
     }
 
@@ -243,7 +255,7 @@ void VisualNeuroMainWindow::addActions() {
             recentWorkspaceMenu->addAction(action);
             connect(action, &QAction::triggered, this, [this, action]() {
                 if (askToSaveWorkspaceChanges()) {
-                    openWorkspace(action->data().toString());
+                    openWorkspace(utilqt::toPath(action->data().toString()));
                 }
             });
         }
@@ -303,7 +315,7 @@ void VisualNeuroMainWindow::addActions() {
         fileMenuItem->addAction(exitAction);
     }
 
-        // View
+    // View
     {
         // dock widget visibility menu entries
         consoleWidget_->toggleViewAction()->setText(tr("&Output Console"));
@@ -311,13 +323,15 @@ void VisualNeuroMainWindow::addActions() {
     }
 }
 
-void VisualNeuroMainWindow::addToRecentWorkspaces(QString workspaceFileName) {
+void VisualNeuroMainWindow::addToRecentWorkspaces(const std::filesystem::path& workspaceFileName) {
     QStringList recentFiles{getRecentWorkspaceList()};
 
-    recentFiles.removeAll(workspaceFileName);
-    recentFiles.prepend(workspaceFileName);
+    recentFiles.removeAll(utilqt::toQString(workspaceFileName));
+    recentFiles.prepend(utilqt::toQString(workspaceFileName));
 
-    if (recentFiles.size() > static_cast<int>(maxNumRecentFiles_)) recentFiles.removeLast();
+    if (recentFiles.size() > maxNumRecentFiles_) {
+        recentFiles.removeLast();
+    }
     saveRecentWorkspaceList(recentFiles);
 }
 
@@ -330,6 +344,10 @@ QStringList VisualNeuroMainWindow::getRecentWorkspaceList() const {
     return list;
 }
 
+bool VisualNeuroMainWindow::hasRestoreWorkspace() const { return undoManager_.hasRestore(); }
+
+void VisualNeuroMainWindow::restoreWorkspace() { undoManager_.restore(); }
+
 void VisualNeuroMainWindow::saveRecentWorkspaceList(const QStringList& list) {
     QSettings settings;
     settings.beginGroup(objectName());
@@ -337,20 +355,20 @@ void VisualNeuroMainWindow::saveRecentWorkspaceList(const QStringList& list) {
     settings.endGroup();
 }
 
-void VisualNeuroMainWindow::setCurrentWorkspace(QString workspaceFileName) {
-    workspaceFileDir_ = QFileInfo(workspaceFileName).absolutePath();
+void VisualNeuroMainWindow::setCurrentWorkspace(const std::filesystem::path& workspaceFileName) {
+    workspaceFileDir_ = std::filesystem::absolute(workspaceFileName);
     currentWorkspaceFileName_ = workspaceFileName;
 }
 
-std::string VisualNeuroMainWindow::getCurrentWorkspace() {
-    return currentWorkspaceFileName_.toLocal8Bit().constData();
+const std::filesystem::path& VisualNeuroMainWindow::getCurrentWorkspace() {
+    return currentWorkspaceFileName_;
 }
 
-bool VisualNeuroMainWindow::openWorkspace(QString workspaceFileName) {
+bool VisualNeuroMainWindow::openWorkspace(const std::filesystem::path& workspaceFileName) {
     return openWorkspace(workspaceFileName, false);
 }
 
-bool VisualNeuroMainWindow::openWorkspaceAskToSave(QString workspaceFileName) {
+bool VisualNeuroMainWindow::openWorkspaceAskToSave(const std::filesystem::path& workspaceFileName) {
     if (askToSaveWorkspaceChanges()) {
         return openWorkspace(workspaceFileName, false);
     } else {
@@ -358,23 +376,35 @@ bool VisualNeuroMainWindow::openWorkspaceAskToSave(QString workspaceFileName) {
     }
 }
 
-void VisualNeuroMainWindow::openLastWorkspace(std::string workspace) {
+void VisualNeuroMainWindow::openLastWorkspace(const std::filesystem::path& workspace) {
     QSettings settings;
     settings.beginGroup(objectName());
     const bool loadlastWorkspace = settings.value("autoloadLastWorkspace", true).toBool();
 
     const auto loadSuccessful = [&]() {
-        workspace = filesystem::cleanupPath(workspace);
         if (!workspace.empty()) {
-            return openWorkspace(utilqt::toQString(workspace));
-        } else if (loadlastWorkspace && !workspaceOnLastSuccessfulExit_.isEmpty()) {
+            return openWorkspace(workspace);
+        } else if (loadlastWorkspace && !workspaceOnLastSuccessfulExit_.empty()) {
             return openWorkspace(workspaceOnLastSuccessfulExit_);
         }
         return false;
     }();
+
+    if (!loadSuccessful) {
+        QMessageBox msgBox(this);
+        msgBox.setText(utilqt::toQString(fmt::format("Failed to open {}", workspace)));
+        msgBox.setInformativeText("Visual Neuro will close");
+        msgBox.setStandardButtons(QMessageBox::Ok);
+        msgBox.setDefaultButton(QMessageBox::Ok);
+        // set minimum size to suppress Qt warning
+        // see bug report https://bugreports.qt.io/browse/QTBUG-63661
+        msgBox.setMinimumSize(msgBox.minimumSizeHint());
+        msgBox.exec();
+        exitInviwo(false);
+    }
 }
 
-bool VisualNeuroMainWindow::openWorkspace() {
+std::optional<std::filesystem::path> VisualNeuroMainWindow::askForWorkspaceToOpen() {
     if (askToSaveWorkspaceChanges()) {
         InviwoFileDialog openFileDialog(this, "Open Workspace ...", "workspace");
         openFileDialog.addSidebarPath(PathType::Workspaces);
@@ -384,18 +414,21 @@ bool VisualNeuroMainWindow::openWorkspace() {
 
         if (openFileDialog.exec()) {
             QString path = openFileDialog.selectedFiles().at(0);
-            return openWorkspace(path);
+            return utilqt::toPath(path);
         }
+    }
+    return std::nullopt;
+}
+
+bool VisualNeuroMainWindow::openWorkspace() {
+    if (auto path = askForWorkspaceToOpen()) {
+        return openWorkspace(*path);
     }
     return false;
 }
 
-bool VisualNeuroMainWindow::openWorkspace(QString workspaceFileName, bool isExample) {
-    std::string fileName{utilqt::fromQString(workspaceFileName)};
-    fileName = filesystem::cleanupPath(fileName);
-    workspaceFileName = utilqt::toQString(fileName);
-
-    if (!filesystem::fileExists(fileName)) {
+bool VisualNeuroMainWindow::openWorkspace(const std::filesystem::path& fileName, bool isExample) {
+    if (!std::filesystem::is_regular_file(fileName)) {
         LogError("Could not find workspace file: " << fileName);
         return false;
     }
@@ -408,18 +441,16 @@ bool VisualNeuroMainWindow::openWorkspace(QString workspaceFileName, bool isExam
                 try {
                     throw;
                 } catch (const IgnoreException& e) {
-                    util::log(
-                        e.getContext(),
-                        "Incomplete network loading " + fileName + " due to " + e.getMessage(),
-                        LogLevel::Error);
+                    util::logError(e.getContext(), "Incomplete network loading {} due to {}",
+                                   fileName, e.getMessage());
                 }
             });
 
             if (isExample) {
                 setCurrentWorkspace(untitledWorkspaceName_);
             } else {
-                setCurrentWorkspace(workspaceFileName);
-                addToRecentWorkspaces(workspaceFileName);
+                setCurrentWorkspace(fileName);
+                addToRecentWorkspaces(fileName);
             }
             std::vector<Processor*> processors = app_->getProcessorNetwork()->getProcessors();
 
@@ -448,8 +479,8 @@ bool VisualNeuroMainWindow::openWorkspace(QString workspaceFileName, bool isExam
                 // FIXME: Workaround to get QGLWidget to show correctly under fullscreen
                 // https://bugreports.qt.io/browse/QTBUG-7556
                 // Should only be
-                //setCentralWidget(mainCanvasWidget);
-                
+                // setCentralWidget(mainCanvasWidget);
+
                 QWidget* const central = new QWidget;
 
                 QWidget* const dw = mainCanvasWidget;
@@ -475,7 +506,7 @@ bool VisualNeuroMainWindow::openWorkspace(QString workspaceFileName, bool isExam
                 centralLayout->setContentsMargins(0, 0, 0, 0);
 
                 setCentralWidget(central);
-                
+
                 // END OF FIXME
                 mainCanvasWidget->show();
 
@@ -486,60 +517,48 @@ bool VisualNeuroMainWindow::openWorkspace(QString workspaceFileName, bool isExam
                 // QApplication::processEvents();
             }
         } catch (const Exception& e) {
-            util::log(e.getContext(),
-                      "Unable to load network " + fileName + " due to " + e.getMessage(),
-                      LogLevel::Error);
+            util::logError(e.getContext(), "Unable to load network {} due to {}", fileName,
+                           e.getMessage());
             app_->getWorkspaceManager()->clear();
             setCurrentWorkspace(untitledWorkspaceName_);
         }
-        app_->processEvents();  // make sure the gui is ready before we unlock.
+        qApp->processEvents(QEventLoop::ExcludeUserInputEvents);  // make sure the gui is ready
+                                                                  // before we unlock.
     }
     saveWindowState();
     return true;
 }
 
-void VisualNeuroMainWindow::appendWorkspace(const std::string& file) {
-    NetworkLock lock(app_->getProcessorNetwork());
-    std::ifstream fs(file);
-    if (!fs) {
-        LogError("Could not open workspace file: " << file);
-        return;
-    }
-    // networkEditor_->append(fs, file);
-    app_->processEvents();  // make sure the gui is ready before we unlock.
-}
-
-void VisualNeuroMainWindow::saveWorkspace(QString workspaceFileName) {
-    std::string fileName{utilqt::fromQString(workspaceFileName)};
-    fileName = filesystem::cleanupPath(fileName);
+bool VisualNeuroMainWindow::saveWorkspace(const std::filesystem::path& fileName) {
+    util::OnScopeExit onExit(nullptr);
 
     try {
         app_->getWorkspaceManager()->save(fileName, [&](ExceptionContext ec) {
             try {
                 throw;
             } catch (const IgnoreException& e) {
-                util::log(e.getContext(),
-                          "Incomplete network save " + fileName + " due to " + e.getMessage(),
-                          LogLevel::Error);
+                util::logError(e.getContext(), "Incomplete network save {} due to {}", fileName,
+                               e.getMessage());
             }
         });
         LogInfo("Workspace saved to: " << fileName);
+        return true;
     } catch (const Exception& e) {
-        util::log(e.getContext(),
-                  "Unable to save network " + fileName + " due to " + e.getMessage(),
-                  LogLevel::Error);
+        util::logError(e.getContext(), "Unable to save network {} due to {}", fileName,
+                       e.getMessage());
     }
+    return false;
 }
 
-void VisualNeuroMainWindow::saveWorkspace() {
+bool VisualNeuroMainWindow::saveWorkspace() {
     if (currentWorkspaceFileName_ == untitledWorkspaceName_)
-        saveWorkspaceAs();
+        return saveWorkspaceAs();
     else {
-        saveWorkspace(currentWorkspaceFileName_);
+        return saveWorkspace(currentWorkspaceFileName_);
     }
 }
 
-void VisualNeuroMainWindow::saveWorkspaceAs() {
+bool VisualNeuroMainWindow::saveWorkspaceAs() {
     InviwoFileDialog saveFileDialog(this, "Save Workspace ...", "workspace");
     saveFileDialog.setFileMode(FileMode::AnyFile);
     saveFileDialog.setAcceptMode(AcceptMode::Save);
@@ -550,15 +569,17 @@ void VisualNeuroMainWindow::saveWorkspaceAs() {
 
     saveFileDialog.addExtension("inv", "Inviwo File");
 
+    bool savedWorkspace = false;
     if (saveFileDialog.exec()) {
-        QString path = saveFileDialog.selectedFiles().at(0);
-        if (!path.endsWith(".inv")) path.append(".inv");
+        std::filesystem::path path = utilqt::toPath(saveFileDialog.selectedFiles().at(0));
+        if (path.extension() != ".inv") path += ".inv";
 
         saveWorkspace(path);
         setCurrentWorkspace(path);
         addToRecentWorkspaces(path);
+        savedWorkspace = true;
     }
-    saveWindowState();
+    return savedWorkspace;
 }
 
 void VisualNeuroMainWindow::saveWorkspaceAsCopy() {
@@ -573,20 +594,18 @@ void VisualNeuroMainWindow::saveWorkspaceAsCopy() {
     saveFileDialog.addExtension("inv", "Inviwo File");
 
     if (saveFileDialog.exec()) {
-        QString path = saveFileDialog.selectedFiles().at(0);
-
-        if (!path.endsWith(".inv")) path.append(".inv");
+        std::filesystem::path path = utilqt::toPath(saveFileDialog.selectedFiles().at(0));
+        if (path.extension() != ".inv") path.append(".inv");
 
         saveWorkspace(path);
         addToRecentWorkspaces(path);
     }
-    saveWindowState();
 }
 
 void VisualNeuroMainWindow::exitInviwo(bool /*saveIfModified*/) {
     /// if (!saveIfModified) getNetworkEditor()->setModified(false);
     QMainWindow::close();
-    app_->closeInviwoApplication();
+    qApp->exit();
 }
 
 void VisualNeuroMainWindow::saveWindowState() {
@@ -614,6 +633,8 @@ void VisualNeuroMainWindow::closeEvent(QCloseEvent* event) {
     }
 
     app_->getWorkspaceManager()->clear();
+    // clear dangling pointers to processors with processor widgets
+    visibleWidgetState_.processors.clear();
 
     saveWindowState();
 
@@ -622,14 +643,20 @@ void VisualNeuroMainWindow::closeEvent(QCloseEvent* event) {
     if (currentWorkspaceFileName_ == untitledWorkspaceName_) {
         settings.setValue("workspaceOnLastSuccessfulExit", "");
     } else {
-        settings.setValue("workspaceOnLastSuccessfulExit", currentWorkspaceFileName_);
+        settings.setValue("workspaceOnLastSuccessfulExit",
+                          utilqt::toQString(currentWorkspaceFileName_));
     }
     settings.endGroup();
 
-    // pass a close event to all children to let the same state etc.
+    // loop over all children and trigger close events _before_ the main window is closed and
+    // destroyed. This way, the main window can stay open if a child widget does not close, i.e.
+    // calls event->ignore().
+    // @see QWidget::closeEvent()
     for (auto& child : children()) {
-        QCloseEvent closeEvent;
-        QApplication::sendEvent(child, &closeEvent);
+        QApplication::sendEvent(child, event);
+        if (!event->isAccepted()) {
+            return;
+        }
     }
 
     QMainWindow::closeEvent(event);
@@ -667,7 +694,6 @@ bool VisualNeuroMainWindow::askToSaveWorkspaceChanges() {
 }
 
 InviwoApplication* VisualNeuroMainWindow::getInviwoApplication() const { return app_; }
-InviwoApplicationQt* VisualNeuroMainWindow::getInviwoApplicationQt() const { return app_; }
 
 void VisualNeuroMainWindow::dragEnterEvent(QDragEnterEvent* event) { dragMoveEvent(event); }
 
@@ -675,13 +701,13 @@ void VisualNeuroMainWindow::dragMoveEvent(QDragMoveEvent* event) {
     auto mimeData = event->mimeData();
     if (mimeData->hasUrls()) {
         QList<QUrl> urlList = mimeData->urls();
-        auto filename = utilqt::fromQString(urlList.front().toLocalFile());
-        auto ext = toLower(filesystem::getFileExtension(filename));
+        std::filesystem::path filename = utilqt::toPath(urlList.front().toLocalFile());
+        auto ext = toLower(filename.extension().string());
 
-        if (ext == "inv" ||
+        if (ext == ".inv" ||
             !app_->getDataVisualizerManager()->getDataVisualizersForFile(filename).empty()) {
 
-            if (event->keyboardModifiers() & Qt::ControlModifier) {
+            if (event->modifiers() & Qt::ControlModifier) {
                 event->setDropAction(Qt::CopyAction);
             } else {
                 event->setDropAction(Qt::MoveAction);
@@ -699,23 +725,26 @@ void VisualNeuroMainWindow::dragMoveEvent(QDragMoveEvent* event) {
 void VisualNeuroMainWindow::dropEvent(QDropEvent* event) {
     const QMimeData* mimeData = event->mimeData();
     if (mimeData->hasUrls()) {
-        QList<QUrl> urlList = mimeData->urls();
+        // use dispatch front here to avoid blocking the drag&drop source, e.g. Windows
+        // Explorer, while the drop operation is performed
+        auto action = [this, keyModifiers = event->modifiers(), urlList = mimeData->urls()]() {
+            RenderContext::getPtr()->activateDefaultRenderContext();
 
-        bool first = true;
+            bool first = true;
 
-        for (auto& file : urlList) {
-            auto filename = file.toLocalFile();
+            for (auto& file : urlList) {
+                std::filesystem::path filename = utilqt::toPath(file.toLocalFile());
 
-            if (toLower(filesystem::getFileExtension(utilqt::fromQString(filename))) == "inv") {
-                if (!first || event->keyboardModifiers() & Qt::ControlModifier) {
-                    appendWorkspace(utilqt::fromQString(filename));
-                } else {
+                if (toLower(filename.extension().string()) == ".inv") {
                     openWorkspaceAskToSave(filename);
+                } else {
                 }
-            } else {
+                first = false;
             }
-            first = false;
-        }
+            saveWindowState();
+            undoManager_.pushStateIfDirty();
+        };
+        app_->dispatchFrontAndForget(action);
         event->accept();
     } else {
         event->ignore();

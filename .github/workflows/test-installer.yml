@@ -12,14 +12,17 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     strategy:
       matrix:
-        os: [macos-latest, windows-latest, ubuntu-20.04]
+        os: [windows, macos, linux]
         include:
-          - os: 'windows-latest'
+          - system: windows
+            os: 'windows-latest'
             installer: 'visualneuro-installer-win'
-          - os: 'macos-latest'
+          - system: macos
+            os: 'macos-13' # for now macos-latest == macos-12 since macos-13 is still "beta"
             installer: 'visualneuro-installer-macos'
-          - os: 'ubuntu-20.04'
-            installer: 'visualneuro-installer-ubuntu'
+          #- system: linux
+          #  os: 'ubuntu-22.04'
+          #  installer: 'visualneuro-installer-ubuntu'
     runs-on: ${{ matrix.os }}
     steps:
     - name: Download artifact
@@ -36,7 +39,7 @@ jobs:
       shell: pwsh
       run: |
         # find the name of the installer
-        $exe = Get-ChildItem -Name "Visual Neuro-*.exe"
+        $exe = Get-ChildItem -Name "Visual*.exe"
         # launch the nsis installer in "silent mode" (/S), should run without user interaction
         Invoke-expression "./'$exe' /S"
         # this will spawn the installer in the background so we need to wait for it to finish
@@ -50,7 +53,7 @@ jobs:
       shell: pwsh
       run: |
         $ver = (Get-ChildItem -Name C:/"Program Files/Visual Neuro"/*)
-        Invoke-expression "C:/'Program Files/VisualNeuro/$ver/bin/Visual Neuro.exe' --logconsole --quit"
+        Invoke-expression "C:/'Program Files/Visual Neuro/$ver/bin/Visual Neuro.exe' --logconsole --quit"
     
     ###############################################################################
     # Macos
@@ -60,7 +63,7 @@ jobs:
       shell: bash
       run: |
         # Find the name of the installer 
-        DMG=$(ls "Visual Neuro-*.dmg")
+        DMG=$(ls Visual*.dmg)
         # Mount installer image
         hdiutil attach "$DMG"
         # Install by copying Visual Neuro.app to applications folder
@@ -77,17 +80,14 @@ jobs:
     ###############################################################################
     # Linux
     ###############################################################################
-    - name: Extract Installer
+    - name: Extract Linux installer and run Visual Neuro
       if: runner.os == 'Linux'
       shell: bash
       run: |
         # Find the name of the installer 
-        TGZ=$(ls "Visual Neuro-*.tgz")
+        TGZ=$(ls Visual*.tar.gz)
         # Extract
         tar zxvf "$TGZ"
-
-    - name: Run Visual Neuro
-      if: runner.os == 'ubuntu'
-      shell: bash
-      run: |
+        # Get folder name and move into the folder 
+        cd "${TGZ%.tar.gz}"
         ./"bin/Visual Neuro" --logconsole --quit

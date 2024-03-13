@@ -75,11 +75,14 @@ public:
     virtual void deserialize(Deserializer& d) override;
     virtual void process() override;
 
-    std::string getPath() const;
+    std::filesystem::path getPath() const;
 
 private:
-    std::shared_ptr<Volume4DSequence> loadFile(std::string_view path, const FileExtension& sext, DataReaderFactory* rf, pool::Progress& progress);
-    std::shared_ptr<Volume4DSequence> loadFolder(std::string_view path, DataReaderFactory* rf, pool::Stop stop, pool::Progress& progress);
+    std::shared_ptr<Volume4DSequence> loadFile(std::filesystem::path path,
+                                               const FileExtension& sext, DataReaderFactory* rf,
+                                               pool::Progress& progress);
+    std::shared_ptr<Volume4DSequence> loadFolder(std::filesystem::path path, DataReaderFactory* rf,
+                                                 pool::Stop stop, pool::Progress& progress);
     void addFileNameFilters();
 
     DataReaderFactory* rf_;
@@ -87,7 +90,7 @@ private:
 
     Volume4DSequenceOutport outport_;
 
-    TemplateOptionProperty<InputType> inputType_;
+    OptionProperty<InputType> inputType_;
     FileProperty file_;
     DirectoryProperty folder_;
     StringProperty filter_;

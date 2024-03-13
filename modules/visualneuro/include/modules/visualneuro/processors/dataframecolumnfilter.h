@@ -30,8 +30,9 @@
 #pragma once
 
 #include <modules/visualneuro/visualneuromoduledefine.h>
-#include <inviwo/dataframe/datastructures/dataframe.h>
+#include <inviwo/core/processors/processor.h>
 #include <inviwo/core/properties/compositeproperty.h>
+#include <inviwo/dataframe/datastructures/dataframe.h>
 #include <inviwo/dataframe/properties/columnoptionproperty.h>
 
 

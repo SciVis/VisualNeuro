@@ -31,7 +31,7 @@
 
 #include <inviwo/core/properties/optionproperty.h>
 #include <inviwo/core/network/workspacemanager.h>
-#include <inviwo/qt/editor/undomanager.h>
+#include <inviwo/qt/applicationbase/undomanager.h>
 
 #include <warn/push>
 #include <warn/ignore/all>
@@ -62,29 +62,29 @@ class VisualNeuroMainWindow : public QMainWindow {
 public:
     static const unsigned int maxNumRecentFiles_ = 10;
 
-    VisualNeuroMainWindow(InviwoApplicationQt* app);
+    VisualNeuroMainWindow(InviwoApplication* app);
     virtual ~VisualNeuroMainWindow();
 
     void showWindow();
 
-    void openLastWorkspace(std::string workspace = "");
+    void openLastWorkspace(const std::filesystem::path& workspace = {});
     /**
      * loads the given workspace.
      *
      * @return true if the workspace was opened, otherwise false.
      */
-    bool openWorkspace(QString workspaceFileName);
+    bool openWorkspace(const std::filesystem::path& workspaceFileName);
 
     /**
      * loads the given workspace. In case there are unsaved changes, the user will be asked to save
      * or discard them, or cancel the loading.
      * @return true if the workspace was opened, otherwise false.
      */
-    bool openWorkspaceAskToSave(QString workspaceFileName);
-    std::string getCurrentWorkspace();
+    bool openWorkspaceAskToSave(const std::filesystem::path& workspaceFileName);
+    const std::filesystem::path&  getCurrentWorkspace();
 
+    ConsoleWidget* getConsoleWidget() const;
     InviwoApplication* getInviwoApplication() const;
-    InviwoApplicationQt* getInviwoApplicationQt() const;
 
     /**
      * shows a file dialog for loading a workspace. In case there are unsaved changes, the user will
@@ -95,8 +95,19 @@ public:
      */
     bool openWorkspace();
 
-    void saveWorkspace();
-    void saveWorkspaceAs();
+    /**
+     * saves the current workspace. If the workspace does not have a name yet, a file dialog will be
+     * shown.
+     * @return true if the workspace was saved, otherwise false.
+     * @see saveWorkspaceAs
+     */
+    bool saveWorkspace();
+    /**
+     * saves the current workspace using a file dialog
+     * @return true if the workspace was saved, otherwise false.
+     * @see saveWorkspaceAs
+     */
+    bool saveWorkspaceAs();
 
     /*
      * Save the current workspace into a new workspace file,
@@ -113,7 +124,9 @@ public:
      */
     QStringList getRecentWorkspaceList() const;
 
-    ConsoleWidget* getConsoleWidget() const;
+
+    bool hasRestoreWorkspace() const;
+    void restoreWorkspace();
 
 protected:
     virtual void dragEnterEvent(QDragEnterEvent* event) override;
@@ -132,9 +145,10 @@ private:
      * @return true if the workspace was opened, otherwise false.
      * @see askToSaveWorkspaceChanges
      */
-    bool openWorkspace(QString workspaceFileName, bool isExample);
-    void saveWorkspace(QString workspaceFileName);
-    void appendWorkspace(const std::string& workspaceFileName);
+    bool openWorkspace(const std::filesystem::path& workspaceFileName, bool isExample);
+    bool saveWorkspace(const std::filesystem::path& workspaceFileName);
+
+    std::optional<std::filesystem::path> askForWorkspaceToOpen();
 
     void addActions();
 
@@ -143,18 +157,18 @@ private:
     void saveWindowState();
     void loadWindowState();
 
-    void saveCanvases(std::string path, std::string fileName);
-    void getScreenGrab(std::string path, std::string fileName);
+    void saveSnapshots(const std::filesystem::path& path, std::string_view fileName);
+    void getScreenGrab(const std::filesystem::path& path, std::string_view fileName);
 
-    void addToRecentWorkspaces(QString workspaceFileName);
+    void addToRecentWorkspaces(const std::filesystem::path& workspaceFileName);
 
     /**
      * \brief update Qt settings for recent workspaces with internal status
      */
     void saveRecentWorkspaceList(const QStringList& list);
-    void setCurrentWorkspace(QString workspaceFileName);
+    void setCurrentWorkspace(const std::filesystem::path& workspaceFileName);
 
-    InviwoApplicationQt* app_;
+    InviwoApplication* app_;
     std::shared_ptr<ConsoleWidget> consoleWidget_;
 
     std::vector<QAction*> workspaceActionRecent_;
@@ -166,11 +180,28 @@ private:
     bool maximized_;
 
     // paths
-    const QString untitledWorkspaceName_;
-    QString rootDir_;
-    QString workspaceFileDir_;
-    QString currentWorkspaceFileName_;
-    QString workspaceOnLastSuccessfulExit_;
+    std::filesystem::path untitledWorkspaceName_;
+    std::filesystem::path workspaceFileDir_;
+    std::filesystem::path currentWorkspaceFileName_;
+    std::filesystem::path workspaceOnLastSuccessfulExit_;
+
+    UndoManager undoManager_;
+    struct VisibleWidgets {
+        /**
+         * store all visible processor and dock widgets before hiding them
+         */
+        void hide(QMainWindow* win);
+        /**
+         * show previously hidden processor and dock widgets
+         */
+        void show();
+
+        std::vector<Processor*> processors;
+        std::vector<QDockWidget*> dockwidgets;
+    };
+    VisibleWidgets visibleWidgetState_;  //!< holds all processor and dock widgets that were visible
+                                         //!< before showing the welcome widget
+    WorkspaceManager::ClearHandle visibleWidgetsClearHandle_;
 };
 
 }  // namespace inviwo

@@ -85,7 +85,7 @@ Volume4DSequenceSource::Volume4DSequenceSource(InviwoApplication* app)
     basis_.setReadOnly(true);
     // Want to be able to change value range for entire sequence
     for (auto prop : information_) {
-        prop->setReadOnly(prop != &information_.valueRange_);
+        prop->setReadOnly(prop != &information_.valueRange);
     }
 
     auto updateVisible = [&]() {
@@ -98,7 +98,7 @@ Volume4DSequenceSource::Volume4DSequenceSource(InviwoApplication* app)
     updateVisible();
 }
 
-std::shared_ptr<Volume4DSequence> Volume4DSequenceSource::loadFile(std::string_view path,
+std::shared_ptr<Volume4DSequence> Volume4DSequenceSource::loadFile(std::filesystem::path path,
                                                                    const FileExtension& sext,
                                                                    DataReaderFactory* rf,
                                                                    pool::Progress& progress) {
@@ -107,7 +107,7 @@ std::shared_ptr<Volume4DSequence> Volume4DSequenceSource::loadFile(std::string_v
     progress(0.f);
     if (auto reader = rf->getReaderForTypeAndExtension<VolumeSequence>(sext, path)) {
         try {
-            volumes = std::make_shared<Volume4DSequence>(1, reader->readData(path.data(), this));
+            volumes = std::make_shared<Volume4DSequence>(1, reader->readData(path, this));
         } catch (DataReaderException const& e) {
             LogProcessorError(e.getMessage());
         }
@@ -118,27 +118,27 @@ std::shared_ptr<Volume4DSequence> Volume4DSequenceSource::loadFile(std::string_v
     return volumes;
 }
 
-std::shared_ptr<Volume4DSequence> Volume4DSequenceSource::loadFolder(std::string_view folder,
+std::shared_ptr<Volume4DSequence> Volume4DSequenceSource::loadFolder(std::filesystem::path folder,
                                                                      DataReaderFactory* rf,
                                                                      pool::Stop stop,
                                                                      pool::Progress& progress) {
     progress(0.f);
     auto volumes = std::make_shared<Volume4DSequence>();
-    auto files = filesystem::getDirectoryContents(folder.data());
+    auto files = filesystem::getDirectoryContents(folder);
     for (auto&& [ind, f] : util::enumerate(files)) {
-        auto file = std::string(folder) + "/" + f;
-        if (filesystem::wildcardStringMatch(filter_, file)) {
+        auto file = folder / f;
+        if (filesystem::wildcardStringMatch(filter_, file.generic_string())) {
             try {
                 if (auto reader1 = rf->getReaderForTypeAndExtension<Volume>(file)) {
                     auto volume = reader1->readData(file, this);
-                    volume->setMetaData<StringMetaData>("filename", file);
+                    volume->setMetaData<StringMetaData>("filename", file.generic_string());
                     volumes->push_back(std::make_shared<VolumeSequence>(1, volume));
 
                 } else if (auto reader2 = rf->getReaderForTypeAndExtension<VolumeSequence>(file)) {
                     auto volumeSeq = reader2->readData(file, this);
 
                     for (auto volume : *volumeSeq) {
-                        volume->setMetaData<StringMetaData>("filename", file);
+                        volume->setMetaData<StringMetaData>("filename", file.generic_string());
                     }
                     volumes->push_back(volumeSeq);
                 } else {
@@ -194,7 +194,7 @@ void Volume4DSequenceSource::process() {
                 for (const auto& volume4d : *result) {
                     for (const auto& volume : *volume4d) {
                         if (!volume->hasMetaData<StringMetaData>("filename"))
-                            volume->setMetaData<StringMetaData>("filename", file_.get());
+                            volume->setMetaData<StringMetaData>("filename", file_.get().generic_string());
 
                         valueRange.x = std::min(valueRange.x, volume->dataMap_.valueRange.x);
                         valueRange.y = std::max(valueRange.y, volume->dataMap_.valueRange.y);
@@ -219,13 +219,13 @@ void Volume4DSequenceSource::process() {
                     valueRange.y = std::abs(valueRange.x);
                 }
                 if (deserialized_) {
-                    Property::setStateAsDefault(information_.valueRange_, valueRange);
-                    Property::setStateAsDefault(information_.dataRange_, dataRange);
+                    Property::setStateAsDefault(information_.valueRange, valueRange);
+                    Property::setStateAsDefault(information_.dataRange, dataRange);
                 } else {
-                    information_.valueRange_ = valueRange;
-                    information_.dataRange_ = dataRange;
-                    information_.valueRange_.setCurrentStateAsDefault();
-                    information_.dataRange_.setCurrentStateAsDefault();
+                    information_.valueRange = valueRange;
+                    information_.dataRange = dataRange;
+                    information_.valueRange.setCurrentStateAsDefault();
+                    information_.dataRange.setCurrentStateAsDefault();
                 }
             }
             deserialized_ = false;
@@ -234,9 +234,9 @@ void Volume4DSequenceSource::process() {
                 for (auto& volumeSequence : *result) {
                     for (auto& volume : *volumeSequence) {
                         volume->dataMap_.dataRange = dvec2(
-                            volume->dataMap_.mapFromValueToData(information_.valueRange_.get().x),
-                            volume->dataMap_.mapFromValueToData(information_.valueRange_.get().y));
-                        volume->dataMap_.valueRange = information_.valueRange_.get();
+                            volume->dataMap_.mapFromValueToData(information_.valueRange.get().x),
+                            volume->dataMap_.mapFromValueToData(information_.valueRange.get().y));
+                        volume->dataMap_.valueRange = information_.valueRange.get();
                     }
                 }
                 outport_.setData(result);
@@ -246,7 +246,7 @@ void Volume4DSequenceSource::process() {
     }
 }
 
-std::string Volume4DSequenceSource::getPath() const {
+std::filesystem::path Volume4DSequenceSource::getPath() const {
     switch (inputType_.get()) {
         case InputType::Folder:
             return folder_.get();
