@@ -10,6 +10,7 @@
         "IVW_EXTERNAL_PROJECTS" : "${sourceParentDir}/visualneuro/apps;",
 
         "BUILD_SHARED_LIBS":                { "type": "BOOL", "value": "ON"},
+        "IVW_ENABLE_PYTHON":                { "type": "BOOL", "value": "OFF"},
         "IVW_CFG_CMAKE_DEBUG":              { "type": "BOOL", "value": "ON"},
         "IVW_CFG_PROFILING":                { "type": "BOOL", "value": "OFF"},
         "IVW_CFG_PRECOMPILED_HEADERS":      { "type": "BOOL", "value": "OFF"},
