@@ -132,7 +132,10 @@ std::shared_ptr<Volume4DSequence> Volume4DSequenceSource::loadFolder(std::filesy
                 if (auto reader1 = rf->getReaderForTypeAndExtension<Volume>(file)) {
                     auto volume = reader1->readData(file, this);
                     volume->setMetaData<StringMetaData>("filename", file.generic_string());
-                    volumes->push_back(std::make_shared<VolumeSequence>(1, volume));
+                    auto tmp = std::vector<std::shared_ptr<Volume>>(1, volume);
+               
+                    volumes->push_back(std::make_shared<VolumeSequence>(
+                        std::span<std::shared_ptr<Volume> >{tmp}));
 
                 } else if (auto reader2 = rf->getReaderForTypeAndExtension<VolumeSequence>(file)) {
                     auto volumeSeq = reader2->readData(file, this);
@@ -196,11 +199,11 @@ void Volume4DSequenceSource::process() {
                         if (!volume->hasMetaData<StringMetaData>("filename"))
                             volume->setMetaData<StringMetaData>("filename", file_.get().generic_string());
 
-                        valueRange.x = std::min(valueRange.x, volume->dataMap_.valueRange.x);
-                        valueRange.y = std::max(valueRange.y, volume->dataMap_.valueRange.y);
+                        valueRange.x = std::min(valueRange.x, volume->dataMap.valueRange.x);
+                        valueRange.y = std::max(valueRange.y, volume->dataMap.valueRange.y);
 
-                        dataRange.x = std::min(dataRange.x, volume->dataMap_.dataRange.x);
-                        dataRange.y = std::max(dataRange.y, volume->dataMap_.dataRange.y);
+                        dataRange.x = std::min(dataRange.x, volume->dataMap.dataRange.x);
+                        dataRange.y = std::max(dataRange.y, volume->dataMap.dataRange.y);
                     }
                     if (!volume4d->empty()) {
                         // set basis of first volume
@@ -232,11 +235,11 @@ void Volume4DSequenceSource::process() {
             if (result && !result->empty()) {
                 // Update value range
                 for (auto& volumeSequence : *result) {
-                    for (auto& volume : *volumeSequence) {
-                        volume->dataMap_.dataRange = dvec2(
-                            volume->dataMap_.mapFromValueToData(information_.valueRange.get().x),
-                            volume->dataMap_.mapFromValueToData(information_.valueRange.get().y));
-                        volume->dataMap_.valueRange = information_.valueRange.get();
+                    for (auto volume : *volumeSequence) {
+                        volume->dataMap.dataRange = dvec2(
+                            volume->dataMap.mapFromValueToData(information_.valueRange.get().x),
+                            volume->dataMap.mapFromValueToData(information_.valueRange.get().y));
+                        volume->dataMap.valueRange = information_.valueRange.get();
                     }
                 }
                 outport_.setData(result);

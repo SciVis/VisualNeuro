@@ -255,7 +255,7 @@ fMRITransferFunctionController::fMRITransferFunctionController()
     tTestVolume_.onChange([this]() {
         if (tTestVolume_.hasData()) {
             NetworkLock lock(this);
-            auto dataMap = tTestVolume_.getData()->dataMap_;
+            auto dataMap = tTestVolume_.getData()->dataMap;
             double maxValueRange =
                 std::max(glm::abs(dataMap.valueRange).x, glm::abs(dataMap.valueRange).y);
             thresholdtTestTF_.setMaxValue(maxValueRange);
@@ -353,30 +353,30 @@ void fMRITransferFunctionController::updateTFs(ActiveInput input) {
     if (input == ActiveInput::Mean && meanVolume_.hasData()) {
         if (TFtype(*inputDataTFtype_) == TFtype::Linear) {
             updateLinearTF(linearTF2D_.get(), true, thresholdLinearTF_.get(),
-                           opacityLinearTF_.get(), meanVolume_.getData()->dataMap_);
+                           opacityLinearTF_.get(), meanVolume_.getData()->dataMap);
             updateLinearTF(linearTF3D_.get(), false, thresholdLinearTF_.get(),
-                           opacityLinearTF_.get(), meanVolume_.getData()->dataMap_);
+                           opacityLinearTF_.get(), meanVolume_.getData()->dataMap);
         } else if (TFtype(*inputDataTFtype_) == TFtype::Symmetric && meanVolume_.hasData()) {
             updateSymmetricTF(symmetricTF2D_.get(), true, thresholdSymmetricTF_.get(),
-                              opacitySymmetricTF_.get(), meanVolume_.getData()->dataMap_);
+                              opacitySymmetricTF_.get(), meanVolume_.getData()->dataMap);
             updateSymmetricTF(symmetricTF3D_.get(), false, thresholdSymmetricTF_.get(),
-                              opacitySymmetricTF_.get(), meanVolume_.getData()->dataMap_);
+                              opacitySymmetricTF_.get(), meanVolume_.getData()->dataMap);
         }
     } else if (input == ActiveInput::Correlation && correlationVolume_.hasData()) {
-        if (correlationVolume_.getData()->dataMap_.valueRange.x < 0) {
+        if (correlationVolume_.getData()->dataMap.valueRange.x < 0) {
             updateSymmetricTF(correlationTF2D_.get(), true, thresholdCorrelationTF_.get(),
-                              opacityCorrelationTF_.get(), correlationVolume_.getData()->dataMap_);
+                              opacityCorrelationTF_.get(), correlationVolume_.getData()->dataMap);
             updateSymmetricTF(correlationTF3D_.get(), false, thresholdCorrelationTF_.get(),
-                              opacityCorrelationTF_.get(), correlationVolume_.getData()->dataMap_);
+                              opacityCorrelationTF_.get(), correlationVolume_.getData()->dataMap);
         } else {
             updateLinearTF(correlationTF2D_.get(), true, thresholdCorrelationTF_.get(),
-                           opacityCorrelationTF_.get(), correlationVolume_.getData()->dataMap_);
+                           opacityCorrelationTF_.get(), correlationVolume_.getData()->dataMap);
             updateLinearTF(correlationTF3D_.get(), false, thresholdCorrelationTF_.get(),
-                           opacityCorrelationTF_.get(), correlationVolume_.getData()->dataMap_);
+                           opacityCorrelationTF_.get(), correlationVolume_.getData()->dataMap);
         }
 
     } else if (input == ActiveInput::tTest && tTestVolume_.hasData()) {
-        if (tTestVolume_.getData()->dataMap_.valueRange.x < 0) {
+        if (tTestVolume_.getData()->dataMap.valueRange.x < 0) {
             // Colormap, reversed, PuOr_8
             auto leftColors = {vec3(0.32941176470588235, 0.15294117647058825, 0.5333333333333333),
                                vec3(0.5019607843137255, 0.45098039215686275, 0.6745098039215687),
@@ -389,16 +389,16 @@ void fMRITransferFunctionController::updateTFs(ActiveInput input) {
                 vec3(0.7019607843137254, 0.34509803921568627, 0.023529411764705882)};
 
             updateSymmetricTF(tTestTF2D_.get(), true, thresholdtTestTF_.get(),
-                              opacitytTestTF_.get(), tTestVolume_.getData()->dataMap_, leftColors,
+                              opacitytTestTF_.get(), tTestVolume_.getData()->dataMap, leftColors,
                               rightColors);
             updateSymmetricTF(tTestTF3D_.get(), false, thresholdtTestTF_.get(),
-                              opacitytTestTF_.get(), tTestVolume_.getData()->dataMap_, leftColors,
+                              opacitytTestTF_.get(), tTestVolume_.getData()->dataMap, leftColors,
                               rightColors);
         } else {
             updateLinearTF(tTestTF2D_.get(), true, thresholdtTestTF_.get(), opacitytTestTF_.get(),
-                           tTestVolume_.getData()->dataMap_);
+                           tTestVolume_.getData()->dataMap);
             updateLinearTF(tTestTF3D_.get(), false, thresholdtTestTF_.get(), opacitytTestTF_.get(),
-                           tTestVolume_.getData()->dataMap_);
+                           tTestVolume_.getData()->dataMap);
         }
     }
 }  // namespace inviwo
@@ -472,7 +472,7 @@ void fMRITransferFunctionController::updateSymmetricTF(TransferFunction &tf, con
 void fMRITransferFunctionController::updateMeanVolumeSliders(const bool updateSetValue) {
     if (meanVolume_.hasData()) {
         NetworkLock lock(this);
-        auto dataMap = meanVolume_.getData()->dataMap_;
+        auto dataMap = meanVolume_.getData()->dataMap;
         thresholdLinearTF_.set(thresholdLinearTF_.get(), dataMap.valueRange.x, dataMap.valueRange.y,
                                abs(dataMap.valueRange.y - dataMap.valueRange.x) * 0.01);
         double maxValueRange =

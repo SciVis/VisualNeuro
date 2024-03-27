@@ -139,8 +139,8 @@ void VolumeSequenceFilter::process() {
             // Processors below will not be evaluated otherwise.
             volumePointer->push_back(std::make_shared<Volume>(
                 std::make_shared<VolumeRAMPrecision<float>>(volumes->front()->getDimensions())));
-            volumePointer->back()->dataMap_.dataRange = dvec2(0, 1);
-            volumePointer->back()->dataMap_.valueRange = dvec2(0, 1);
+            volumePointer->back()->dataMap.dataRange = dvec2(0, 1);
+            volumePointer->back()->dataMap.valueRange = dvec2(0, 1);
         }
         volumesOutport_.setData(volumePointer);
 

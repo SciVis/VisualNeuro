@@ -120,7 +120,7 @@ int VolumeAtlas::getLabelId(vec3 worldPos) const {
 }
 
 double VolumeAtlas::getLabelIdNormalized(int labelId) const {
-    return atlas_->dataMap_.mapFromValueToNormalized(static_cast<double>(labelId));
+    return atlas_->dataMap.mapFromValueToNormalized(static_cast<double>(labelId));
 }
 
 std::optional<VolumeAtlas::Label> VolumeAtlas::getLabel(int id) const {

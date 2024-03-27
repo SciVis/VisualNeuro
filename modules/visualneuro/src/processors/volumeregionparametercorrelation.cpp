@@ -122,7 +122,7 @@ void VolumeRegionParameterCorrelation::process() {
             values.reserve(volumeRAMs.size());
 
             for (size_t index = 0; index < volumeRAMs.size(); index++) {
-                auto dataMap = (*volumeSequence)[index]->dataMap_;
+                auto dataMap = (*volumeSequence)[index]->dataMap;
                 volumeRAMs[index]->dispatch<void, dispatching::filter::Scalars>(
                     [&values, vxlNmbr, &dataMap](auto vr) {
                         auto ptr_first_vxl = vr->getDataTyped();
