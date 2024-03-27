@@ -100,7 +100,7 @@ void ParameterVolumeSequenceCorrelation::process() {
             for (size_t index = 0; index < volumeRAMs.size(); index++) {
                 if (filter[index]) continue;
 
-                auto dataMap = (*volumeSequence)[index]->dataMap_;
+                auto dataMap = (*volumeSequence)[index]->dataMap;
                 volumeRAMs[index]->dispatch<void, dispatching::filter::Scalars>(
                     [&values, vxlNmbr, &dataMap](auto vr) {
                         auto ptr_first_vxl = vr->getDataTyped();
@@ -207,8 +207,8 @@ void ParameterVolumeSequenceCorrelation::process() {
 
         // Set data range and value range to (-1,1) since that's the range of the Pearson/Spearman
         // correlation.
-        resVol->dataMap_.dataRange = dvec2(-1.0, 1.0);
-        resVol->dataMap_.valueRange = dvec2(-1.0, 1.0);
+        resVol->dataMap.dataRange = dvec2(-1.0, 1.0);
+        resVol->dataMap.valueRange = dvec2(-1.0, 1.0);
 
         resVol->setModelMatrix(volumes->front()->getModelMatrix());
         resVol->setWorldMatrix(volumes->front()->getWorldMatrix());
