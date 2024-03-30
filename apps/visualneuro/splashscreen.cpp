@@ -28,7 +28,7 @@
  *********************************************************************************/
 
 #include "splashscreen.h"
-#include <inviwo/core/inviwocommondefines.h>
+#include <inviwo/core/common/inviwocommondefines.h>
 #include <inviwo/core/util/commandlineparser.h>
 #include <inviwo/core/util/stringconversion.h>
 #include <modules/qtwidgets/inviwoqtutils.h>
