@@ -21,6 +21,7 @@ jobs:
       matrix:
         system: [windows, macos, linux]
         linkage: [dynamic]
+        cmake_linkage: 'ON'
         configuration: [Release]
 
         include:
