@@ -57,20 +57,20 @@
       "name": "msvc-visualneuro",
       "displayName": "MSVC Visual Neuro",
       "description": "Visual Studio configuration",
-      "inherits": ["msvc", "user", "vcpkg", "visualneuro"]
+      "inherits": ["visualneuro", "msvc", "user", "vcpkg"]
     },
     {
       "name": "ninja-visualneuro",
       "displayName": "Ninja Visual Neuro",
       "description": "Ninja configuration",
-      "inherits": ["ninja", "user", "vcpkg", "visualneuro"]
+      "inherits": ["visualneuro", "ninja", "user", "vcpkg"]
     },
     {
       "name": "xcode-visualneuro",
       "displayName": "Visual Neuro XCode",
       "description": "XCode development configuration",
       "generator": "Xcode",
-      "inherits": ["user", "visualneuro"]
+      "inherits": ["visualneuro", "user"]
     }  
   ]
 }
