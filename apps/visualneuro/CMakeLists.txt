@@ -59,7 +59,7 @@ add_executable(${PROJECT_NAME} MACOSX_BUNDLE WIN32
     ${RES_FILES})
 # Do not name the CMake project VisualNeuro because it can be confused with the module
 # However, we still want the the executable to be called VisualNeuro
-set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "VisualNeuro")
+#set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "VisualNeuroApp")
 target_link_libraries(${PROJECT_NAME} PUBLIC
     inviwo::core
     inviwo::module-system
