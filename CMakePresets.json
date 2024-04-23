@@ -10,6 +10,7 @@
         "IVW_EXTERNAL_PROJECTS" : "${sourceParentDir}/visualneuro/apps;",
 
         "BUILD_SHARED_LIBS":                { "type": "BOOL", "value": "ON"},
+        "IVW_ENABLE_PYTHON":                { "type": "BOOL", "value": "OFF"},
         "IVW_CFG_CMAKE_DEBUG":              { "type": "BOOL", "value": "ON"},
         "IVW_CFG_PROFILING":                { "type": "BOOL", "value": "OFF"},
         "IVW_CFG_PRECOMPILED_HEADERS":      { "type": "BOOL", "value": "OFF"},
@@ -28,7 +29,7 @@
         "IVW_TEST_INTEGRATION_TESTS":       { "type": "BOOL", "value": "OFF"},
         
         "IVW_PACKAGE_INSTALLER":            { "type": "BOOL", "value": "ON"},
-        "IVW_APP_INSTALL_NAME":             "Visual Neuro",
+        "IVW_APP_INSTALL_NAME":             "VisualNeuroApp",
         "IVW_PACKAGE_SELECT_APP":           "VisualNeuroApp",
 
         "IVW_USE_OPENMP":                   { "type": "BOOL", "value": "OFF"},
@@ -56,20 +57,20 @@
       "name": "msvc-visualneuro",
       "displayName": "MSVC Visual Neuro",
       "description": "Visual Studio configuration",
-      "inherits": ["msvc", "user", "vcpkg", "visualneuro"]
+      "inherits": ["visualneuro", "msvc", "user", "vcpkg"]
     },
     {
       "name": "ninja-visualneuro",
       "displayName": "Ninja Visual Neuro",
       "description": "Ninja configuration",
-      "inherits": ["ninja", "user", "vcpkg", "visualneuro"]
+      "inherits": ["visualneuro", "ninja", "user", "vcpkg"]
     },
     {
       "name": "xcode-visualneuro",
       "displayName": "Visual Neuro XCode",
       "description": "XCode development configuration",
       "generator": "Xcode",
-      "inherits": ["user", "visualneuro"]
+      "inherits": ["visualneuro", "user"]
     }  
   ]
 }

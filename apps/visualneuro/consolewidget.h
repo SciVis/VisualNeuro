@@ -44,6 +44,7 @@
 #include <warn/pop>
 
 #include <chrono>
+#include <mutex>
 
 class QLabel;
 class QKeyEvent;

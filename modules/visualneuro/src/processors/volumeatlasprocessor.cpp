@@ -88,7 +88,7 @@ VolumeAtlasProcessor::VolumeAtlasProcessor()
     , selectedOpacity_("selectedOpacity", "Opacity Selected", ordinalAlpha(1.f))
     , applyNotSelectedForEmptySelection_("applyNotSelected",
                                          "Apply 'Not Selected' For Empty Selection", false)
-    , notSelectedColor_("notSelectedColor", "Not Selected Color", vec3(0.2))
+    , notSelectedColor_("notSelectedColor", "Not Selected Color", vec3(0.2f))
     , notSelectedMix_("notSelectedMix", "Not Selected Mix", ordinalAlpha(1.f))
     , notSelectedOpacity_("notSelectedOpacity", "Opacity Not selected", ordinalAlpha(0.f))
     , isotfComposite_("isotfComposite", "Atlas TF & Isovalues")
@@ -332,7 +332,7 @@ void VolumeAtlasProcessor::updateSelectableRegionProperties() {
         for (auto &p : tf) {
             primitives.push_back(&p);
         }
-        vec2 dataRange = atlasVolume->dataMap_.dataRange;
+        vec2 dataRange = atlasVolume->dataMap.dataRange;
         auto delta_ = 1.0 / (dataRange.y - dataRange.x);
         for (size_t i = 0; i < regionIndices->getSize(); i++) {
             auto labelId = static_cast<int>(regionIndices->getAsDouble(i));
@@ -368,7 +368,7 @@ void VolumeAtlasProcessor::updateSelectableRegionProperties() {
         for (auto &p : tf) {
             primitives.push_back(&p);
         }
-        vec2 dataRange = atlasVolume->dataMap_.dataRange;
+        vec2 dataRange = atlasVolume->dataMap.dataRange;
         auto delta_ = 1.0 / (dataRange.y - dataRange.x);
         for (size_t i = 0; i < regionIndices->getSize(); i++) {
             auto labelId = static_cast<int>(regionIndices->getAsDouble(i));

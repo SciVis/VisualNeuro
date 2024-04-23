@@ -43,7 +43,7 @@ jobs:
         # launch the nsis installer in "silent mode" (/S), should run without user interaction
         Invoke-expression "./'$exe' /S"
         # this will spawn the installer in the background so we need to wait for it to finish
-        $proc = Get-Process | where {$_.ProcessName -like "Visual Neuro-*"} | Select-Object -First 1
+        $proc = Get-Process | where {$_.ProcessName -like "VisualNeuro*"} | Select-Object -First 1
         if ($proc) { 
           Wait-Process -Id $proc.id
         }
@@ -52,8 +52,8 @@ jobs:
       if: runner.os == 'Windows'
       shell: pwsh
       run: |
-        $ver = (Get-ChildItem -Name C:/"Program Files/Visual Neuro"/*)
-        Invoke-expression "C:/'Program Files/Visual Neuro/$ver/bin/Visual Neuro.exe' --logconsole --quit"
+        $ver = (Get-ChildItem -Name C:/"Program Files/VisualNeuroApp"/*)
+        Invoke-expression "C:/'Program Files/VisualNeuroApp/$ver/bin/VisualNeuro.exe' --logconsole --quit"
     
     ###############################################################################
     # Macos
@@ -67,15 +67,15 @@ jobs:
         # Mount installer image
         hdiutil attach "$DMG"
         # Install by copying Visual Neuro.app to applications folder
-        cp -r "/Volumes/${DMG%%.dmg}/Visual Neuro.app" /Applications/
+        cp -r "/Volumes/${DMG%%.dmg}/VisualNeuroApp.app" /Applications/
         hdiutil detach "/Volumes/${DMG%%.dmg}/"
 
     - name: Run Visual Neuro
       if: runner.os == 'macOS'
       shell: bash
       run: |
-        cd "/Applications/Visual Neuro.app/Contents/MacOS/"
-        ./"Visual Neuro" --logconsole --quit
+        cd "/Applications/VisualNeuroApp.app/Contents/MacOS/"
+        ./"VisualNeuro" --logconsole --quit
 
     ###############################################################################
     # Linux
@@ -90,4 +90,4 @@ jobs:
         tar zxvf "$TGZ"
         # Get folder name and move into the folder 
         cd "${TGZ%.tar.gz}"
-        ./"bin/Visual Neuro" --logconsole --quit
+        ./"bin/VisualNeuro" --logconsole --quit

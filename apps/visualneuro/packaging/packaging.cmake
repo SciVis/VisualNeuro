@@ -31,7 +31,16 @@ set(CMAKE_INSTALL_OPENMP_LIBRARIES TRUE)
 set(CMAKE_INSTALL_SYSTEM_RUNTIME_COMPONENT Application)
 include (InstallRequiredSystemLibraries)
 
-set(CPACK_PACKAGE_NAME                "Visual Neuro")
+
+if(APPLE)
+    # Fix for CPack Error on MacOS 13
+    # Error generating temporary disk image.
+    # hdiutil: create failed - Resource busy
+    # https://github.com/actions/runner-images/issues/7522#issuecomment-1564467252
+    set(CPACK_COMMAND_HDIUTIL "/usr/bin/sudo /usr/bin/hdiutil")
+endif()
+
+set(CPACK_PACKAGE_NAME                "VisualNeuroApp")
 set(CPACK_PACKAGE_CONTACT             "Daniel Jönsson <info@visualneuro.com>")
 set(CPACK_PACKAGE_VENDOR              "Daniel Jönsson")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Interactive brain cohort analysis")

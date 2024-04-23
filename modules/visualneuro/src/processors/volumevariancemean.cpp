@@ -115,10 +115,10 @@ void VolumeVarianceMean::process() {
         }
     }
 
-    meanVolume->dataMap_.dataRange = volumes->front()->dataMap_.dataRange;
-    sdevVolume->dataMap_.dataRange = volumes->front()->dataMap_.dataRange;
-    meanVolume->dataMap_.valueRange = meanVolume->dataMap_.dataRange;
-    sdevVolume->dataMap_.valueRange = sdevVolume->dataMap_.dataRange;
+    meanVolume->dataMap.dataRange = volumes->front()->dataMap.dataRange;
+    sdevVolume->dataMap.dataRange = volumes->front()->dataMap.dataRange;
+    meanVolume->dataMap.valueRange = meanVolume->dataMap.dataRange;
+    sdevVolume->dataMap.valueRange = sdevVolume->dataMap.dataRange;
 
     meanVolume->setModelMatrix(volumes->front()->getModelMatrix());
     sdevVolume->setModelMatrix(volumes->front()->getModelMatrix());

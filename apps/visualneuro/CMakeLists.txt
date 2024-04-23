@@ -1,5 +1,6 @@
 #--------------------------------------------------------------------
 # Brain Cohort Analyzer
+# Do not name the CMake project VisualNeuro because it can be confused with the module
 project(VisualNeuroApp)
 
 include(version.cmake)
@@ -58,7 +59,7 @@ add_executable(${PROJECT_NAME} MACOSX_BUNDLE WIN32
     ${RES_FILES})
 # Do not name the CMake project VisualNeuro because it can be confused with the module
 # However, we still want the the executable to be called VisualNeuro
-set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "Visual Neuro")
+#set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "VisualNeuroApp")
 target_link_libraries(${PROJECT_NAME} PUBLIC
     inviwo::core
     inviwo::module-system
@@ -83,11 +84,11 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     # https://cmake.org/cmake/help/v3.15/prop_tgt/MACOSX_BUNDLE_INFO_PLIST.html
     string(TIMESTAMP YEAR "%Y")
     set_target_properties(${PROJECT_NAME} PROPERTIES
-        MACOSX_BUNDLE_INFO_STRING "Visual Neuro ${VISUALNEURO_VERSION}"
+        MACOSX_BUNDLE_INFO_STRING "${IVW_APP_INSTALL_NAME} ${VISUALNEURO_VERSION}"
         MACOSX_BUNDLE_ICON_FILE "favicon.icns"
         MACOSX_BUNDLE_GUI_IDENTIFIER "com.VisualNeuro"
         MACOSX_BUNDLE_LONG_VERSION_STRING "${VISUALNEURO_VERSION}"
-        MACOSX_BUNDLE_BUNDLE_NAME "Visual Neuro"
+        MACOSX_BUNDLE_BUNDLE_NAME "${IVW_APP_INSTALL_NAME}"
         MACOSX_BUNDLE_SHORT_VERSION_STRING "${VISUALNEURO_VERSION}"
         MACOSX_BUNDLE_BUNDLE_VERSION "${VISUALNEURO_VERSION}"
         MACOSX_BUNDLE_COPYRIGHT "C) 2012-${YEAR} Daniel Jönsson"
@@ -95,7 +96,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
     install(
         DIRECTORY   ${IVW_ROOT_DIR}/data/
-        DESTINATION VisualNeuro.app/Contents/Resources/data
+        DESTINATION ${IVW_APP_INSTALL_NAME}.app/Contents/Resources/data
         COMPONENT   Application
     )
     
@@ -110,8 +111,8 @@ endif()
 
 ivw_deploy_qt(${PROJECT_NAME})
 
-set_property(CACHE IVW_PACKAGE_SELECT_APP APPEND PROPERTY STRINGS "Visual Neuro")
+set_property(CACHE IVW_PACKAGE_SELECT_APP APPEND PROPERTY STRINGS "VisualNeuroApp")
 
-if(IVW_PACKAGE_SELECT_APP STREQUAL "Visual Neuro")
+if(IVW_PACKAGE_SELECT_APP STREQUAL "VisualNeuroApp")
     include(packaging/packaging.cmake) # Package creation
 endif()

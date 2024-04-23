@@ -66,7 +66,7 @@ void VolumeSequenceMean::process() {
         for (auto i = 0; i < static_cast<int>(volumes->size()); i++) {
             auto volume = (*volumes)[i];
             auto volumeRAM = volume->getRepresentation<VolumeRAM>();
-            auto& dataMap = volume->dataMap_;
+            auto& dataMap = volume->dataMap;
             dataRange += residual * dataMap.dataRange;
             valueRange += residual * dataMap.valueRange;
             // Dispatch function
@@ -86,8 +86,8 @@ void VolumeSequenceMean::process() {
             progress(i, volumes->size());
         }
         // Data is stored in value domain
-        resVolume->dataMap_.dataRange = valueRange;
-        resVolume->dataMap_.valueRange = valueRange;
+        resVolume->dataMap.dataRange = valueRange;
+        resVolume->dataMap.valueRange = valueRange;
 
         resVolume->setModelMatrix(volumes->front()->getModelMatrix());
         resVolume->setWorldMatrix(volumes->front()->getWorldMatrix());

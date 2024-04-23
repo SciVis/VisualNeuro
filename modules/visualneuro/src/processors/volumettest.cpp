@@ -87,7 +87,7 @@ void VolumeTTest::process() {
             for (auto index = 0u; index < volumes.size(); index++) {
                 volumes[index]->dispatch<void, dispatching::filter::Scalars>(
                     [&scores, index, vxlNmbr,
-                     dataMap = &volumes[index]->getOwner()->dataMap_](auto vr) {
+                     dataMap = &volumes[index]->getOwner()->dataMap](auto vr) {
                         auto ptr_first_vxl = vr->getDataTyped();
                         scores[index] = dataMap->mapFromDataToValue(
                             static_cast<double>(*(ptr_first_vxl + vxlNmbr)));
@@ -149,8 +149,8 @@ void VolumeTTest::process() {
             // Prevent division by zero errors
             minMax.y += std::numeric_limits<double>::denorm_min();
         }
-        resVol->dataMap_.dataRange = minMax;
-        resVol->dataMap_.valueRange = minMax;
+        resVol->dataMap.dataRange = minMax;
+        resVol->dataMap.valueRange = minMax;
 
         resVol->setModelMatrix(volumesA->front()->getModelMatrix());
         resVol->setWorldMatrix(volumesA->front()->getWorldMatrix());
