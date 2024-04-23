@@ -56,7 +56,7 @@ set(CPACK_PACKAGE_FILE_NAME           "${CPACK_PACKAGE_NAME}-v${VISUALNEURO_VERS
 
 set(CPACK_MONOLITHIC_INSTALL OFF)
 set(CPACK_NSIS_MANIFEST_DPI_AWARE ON)
-ivw_get_target_property_recursive(install_list VisualNeuroApp INTERFACE_IVW_INSTALL_LIST OFF)
+ivw_get_target_property_recursive(install_list VisualNeuro INTERFACE_IVW_INSTALL_LIST OFF)
 ivw_filter_install_list(LIST install_list REMOVE_COMPONENTS Development Testing)
 list(TRANSFORM install_list REPLACE "\\|%\\|" ";")
 set(CPACK_INSTALL_CMAKE_PROJECTS ${install_list})
