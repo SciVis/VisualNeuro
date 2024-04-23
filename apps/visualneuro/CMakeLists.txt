@@ -1,6 +1,6 @@
 #--------------------------------------------------------------------
 # Brain Cohort Analyzer
-project(VisualNeuroApp)
+project(VisualNeuro)
 
 include(version.cmake)
 
@@ -110,8 +110,8 @@ endif()
 
 ivw_deploy_qt(${PROJECT_NAME})
 
-set_property(CACHE IVW_PACKAGE_SELECT_APP APPEND PROPERTY STRINGS "Visual Neuro")
+set_property(CACHE IVW_PACKAGE_SELECT_APP APPEND PROPERTY STRINGS "VisualNeuro")
 
-if(IVW_PACKAGE_SELECT_APP STREQUAL "Visual Neuro")
+if(IVW_PACKAGE_SELECT_APP STREQUAL "VisualNeuro")
     include(packaging/packaging.cmake) # Package creation
 endif()

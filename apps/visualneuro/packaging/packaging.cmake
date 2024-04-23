@@ -31,6 +31,7 @@ set(CMAKE_INSTALL_OPENMP_LIBRARIES TRUE)
 set(CMAKE_INSTALL_SYSTEM_RUNTIME_COMPONENT Application)
 include (InstallRequiredSystemLibraries)
 
+
 if(APPLE)
     # Fix for CPack Error on MacOS 13
     # Error generating temporary disk image.
@@ -39,7 +40,7 @@ if(APPLE)
     set(CPACK_COMMAND_HDIUTIL "/usr/bin/sudo /usr/bin/hdiutil")
 endif()
 
-set(CPACK_PACKAGE_NAME                "Visual Neuro")
+set(CPACK_PACKAGE_NAME                "VisualNeuro")
 set(CPACK_PACKAGE_CONTACT             "Daniel Jönsson <info@visualneuro.com>")
 set(CPACK_PACKAGE_VENDOR              "Daniel Jönsson")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Interactive brain cohort analysis")
