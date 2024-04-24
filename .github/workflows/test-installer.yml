@@ -53,7 +53,7 @@ jobs:
       shell: pwsh
       run: |
         $ver = (Get-ChildItem -Name C:/"Program Files/VisualNeuroApp"/*)
-        Invoke-expression "C:/'Program Files/VisualNeuroApp/$ver/bin/VisualNeuro.exe' --logconsole --quit"
+        Invoke-expression "C:/'Program Files/VisualNeuroApp/$ver/bin/VisualNeuroApp.exe' --logconsole --quit"
     
     ###############################################################################
     # Macos
@@ -75,7 +75,7 @@ jobs:
       shell: bash
       run: |
         cd "/Applications/VisualNeuroApp.app/Contents/MacOS/"
-        ./"VisualNeuro" --logconsole --quit
+        ./"VisualNeuroApp" --logconsole --quit
 
     ###############################################################################
     # Linux
@@ -90,4 +90,4 @@ jobs:
         tar zxvf "$TGZ"
         # Get folder name and move into the folder 
         cd "${TGZ%.tar.gz}"
-        ./"bin/VisualNeuro" --logconsole --quit
+        ./"bin/VisualNeuroApp" --logconsole --quit
