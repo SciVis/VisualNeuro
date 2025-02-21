@@ -41,6 +41,7 @@
 #include <inviwo/core/ports/imageport.h>
 #include <inviwo/core/ports/volumeport.h>
 
+
 #include <modules/opengl/shader/shader.h>
 
 namespace inviwo {
@@ -94,7 +95,7 @@ protected:
     ImageInport entryPort_;
     ImageInport exitPort_;
     VolumeInport atlasPort_;
-    DataInport<IsoTFProperty> atlasTransferFunction_;
+    DataInport<TransferFunction> atlasTransferFunction_;
     ImageInport backgroundPort_;
     ImageOutport outport_;
 
@@ -107,6 +108,9 @@ protected:
     CameraProperty camera_;
     SimpleLightingProperty lighting_;
     VolumeIndicatorProperty positionIndicator_;
+
+    std::shared_ptr<LayerRAMPrecision<vec4>> atlasLookupTableRep_;
+    Layer atlasLookupTable_;
 };
 
 }  // namespace inviwo

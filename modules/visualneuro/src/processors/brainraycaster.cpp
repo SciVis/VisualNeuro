@@ -34,7 +34,6 @@
 #include <modules/opengl/texture/textureunit.h>
 #include <modules/opengl/texture/textureutils.h>
 #include <modules/opengl/shader/shaderutils.h>
-#include <modules/opengl/texture/textureutils.h>
 #include <modules/opengl/volume/volumeutils.h>
 #include <inviwo/core/common/inviwoapplication.h>
 #include <inviwo/core/util/rendercontext.h>
@@ -72,7 +71,9 @@ BrainRayCaster::BrainRayCaster()
                                 TransferFunction())
     , camera_("camera", "Camera", util::boundingBox(volumePort_))
     , lighting_("lighting", "Lighting", &camera_)
-    , positionIndicator_("positionindicator", "Position Indicator") {
+    , positionIndicator_("positionindicator", "Position Indicator") 
+    , atlasLookupTableRep_(std::make_shared<LayerRAMPrecision<vec4>>(size2_t{1024, 1}))
+    , atlasLookupTable_(atlasLookupTableRep_) {
 
     shader_.onReload([this]() { invalidate(InvalidationLevel::InvalidResources); });
 
@@ -145,6 +146,11 @@ void BrainRayCaster::initializeResources() {
 }
 
 void BrainRayCaster::process() {
+    if (atlasTransferFunction_.isChanged()) {
+        atlasTransferFunction_.getData()->interpolateAndStoreColors(
+            atlasLookupTableRep_->getView());
+        atlasLookupTable_.invalidateAllOther(atlasLookupTableRep_.get());
+    }
     if (volumePort_.isChanged() || activityPort_.isChanged() || atlasPort_.isChanged()) {
         dispatchOne(
             [volume = volumePort_.getData(), activity = activityPort_.getData(),
@@ -179,7 +185,7 @@ void BrainRayCaster::raycast(const Volume& volume, const Volume& activity, const
     utilgl::bindAndSetUniforms(shader_, units, activityTransferFunction_);
     utilgl::bindAndSetUniforms(
         shader_, units,
-        *(atlasTransferFunction_.getData()->getData()->getRepresentation<LayerGL>()->getTexture()),
+        *atlasLookupTable_.getRepresentation<LayerGL>()->getTexture(),
         "atlasTransferFunction");
 
     utilgl::bindAndSetUniforms(shader_, units, entryPort_, ImageType::ColorDepthPicking);

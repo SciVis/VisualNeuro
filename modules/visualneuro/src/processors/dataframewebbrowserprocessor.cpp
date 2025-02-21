@@ -56,27 +56,79 @@ const ProcessorInfo DataFrameWebBrowserProcessor::processorInfo_{
     CodeState::Stable,                 // Code state
     "GL, Web Browser, DataFrame",      // Tags
 };
-const ProcessorInfo DataFrameWebBrowserProcessor::getProcessorInfo() const {
+const ProcessorInfo& DataFrameWebBrowserProcessor::getProcessorInfo() const {
     return processorInfo_;
 }
 
 DataFrameWebBrowserProcessor::DataFrameWebBrowserProcessor(InviwoApplication* app)
-    : WebBrowserProcessor(app)
+    : Processor()
     // Output from CEF is 8-bits per channel
-    , dataFramePort_("dataFrames") {
+    , dataFramePort_("dataFrames")
+    , background_{"background"}
+    , outport_{"webpage", DataVec4UInt8::get()}
+    , sourceType_{"sourceType", "Source",
+                  OptionPropertyState<SourceType>{
+                      .options = {{"localFile", "Local File", SourceType::LocalFile},
+                                  {"webAddress", "Web Address", SourceType::WebAddress}},
+                      .invalidationLevel = InvalidationLevel::Valid,
+                  }
+                      .setSelectedValue(SourceType::WebAddress)}
+    , fileName_{"fileName", "HTML file", {}, "html", InvalidationLevel::Valid}
+    , autoReloadFile_{"autoReloadFile", "Auto Reload", true, InvalidationLevel::Valid}
+    , url_{"URL", "URL", "https://www.inviwo.org", InvalidationLevel::Valid}
+    , reload_{"reload", "Reload", InvalidationLevel::Valid}
+    , zoom_{"zoom", "Zoom Factor", 1.0, 0.2, 5.0}
+    , runJS_{"runJS", "Run JS"}
+    , js_{"js", "JavaScript", "", InvalidationLevel::Valid}
+    , browser_{new WebBrowserBase(app, *this, outport_, &background_)} {
+
+    addPorts(background_, dataFramePort_, outport_);
     dataFramePort_.setOptional(true);
-    addPort(dataFramePort_);
-    isLoading_.set(true);
+
+    background_.setOptional(true);
+    addProperties(sourceType_, fileName_, autoReloadFile_, url_, reload_, zoom_, runJS_, js_);
+
+    fileName_.visibilityDependsOn(sourceType_, [](auto& p) { return p == SourceType::LocalFile; });
+    autoReloadFile_.visibilityDependsOn(sourceType_,
+                                        [](auto& p) { return p == SourceType::LocalFile; });
+    url_.visibilityDependsOn(sourceType_, [](auto& p) { return p == SourceType::WebAddress; });
+
+    sourceType_.onChange([this]() { updateSource(); });
+    fileName_.onChange([this]() {
+        if (autoReloadFile_) {
+            fileObserver_.setFilename(fileName_);
+        }
+        updateSource();
+    });
+    autoReloadFile_.onChange([this]() {
+        if (autoReloadFile_) {
+            fileObserver_.setFilename(fileName_);
+        } else {
+            fileObserver_.stop();
+        }
+    });
+
+    url_.onChange([this]() { updateSource(); });
+    reload_.onChange([this]() { updateSource(); });
+
+    fileObserver_.onChange([this]() {
+        if (sourceType_ == SourceType::LocalFile) {
+            updateSource();
+        }
+    });
+
+    addInteractionHandler(browser_->getInteractionHandler());
+    updateSource();
 }
 
 void DataFrameWebBrowserProcessor::process() {
     reloaded_ |= fileName_.isModified() || url_.isModified() || reload_.isModified() ||
                     sourceType_.isModified();
-    if (isLoading_) {
+    if (browser_->isLoading()) {
         return;
     }
     if (js_.isModified() && !js_.get().empty()) {
-        browser_->GetMainFrame()->ExecuteJavaScript(js_.get(), "", 1);
+        browser_->executeJavaScript(js_.get(), 1);
     }
     if (reloaded_ || dataFramePort_.isChanged()) {
         auto changed = dataFramePort_.getChangedOutports();
@@ -90,21 +142,36 @@ void DataFrameWebBrowserProcessor::process() {
                 std::stringstream data("var data = ", std::ios_base::app | std::ios_base::out);
                 data << root.dump() << ";";
 
-                auto frame = browser_->GetMainFrame();
                 json port = {{"port", elem.first->getIdentifier()},
                              {"processor", elem.first->getProcessor()->getIdentifier()}};
 
                 data << "onInviwoDataChanged(data," << port.dump() << ");";
 
-                frame->ExecuteJavaScript(data.str(), frame->GetURL(), 0);
+                browser_->executeJavaScript(data.str(), 0);
             }
         }
     } 
-    // Vertical flip of CEF output image
-    cefToInviwoImageConverter_.convert(renderHandler_->getTexture2D(browser_), outport_,
-                                       &background_);
-
     reloaded_ = false;
+}
+
+void DataFrameWebBrowserProcessor::deserialize(Deserializer& d) {
+    Processor::deserialize(d);
+    // Must reload page to connect property with Frame, see PropertyCefSynchronizer::OnLoadEnd
+    updateSource();
+}
+
+void DataFrameWebBrowserProcessor::updateSource() {
+    switch (sourceType_) {
+        case SourceType::LocalFile:
+            browser_->load(fileName_);
+            break;
+        case SourceType::WebAddress:
+            browser_->load(url_);
+            break;
+        default:
+            browser_->load(std::string_view{"https://www.inviwo.org"});
+            break;
+    }
 }
 
 }  // namespace inviwo
