@@ -35,6 +35,8 @@
 #include <inviwo/core/util/filesystem.h>
 #include <inviwo/core/util/zip.h>
 
+#include <fmt/std.h>
+
 namespace inviwo {
 
 // The Class Identifier has to be globally unique. Use a reverse DNS naming scheme
@@ -45,7 +47,7 @@ const ProcessorInfo Volume4DSequenceSource::processorInfo_{
     CodeState::Stable,                    // Code state
     Tags::CPU,                            // Tags
 };
-const ProcessorInfo Volume4DSequenceSource::getProcessorInfo() const { return processorInfo_; }
+const ProcessorInfo& Volume4DSequenceSource::getProcessorInfo() const { return processorInfo_; }
 
 Volume4DSequenceSource::Volume4DSequenceSource(InviwoApplication* app)
     : PoolProcessor()
@@ -109,10 +111,10 @@ std::shared_ptr<Volume4DSequence> Volume4DSequenceSource::loadFile(std::filesyst
         try {
             volumes = std::make_shared<Volume4DSequence>(1, reader->readData(path, this));
         } catch (DataReaderException const& e) {
-            LogProcessorError(e.getMessage());
+            log::exception(e);
         }
     } else {
-        LogProcessorError("Could not find a data reader for file: " << path);
+        log::error("Could not find a data reader for file: {} ", path);
     }
     progress(1.f);
     return volumes;
@@ -145,10 +147,10 @@ std::shared_ptr<Volume4DSequence> Volume4DSequenceSource::loadFolder(std::filesy
                     }
                     volumes->push_back(volumeSeq);
                 } else {
-                    LogProcessorError("Could not find a data reader for file: " << file);
+                    log::error("Could not find a data reader for file:  {}", file);
                 }
             } catch (DataReaderException const& e) {
-                LogProcessorError(e.getMessage());
+                log::exception(e);
             }
         }
         progress(ind + 1, files.size());

@@ -51,7 +51,7 @@ const ProcessorInfo VolumeAtlasProcessor::processorInfo_{
     CodeState::Experimental,   // Code state
     Tags::None,                // Tags
 };
-const ProcessorInfo VolumeAtlasProcessor::getProcessorInfo() const { return processorInfo_; }
+const ProcessorInfo& VolumeAtlasProcessor::getProcessorInfo() const { return processorInfo_; }
 
 OrdinalPropertyState<float> ordinalAlpha(
     const float &value, InvalidationLevel invalidationLevel = InvalidationLevel::InvalidOutput) {
@@ -196,7 +196,7 @@ void VolumeAtlasProcessor::updateTransferFunction() {
 
         auto normalizedVal = atlas_->getLabelIdNormalized(labelId);
 
-        auto it = std::lower_bound(tf.begin(), tf.end(), normalizedVal);
+        auto it = std::lower_bound(tf.begin(), tf.end(), TFPrimitive(normalizedVal));
         if (it != tf.end()) {
             it->setColor(color);
         }
@@ -303,7 +303,7 @@ void VolumeAtlasProcessor::updateSelectableRegionProperties() {
         BoolProperty *prop;
         if (auto existingProp = selectedVolumeRegions_.getPropertyByIdentifier(identifier)) {
             prop = static_cast<BoolProperty *>(existingProp);
-            util::erase_remove(propertiesToRemove, identifier);
+            std::erase(propertiesToRemove, identifier);
         } else {
             auto newProp = std::make_unique<BoolProperty>(identifier, name, false);
             newProp->onChange([&]() { brushingDirty_ = true; });

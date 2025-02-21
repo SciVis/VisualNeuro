@@ -81,7 +81,7 @@ public:
 
     virtual void initializeResources() override;
 
-    virtual const ProcessorInfo getProcessorInfo() const override;
+    virtual const ProcessorInfo& getProcessorInfo() const override;
     static const ProcessorInfo processorInfo_;
 
 protected:
@@ -94,7 +94,7 @@ protected:
     ImageInport entryPort_;
     ImageInport exitPort_;
     VolumeInport atlasPort_;
-    DataInport<TransferFunction> atlasTransferFunction_;
+    DataInport<IsoTFProperty> atlasTransferFunction_;
     ImageInport backgroundPort_;
     ImageOutport outport_;
 

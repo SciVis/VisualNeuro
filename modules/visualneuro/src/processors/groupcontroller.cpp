@@ -41,7 +41,7 @@ const ProcessorInfo GroupController::processorInfo_{
     CodeState::Experimental,       // Code state
     Tags::None,                    // Tags
 };
-const ProcessorInfo GroupController::getProcessorInfo() const { return processorInfo_; }
+const ProcessorInfo& GroupController::getProcessorInfo() const { return processorInfo_; }
 
 GroupController::GroupController()
     : Processor()

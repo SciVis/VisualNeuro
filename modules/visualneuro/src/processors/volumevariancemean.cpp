@@ -41,7 +41,7 @@ const ProcessorInfo VolumeVarianceMean::processorInfo_{
     CodeState::Experimental,          // Code state
     "Statistics",                     // Tags
 };
-const ProcessorInfo VolumeVarianceMean::getProcessorInfo() const { return processorInfo_; }
+const ProcessorInfo& VolumeVarianceMean::getProcessorInfo() const { return processorInfo_; }
 
 VolumeVarianceMean::VolumeVarianceMean()
     : Processor()

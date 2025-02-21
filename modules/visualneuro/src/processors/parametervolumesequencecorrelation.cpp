@@ -46,7 +46,7 @@ const ProcessorInfo ParameterVolumeSequenceCorrelation::processorInfo_{
     CodeState::Experimental,                          // Code state
     Tags::None,                                       // Tags
 };
-const ProcessorInfo ParameterVolumeSequenceCorrelation::getProcessorInfo() const {
+const ProcessorInfo& ParameterVolumeSequenceCorrelation::getProcessorInfo() const {
     return processorInfo_;
 }
 

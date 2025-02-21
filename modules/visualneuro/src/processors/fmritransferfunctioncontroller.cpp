@@ -42,7 +42,7 @@ const ProcessorInfo fMRITransferFunctionController::processorInfo_{
     CodeState::Experimental,                      // Code state
     Tags::None,                                   // Tags
 };
-const ProcessorInfo fMRITransferFunctionController::getProcessorInfo() const {
+const ProcessorInfo& fMRITransferFunctionController::getProcessorInfo() const {
     return processorInfo_;
 }
 

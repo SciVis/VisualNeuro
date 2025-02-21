@@ -34,6 +34,7 @@
 #include <modules/opengl/texture/textureunit.h>
 #include <modules/opengl/texture/textureutils.h>
 #include <modules/opengl/shader/shaderutils.h>
+#include <modules/opengl/texture/textureutils.h>
 #include <modules/opengl/volume/volumeutils.h>
 #include <inviwo/core/common/inviwoapplication.h>
 #include <inviwo/core/util/rendercontext.h>
@@ -49,7 +50,7 @@ const ProcessorInfo BrainRayCaster::processorInfo_{
     CodeState::Stable,            // Code state
     "GL, DVR, Raycasting",        // Tags
 };
-const ProcessorInfo BrainRayCaster::getProcessorInfo() const { return processorInfo_; }
+const ProcessorInfo& BrainRayCaster::getProcessorInfo() const { return processorInfo_; }
 
 BrainRayCaster::BrainRayCaster()
     : PoolProcessor()

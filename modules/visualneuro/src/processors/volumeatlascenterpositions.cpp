@@ -41,7 +41,7 @@ const ProcessorInfo VolumeAtlasCenterPositions::processorInfo_{
     CodeState::Experimental,                  // Code state
     Tags::None,                               // Tags
 };
-const ProcessorInfo VolumeAtlasCenterPositions::getProcessorInfo() const { return processorInfo_; }
+const ProcessorInfo& VolumeAtlasCenterPositions::getProcessorInfo() const { return processorInfo_; }
 
 VolumeAtlasCenterPositions::VolumeAtlasCenterPositions()
     : Processor(), indexedVolume_("indexedVolume"), atlasAggregateInfo_("regionPositions") {

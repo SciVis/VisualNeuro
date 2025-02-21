@@ -41,7 +41,7 @@ const ProcessorInfo VolumeSequenceMean::processorInfo_{
     CodeState::Experimental,            // Code state
     Tags::CPU,                          // Tags
 };
-const ProcessorInfo VolumeSequenceMean::getProcessorInfo() const { return processorInfo_; }
+const ProcessorInfo& VolumeSequenceMean::getProcessorInfo() const { return processorInfo_; }
 
 VolumeSequenceMean::VolumeSequenceMean() : PoolProcessor(), inport_("inport"), outport_("outport") {
     addPort(inport_);
