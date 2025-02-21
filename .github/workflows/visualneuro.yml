@@ -11,7 +11,7 @@ permissions:
 
 env:
   VCPKG_INSTALL_OPTIONS: "--clean-after-build;--x-abi-tools-use-exact-versions"
-  VCPKG_BINARY_SOURCES: ${{ secrets.VCPKG_CACHE_TOKEN }}
+  VCPKG_CACHE_TOKEN: ${{ secrets.VCPKG_CACHE_TOKEN }}
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   VCPKG_FEATURE_FLAGS: dependencygraph
 
