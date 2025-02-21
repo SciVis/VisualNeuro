@@ -70,10 +70,10 @@ jobs:
         submodules: false 
 
     - name: Install dependencies
-      uses: ./visualneuro/.github/actions/install-dependencies
+      uses: ./inviwo/.github/actions/install-dependencies
     
     - name: Configure build environment
-      uses: ./visualneuro/.github/actions/configure-build-env
+      uses: ./inviwo/.github/actions/configure-build-env
       with:
         triplet: ${{ matrix.triplet }}
         configuration: ${{ matrix.configuration }}
