@@ -51,7 +51,7 @@ const ProcessorInfo VolumeTTest::processorInfo_{
     CodeState::Experimental,   // Code state
     Tags::None,                // Tags
 };
-const ProcessorInfo VolumeTTest::getProcessorInfo() const { return processorInfo_; }
+const ProcessorInfo& VolumeTTest::getProcessorInfo() const { return processorInfo_; }
 
 VolumeTTest::VolumeTTest()
     : PoolProcessor()

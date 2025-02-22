@@ -39,7 +39,7 @@ const ProcessorInfo Volume4DSequenceSliceFilter::processorInfo_{
     CodeState::Experimental,                   // Code state
     Tags::CPU,                                 // Tags
 };
-const ProcessorInfo Volume4DSequenceSliceFilter::getProcessorInfo() const { return processorInfo_; }
+const ProcessorInfo& Volume4DSequenceSliceFilter::getProcessorInfo() const { return processorInfo_; }
 
 Volume4DSequenceSliceFilter::Volume4DSequenceSliceFilter()
     : Processor(), inport_("inport"), outport_("volumesOutport"), index_("index", "Index", 1, 1, 1, 1) {

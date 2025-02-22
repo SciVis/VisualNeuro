@@ -41,6 +41,7 @@
 #include <inviwo/core/ports/imageport.h>
 #include <inviwo/core/ports/volumeport.h>
 
+
 #include <modules/opengl/shader/shader.h>
 
 namespace inviwo {
@@ -81,7 +82,7 @@ public:
 
     virtual void initializeResources() override;
 
-    virtual const ProcessorInfo getProcessorInfo() const override;
+    virtual const ProcessorInfo& getProcessorInfo() const override;
     static const ProcessorInfo processorInfo_;
 
 protected:
@@ -107,6 +108,9 @@ protected:
     CameraProperty camera_;
     SimpleLightingProperty lighting_;
     VolumeIndicatorProperty positionIndicator_;
+
+    std::shared_ptr<LayerRAMPrecision<vec4>> atlasLookupTableRep_;
+    Layer atlasLookupTable_;
 };
 
 }  // namespace inviwo

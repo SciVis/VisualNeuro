@@ -42,7 +42,7 @@ const ProcessorInfo VolumeSequenceFilter::processorInfo_{
     CodeState::Experimental,            // Code state
     Tags::CPU,                          // Tags
 };
-const ProcessorInfo VolumeSequenceFilter::getProcessorInfo() const { return processorInfo_; }
+const ProcessorInfo& VolumeSequenceFilter::getProcessorInfo() const { return processorInfo_; }
 
 VolumeSequenceFilter::VolumeSequenceFilter()
     : Processor()

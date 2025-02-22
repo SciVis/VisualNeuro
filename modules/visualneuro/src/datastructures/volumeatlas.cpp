@@ -28,6 +28,7 @@
  *********************************************************************************/
 
 #include <modules/visualneuro/datastructures/volumeatlas.h>
+#include <inviwo/core/datastructures/volume/volumeram.h>
 
 namespace inviwo {
 

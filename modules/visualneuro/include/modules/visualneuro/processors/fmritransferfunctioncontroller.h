@@ -77,7 +77,7 @@ public:
 
     virtual void process() override;
 
-    virtual const ProcessorInfo getProcessorInfo() const override;
+    virtual const ProcessorInfo& getProcessorInfo() const override;
     static const ProcessorInfo processorInfo_;
 
     virtual bool isConnectionActive(Inport*, Outport*) const override;
@@ -85,6 +85,7 @@ public:
 private:
     enum class TFtype { Linear, Symmetric };
     enum class ActiveInput { Mean, tTest, Correlation };
+    enum class ValueRangeType { Negative, Symmetric, Positive };
 
     ActiveInput getActiveInput() const;
 
@@ -132,11 +133,12 @@ private:
     DoubleProperty thresholdtTestTF_;
 
     void updateTFs(ActiveInput type);
-    void updateLinearTF(TransferFunction& tf, const bool slicesTF, double threshold, double opacity,
-                        const DataMapper& dataMap);
+    void updateLinearTF(TransferFunctionProperty& tf, const bool slicesTF, double threshold,
+                        double opacity,
+                        const DataMapper& dataMap, ValueRangeType rt = ValueRangeType::Positive);
 
     // Default colormap, reversed, RdBu_8
-    void updateSymmetricTF(TransferFunction& tf, const bool slicesTF, double threshold,
+    void updateSymmetricTF(TransferFunctionProperty& tf, const bool slicesTF, double threshold,
                            double opacity, const DataMapper& dataMap,
                            std::vector<vec3> leftColors =
                                {vec3(0.12941176470588237, 0.4, 0.6745098039215687),
@@ -147,6 +149,8 @@ private:
                                vec3(0.8392156862745098, 0.3764705882352941, 0.30196078431372547),
                                vec3(0.6980392156862745, 0.09411764705882353, 0.16862745098039217)});
     void updateMeanVolumeSliders(const bool updateSetValue = false);
+
+    ValueRangeType rangeType(double minVal, double maxVal);
 };
 
 }  // namespace inviwo

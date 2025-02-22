@@ -41,7 +41,7 @@ const ProcessorInfo JoinDataFrames::processorInfo_{
     CodeState::Stable,              // Code state
     "CPU, DataFrame, Spreadsheet",  // Tags
 };
-const ProcessorInfo JoinDataFrames::getProcessorInfo() const { return processorInfo_; }
+const ProcessorInfo& JoinDataFrames::getProcessorInfo() const { return processorInfo_; }
 
 JoinDataFrames::JoinDataFrames()
     : Processor(), dataFrames("dataFrames"), joinedFrame("joinedDataFrame") {

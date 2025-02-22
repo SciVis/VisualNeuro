@@ -47,7 +47,7 @@ const ProcessorInfo VolumeRegionParameterCorrelation::processorInfo_{
     CodeState::Experimental,                        // Code state
     Tags::None,                                     // Tags
 };
-const ProcessorInfo VolumeRegionParameterCorrelation::getProcessorInfo() const {
+const ProcessorInfo& VolumeRegionParameterCorrelation::getProcessorInfo() const {
     return processorInfo_;
 }
 

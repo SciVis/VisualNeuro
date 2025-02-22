@@ -67,7 +67,7 @@ class IVW_MODULE_VISUALNEURO_API Volume4DSequenceSource : public PoolProcessor {
     enum class InputType { SingleFile, Folder };
 
 public:
-    virtual const ProcessorInfo getProcessorInfo() const override;
+    virtual const ProcessorInfo& getProcessorInfo() const override;
     static const ProcessorInfo processorInfo_;
     Volume4DSequenceSource(InviwoApplication* app);
     virtual ~Volume4DSequenceSource() = default;

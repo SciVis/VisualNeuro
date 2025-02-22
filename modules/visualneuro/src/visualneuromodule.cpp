@@ -27,6 +27,8 @@
  *
  *********************************************************************************/
 
+#include <inviwo/core/common/inviwoapplication.h>
+
 #include <modules/visualneuro/visualneuromodule.h>
 #include <modules/visualneuro/processors/brainmask.h>
 #include <modules/visualneuro/processors/brainraycaster.h>
@@ -93,13 +95,11 @@ VisualNeuroModule::VisualNeuroModule(InviwoApplication* app) : InviwoModule(app,
 
     // Properties
     // registerProperty<VisualNeuroProperty>();
-    auto jsonModule = app->getModuleByType<JSONModule>();
-    jsonModule->registerPropertyJSONConverter<OptionProperty<stats::StatisticsType>>();
-    jsonModule->registerPropertyJSONConverter<OptionProperty<stats::TailTest>>();
-    auto browserModule = app->getModuleByType<WebBrowserModule>();
-    browserModule
-        ->registerPropertyWidgetCEF<PropertyWidgetCEF, OptionProperty<stats::StatisticsType>>();
-    browserModule->registerPropertyWidgetCEF<PropertyWidgetCEF, OptionProperty<stats::TailTest>>();
+    //auto jsonModule = app->getModuleByType<JSONModule>();
+    //jsonModule->registerJSONConverter<OptionProperty<stats::StatisticsType>>();
+    //jsonModule->registerJSONConverter<OptionProperty<stats::TailTest>>();
+    registerProperty<OptionProperty<stats::StatisticsType>>();
+    registerProperty<OptionProperty<stats::TailTest>>();
     // Readers and writes
     // registerDataReader(std::make_unique<VisualNeuroReader>());
     // registerDataWriter(std::make_unique<VisualNeuroWriter>());

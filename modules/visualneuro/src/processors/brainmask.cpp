@@ -43,7 +43,7 @@ const ProcessorInfo BrainMask::processorInfo_{
     CodeState::Experimental,  // Code state
     Tags::None,               // Tags
 };
-const ProcessorInfo BrainMask::getProcessorInfo() const { return processorInfo_; }
+const ProcessorInfo& BrainMask::getProcessorInfo() const { return processorInfo_; }
 
 BrainMask::BrainMask() : PoolProcessor(), volumes_("brainVol"), maskPort_("mask") {
 

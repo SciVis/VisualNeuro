@@ -39,7 +39,7 @@ const ProcessorInfo CameraPositionController::processorInfo_{
     CodeState::Experimental,  // Code state
     Tags::None,               // Tags
 };
-const ProcessorInfo CameraPositionController::getProcessorInfo() const { return processorInfo_; }
+const ProcessorInfo& CameraPositionController::getProcessorInfo() const { return processorInfo_; }
 
 CameraPositionController::CameraPositionController()
     : Processor()
