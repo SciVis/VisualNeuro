@@ -35,7 +35,7 @@ jobs:
             installer: 'visualneuro-installer-win'
             artifact: 'build/VisualNeuroApp-v*.exe'
           - system: macos
-            os: 'macos-13' # for now macos-latest == macos-12 since macos-13 is still "beta"
+            os: 'macos-latest'
             triplet: 'x64-osx'
             cmake: '-DVCPKG_APPLOCAL_DEPS=OFF'
             preset: ninja-visualneuro
